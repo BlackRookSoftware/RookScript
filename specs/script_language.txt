@@ -1,0 +1,111 @@
+============================================================================
+Language
+============================================================================
+
+<Expression>
+
+<ParameterList> :=
+	<Expression> ["," <ParameterList>]
+
+<ElseClause> :=
+	<ELSE> <StatementBody>
+	[e]
+
+<Statement> :=
+	";"																	(No-op)
+	<IF> "(" <Expression> ")" <StatementBody> <ElseClause>
+	<WHILE> "(" <Expression> ")" <StatementBody>
+	<FOR> "(" <Statement> ";" <Expression> ";" <Statement> ")" <StatementBody>
+	<BREAK>																(only in for or while)
+	<CONTINUE>															(only in for or while)
+	<IDENTIFIER>
+		"(" <ParameterList> ")"   										(Must be command, function, or host function)
+		"[" <Expression> "]" <ASSIGNMENTOPERATOR> <VariableAssignment>	(Array variable assignment)
+		"." <IDENTIFIER> <ASSIGNMENTOPERATOR> <Expression>				(scoped variable)
+		<ASSIGNMENTOPERATOR> <Expression>								(variable assignment)
+
+<StatementList> := 
+	<Statement> <StatementList>
+	[e]
+
+<StatementBody> :=
+	"{" <StatementList> "}"
+	<Statement> ";"
+
+<ScriptEntryArgumentListPrime> :=
+	"," <IDENTIFIER> <ScriptEntryArgumentListPrime>
+	[e]
+
+<ScriptEntryArgumentList> :=
+	<IDENTIFIER> <ScriptEntryArgumentListPrime>
+	[e]
+
+<ScriptName> :=
+	<IDENTIFIER>
+	<NUMBER>
+	<STRING>
+
+<ScriptEntry> :=
+	script <ScriptName> "(" <ScriptEntryArgumentList> ")" "{" <StatementList> "}"
+	-> add script entry stub
+
+<FunctionArgumentListPrime> :=
+	"," <IDENTIFIER> <FunctionArgumentListPrime>
+	[e]
+
+<FunctionArgumentList> :=
+	<IDENTIFIER> <FunctionArgumentListPrime>
+	[e]
+
+<Function> :=
+	function <IDENTIFIER> "(" <FunctionArgumentList> ")" "{" <StatementList> "}"
+	-> add function stub
+
+<Function> :=
+	init "(" ")" "{" <StatementList> "}"
+	-> add init stub
+
+============================================================================
+
+function mult(int x, y)
+{
+	return x * y;
+}
+	
+script name(arg0, arg1, ...)
+{
+	game.x = 4; // game scope
+	hub.x = 3; // hub scope
+	map.x = 2; // map scope
+	x = 1; // local scope
+	
+	decb = true;
+	deci = 2;
+	decf = 0.0;
+	decs = "asdfasdf";
+	decq = query("#menu");
+	dece = qobject(decq, 0);
+
+	if (mult(deci, 2) >= 4)
+	{
+		log("butt");
+	}
+	else
+	{
+		log("hole");
+	}
+	
+	x = 5;
+	while (x > 0)
+	{
+		log(x);
+		x = x - 1;
+	}
+	
+	for (x = 0; x < 10; x = x + 1)
+	{
+		log(x);
+	}
+	
+}
+

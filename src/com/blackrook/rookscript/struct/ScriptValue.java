@@ -80,7 +80,14 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public void set(Object value)
 	{
-		if (value instanceof ScriptValue)
+		if (value == null)
+		{
+			// null -> false
+			this.type = Type.BOOLEAN;
+			this.ref = null;
+			this.rawbits = 0L;
+		}
+		else if (value instanceof ScriptValue)
 		{
 			ScriptValue sv = (ScriptValue)value;
 			this.type = sv.type;
@@ -430,6 +437,22 @@ public class ScriptValue implements Comparable<ScriptValue>
 		return type == Type.FLOAT && Double.isInfinite(Double.longBitsToDouble(rawbits));
 	}
 	
+	/**
+	 * @return true if this value is a numeric type.
+	 */
+	public boolean isNumeric()
+	{
+		return type == Type.INTEGER || type == Type.FLOAT;
+	}
+
+	/**
+	 * @return true if this value is a string type.
+	 */
+	public boolean isString()
+	{
+		return type == Type.STRING;
+	}
+
 	/**
 	 * @return true if this value is a list type.
 	 */

@@ -32,10 +32,36 @@ public interface ScriptFunctionType
 	public int getParameterCount();
 	
 	/**
+	 * @return this function's usage instructions.
+	 */
+	public Usage getUsage();
+	
+	/**
 	 * Executes this function.
 	 * @param scriptInstance the originating script instance.
 	 * @return if false, this halts script execution, else if true, continue.
 	 */
 	public boolean execute(ScriptInstance scriptInstance);
 
+	/**
+	 * Function usage info.
+	 */
+	public static interface Usage
+	{
+		/**
+		 * Gets the function usage instructions.
+		 * @return the function usage instructions.
+		 */
+		public String getUsageInstructions();
+		
+		/**
+		 * Gets the usage instructions per function parameter.
+		 * Can be null for no instructions. Must match function's parameter count.
+		 * @return the usage instructions per function parameter.
+		 * @see ScriptFunctionType#getParameterCount()
+		 */
+		public String[] getUsageParameterInstructions();
+
+	}
+	
 }

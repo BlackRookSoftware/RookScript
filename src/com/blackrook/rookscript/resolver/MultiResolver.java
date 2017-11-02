@@ -7,6 +7,7 @@
  ******************************************************************************/
 package com.blackrook.rookscript.resolver;
 
+import com.blackrook.commons.Common;
 import com.blackrook.commons.linkedlist.Queue;
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
@@ -60,4 +61,14 @@ public class MultiResolver implements ScriptFunctionResolver
 		return null;
 	}
 	
+	@Override
+	public ScriptFunctionType[] getFunctions()
+	{
+		int i = 0;
+		ScriptFunctionType[][] resolverSets = new ScriptFunctionType[resolvers.size()][];
+		for (ScriptFunctionResolver r : resolvers)
+			resolverSets[i++] = r.getFunctions();
+		return Common.joinArrays(resolverSets);
+	}
+
 }

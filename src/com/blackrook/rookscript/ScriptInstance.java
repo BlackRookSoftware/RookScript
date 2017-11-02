@@ -19,9 +19,6 @@ import com.blackrook.rookscript.struct.ScriptValue;
  */
 public class ScriptInstance
 {
-	/** Command runaway. */
-	public static final int MAX_COMMAND_RUNAWAY = 250000;
-	
 	/**
 	 * Enumeration of script states.
 	 */
@@ -63,10 +60,10 @@ public class ScriptInstance
 	 * Creates a new script instance.
 	 * @param script the script that holds the code.
 	 * @param scriptInstanceStack the instance stack. 
-	 * @param hostInterface the host interface object for host calls.
 	 * @param waitHandler the handler for handling a script in a waiting state (can be null).
+	 * @param hostInterface the host interface object for host calls.
 	 */
-	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, Object hostInterface, ScriptWaitHandler waitHandler)
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptWaitHandler waitHandler, Object hostInterface)
 	{
 		this.script = script;
 		this.scriptInstanceStack = scriptInstanceStack;
@@ -188,13 +185,13 @@ public class ScriptInstance
 			case INIT:
 			case RUNNING:
 			{
-				while (step())
-				{
-					if (++commandsExecuted > MAX_COMMAND_RUNAWAY)
-						throw new ScriptExecutionException("Script runaway triggered. Possible infinite loop. "+commandsExecuted+" commands executed.");
-				}
 				// reset counter.
 				commandsExecuted = 0;
+				while (step())
+				{
+					if (++commandsExecuted > script.getCommandRunawayLimit())
+						throw new ScriptExecutionException("Script runaway triggered. Possible infinite loop. "+commandsExecuted+" commands executed.");
+				}
 				break;
 			}
 			case ENDED:

@@ -55,7 +55,7 @@
             <link href="http://blackrooksoftware.com/docs/common/"/>
             <link href="http://blackrooksoftware.com/docs/commonio/"/>
             <link href="http://blackrooksoftware.com/docs/commonlang/"/>
-            <link href="http://download.oracle.com/javase/8/docs/api/"/>
+            <link href="https://docs.oracle.com/javase/8/docs/api/"/>
         </javadoc>
     </target>	
 

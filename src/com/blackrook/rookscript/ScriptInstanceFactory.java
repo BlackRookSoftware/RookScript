@@ -70,17 +70,17 @@ public class ScriptInstanceFactory<H extends Object>
 	/**
 	 * Creates a new instance.
 	 * @param script the script to instantiate.
-	 * @param hostInterface the host interface object.
 	 * @param waitHandler the waiting handler to use. 
+	 * @param hostInterface the host interface object.
 	 * @return a new instance.
 	 */
-	public ScriptInstance create(Script script, H hostInterface, ScriptWaitHandler waitHandler)
+	public ScriptInstance create(Script script, ScriptWaitHandler waitHandler, H hostInterface)
 	{
-		return new ScriptInstance(script, acquireStack(), hostInterface, waitHandler);
+		return new ScriptInstance(script, acquireStack(), waitHandler, hostInterface);
 	}
 	
 	/**
-	 * Destroys an instance as releases pooled objects.
+	 * Destroys an instance and releases pooled objects.
 	 * @param instance the script instance.
 	 */
 	public void destroy(ScriptInstance instance)

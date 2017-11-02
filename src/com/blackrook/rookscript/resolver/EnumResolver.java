@@ -7,6 +7,7 @@
  ******************************************************************************/
 package com.blackrook.rookscript.resolver;
 
+import com.blackrook.commons.ObjectPair;
 import com.blackrook.commons.hash.CaseInsensitiveHashMap;
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
@@ -41,6 +42,16 @@ public class EnumResolver implements ScriptFunctionResolver
 	public boolean containsFunctionByName(String name)
 	{
 		return map.containsKey(name);
+	}
+
+	@Override
+	public ScriptFunctionType[] getFunctions()
+	{
+		ScriptFunctionType[] out = new ScriptFunctionType[map.size()];
+		int i = 0;
+		for (ObjectPair<String, ScriptFunctionType> type : map)
+			out[i++] = type.getValue();
+		return out;
 	}
 
 }

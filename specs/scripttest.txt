@@ -1,0 +1,9 @@
+
+main()
+{
+	s = "Matt Tropiano";
+	out(strupper(s)); 
+	out(strlower(s)); 
+	out(strtrim(" apple ")); 
+	out(strchar(s, 7)); 
+}

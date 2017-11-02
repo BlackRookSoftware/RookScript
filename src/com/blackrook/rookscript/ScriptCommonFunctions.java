@@ -174,7 +174,7 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	 * Convert to boolean.
 	 * ARG: Value
 	 */
-	BOOLEAN(1)
+	TOBOOLEAN(1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
@@ -189,7 +189,7 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	 * Convert to integer (long, internally).
 	 * ARG: Value
 	 */
-	INT(1)
+	TOINT(1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
@@ -204,7 +204,7 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	 * Convert to floating point (double, internally).
 	 * ARG: Value
 	 */
-	FLOAT(1)
+	TOFLOAT(1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
@@ -219,7 +219,7 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	 * Convert to string (double, internally).
 	 * ARG: Value
 	 */
-	STRING(1)
+	TOSTRING(1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
@@ -358,6 +358,114 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 		}
 	},
 	
+	/**
+	 * Returns the "length" of a value.
+	 * ARG1: The value. 
+	 * 
+	 * Strings: string length.
+	 * Lists: list length.
+	 * Others: 1
+	 */
+	LENGTH(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			if (value.isString())
+				scriptInstance.pushStackValue(value.asString().length());
+			else
+				scriptInstance.pushStackValue(value.size());
+			return true;
+		}
+	},
+
+	/**
+	 * Returns a string in full uppercase.
+	 * ARG1: The value (converted to string, first). 
+	 */
+	STRUPPER(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			scriptInstance.pushStackValue(scriptInstance.popStackValue().asString().toUpperCase());
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns a string in full lowercase.
+	 * ARG1: The value (converted to string, first). 
+	 */
+	STRLOWER(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			scriptInstance.pushStackValue(scriptInstance.popStackValue().asString().toLowerCase());
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns a string trimmed of whitespace at both ends.
+	 * ARG1: The value (converted to string, first). 
+	 */
+	STRTRIM(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			scriptInstance.pushStackValue(scriptInstance.popStackValue().asString().trim());
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns a single character from a string.
+	 * If ARG2 is out of bounds, this returns false.
+	 * ARG1: The string value (may be converted). 
+	 * ARG2: The string index. 
+	 */
+	STRCHAR(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			int value = scriptInstance.popStackValue().asInt();
+			String str = scriptInstance.popStackValue().asString();
+			if (value < 0 || value >= str.length())
+				scriptInstance.pushStackValue(false);
+			else
+				scriptInstance.pushStackValue(String.valueOf(str.charAt(value)));
+			return true;
+		}
+	},
+	
+	/*
+	 * SUBSTR
+	 * STRSPLIT
+	 * LISTADD
+	 * LISTADDAT
+	 * LISTREMOVE
+	 * LISTSORT
+	 * LISTCOPY
+	 * LISTSHUFFLE
+	 * LISTINDEX
+	 * LISTTOSET
+	 * SETNEW
+	 * SETADD
+	 * SETREMOVE
+	 * SETCONTAINS
+	 * SETSEARCH
+	 * SETUNION
+	 * SETINTERSECT
+	 * SETXOR
+	 * SETDIFF
+	 * TODO: Finish these.
+	 */
+
 	;
 	
 	
@@ -394,6 +502,12 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 		return parameterCount;
 	}
 
+	@Override
+	public Usage getUsage()
+	{
+		return null;
+	}
+	
 	@Override
 	public abstract boolean execute(ScriptInstance scriptInstance);
 

@@ -34,4 +34,10 @@ public interface ScriptFunctionResolver
 	 */
 	public ScriptFunctionType getFunctionByName(String name);
 	
+	/**
+	 * Gets the full list of all script functions.
+	 * @return a list of all functions.
+	 */
+	public ScriptFunctionType[] getFunctions();
+	
 }

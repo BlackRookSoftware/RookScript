@@ -496,6 +496,7 @@ public final class ScriptReader
 			final int STATE_PUSH_VAR_1 = 1;
 			final int STATE_PUSH_LITERAL_1 = 2;
 			final int STATE_PUSH_LITERAL_2 = 3;
+			final int STATE_RETURN = 4;
 			int state = STATE_INIT;
 			for (int index = 0; index < script.getCommandCount(); index++)
 			{
@@ -517,6 +518,11 @@ public final class ScriptReader
 							reduceStack.push(command);
 							state = STATE_PUSH_LITERAL_1;
 						}
+						else if (command.getType() == ScriptCommandType.RETURN)
+						{
+							outCommands.add(command);
+							state = STATE_RETURN;
+						}
 						else if (command.getType() == ScriptCommandType.PUSH_VARIABLE)
 						{
 							reduceStack.push(command);
@@ -524,6 +530,7 @@ public final class ScriptReader
 						}
 						else if (command.getType() == ScriptCommandType.JUMP)
 						{
+							// remove unnecessary jumps
 							String label = command.getOperand1().toString();
 							if (script.getIndex(label) != index + 1)
 								outCommands.add(command);
@@ -615,6 +622,12 @@ public final class ScriptReader
 							index--;
 							state = STATE_INIT;
 						}
+						break;
+					}
+					
+					// eats commands until a label is found.
+					case STATE_RETURN:
+					{
 						break;
 					}
 				}
@@ -841,7 +854,7 @@ public final class ScriptReader
 			
 			if (currentToken() != null)
 			{
-				addErrorMessage("Expected an \"init\", \"function\", \"script\", or \"pragma\" entry.");
+				addErrorMessage("Expected an \"main\", \"function\", \"entry\", or \"pragma\" entry.");
 				return false;
 			}
 			
@@ -879,7 +892,7 @@ public final class ScriptReader
 			}
 			else
 			{
-				addErrorMessage("Expected an \"init\", \"function\", \"script\", or \"pragma\" entry.");
+				addErrorMessage("Expected an \"main\", \"function\", \"entry\", or \"pragma\" entry.");
 				return false;
 			}
 		}
@@ -893,7 +906,7 @@ public final class ScriptReader
 		{
 			if (currentScript.getIndex(Script.LABEL_MAIN) >= 0)
 			{
-				addErrorMessage("The \"init\" entry was already defined.");
+				addErrorMessage("The \"main\" entry was already defined.");
 				return false;
 			}
 			
@@ -901,7 +914,7 @@ public final class ScriptReader
 			
 			if (!matchType(SKernel.TYPE_LPAREN))
 			{
-				addErrorMessage("Expected \"(\" after \"init\".");
+				addErrorMessage("Expected \"(\" after \"main\".");
 				return false;
 			}
 
@@ -914,7 +927,7 @@ public final class ScriptReader
 			// start statement list?
 			if (!matchType(SKernel.TYPE_LBRACE))
 			{
-				addErrorMessage("Expected \"{\" to start \"init\" body.");
+				addErrorMessage("Expected \"{\" to start \"main\" body.");
 				return false;
 			}
 			
@@ -923,7 +936,7 @@ public final class ScriptReader
 			
 			if (!matchType(SKernel.TYPE_RBRACE))
 			{
-				addErrorMessage("Expected \"}\" to close \"init\" body.");
+				addErrorMessage("Expected \"}\" to close \"main\" body.");
 				return false;
 			}
 
@@ -999,7 +1012,7 @@ public final class ScriptReader
 			// start statement list?
 			if (!matchType(SKernel.TYPE_LBRACE))
 			{
-				addErrorMessage("Expected \"{\" to start \"init\" body.");
+				addErrorMessage("Expected \"{\" to start \"main\" body.");
 				return false;
 			}
 			
@@ -1008,7 +1021,7 @@ public final class ScriptReader
 			
 			if (!matchType(SKernel.TYPE_RBRACE))
 			{
-				addErrorMessage("Expected \"}\" to close \"init\" body.");
+				addErrorMessage("Expected \"}\" to close \"main\" body.");
 				return false;
 			}
 			
@@ -1084,7 +1097,7 @@ public final class ScriptReader
 			// start statement list?
 			if (!matchType(SKernel.TYPE_LBRACE))
 			{
-				addErrorMessage("Expected \"{\" to start \"init\" body.");
+				addErrorMessage("Expected \"{\" to start \"main\" body.");
 				return false;
 			}
 			
@@ -1093,7 +1106,7 @@ public final class ScriptReader
 			
 			if (!matchType(SKernel.TYPE_RBRACE))
 			{
-				addErrorMessage("Expected \"}\" to close \"init\" body.");
+				addErrorMessage("Expected \"}\" to close \"main\" body.");
 				return false;
 			}
 		
@@ -1534,7 +1547,7 @@ public final class ScriptReader
 				return false;
 			}
 
-			emit(ScriptCommand.create(ScriptCommandType.JUMP_FALSE, endLabel));
+			emit(ScriptCommand.create(ScriptCommandType.JUMP_BRANCH, successLabel, endLabel));
 
 			mark(stepLabel);
 			if (!parseStatementClause(null, null))

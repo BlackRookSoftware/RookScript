@@ -18,6 +18,8 @@ import com.blackrook.commons.hash.HashedQueueMap;
  */
 public class Script
 {
+	/** Command runaway. */
+	public static final int DEFAULT_COMMAND_RUNAWAY_LIMIT = 500000;
 	/** Function label prefix. */
 	public static final String LABEL_FUNCTION_PREFIX = "function_";
 	/** Script label prefix. */
@@ -38,6 +40,9 @@ public class Script
 	/** Reverse lookup map (index to labels - for debug). Transient. */
 	private HashedQueueMap<Integer, String> indexMap;
 	
+	/** Pragma setting - runaway limit. */
+	private int commandRunawayLimit;
+	
 	/**
 	 * Creates a new empty script.
 	 */
@@ -48,6 +53,8 @@ public class Script
 		this.scriptLabelMap = new CaseInsensitiveHashMap<>();
 		this.labelMap = new HashMap<>();
 		this.indexMap = null;
+		
+		this.commandRunawayLimit = DEFAULT_COMMAND_RUNAWAY_LIMIT;
 	}
 	
 	/**
@@ -68,6 +75,28 @@ public class Script
 		this.commands = commands;
 	}
 
+	/**
+	 * Sets the amount of commands that can be executed in one 
+	 * update before the runaway detection is triggered.
+	 * @param commandRunawayLimit the amount of commands.
+	 * @see #DEFAULT_COMMAND_RUNAWAY_LIMIT
+	 */
+	public void setCommandRunawayLimit(int commandRunawayLimit)
+	{
+		this.commandRunawayLimit = commandRunawayLimit;
+	}
+
+	/**
+	 * Gets the amount of commands that can be executed in one 
+	 * update before the runaway detection is triggered.
+	 * @return the amount of commands.
+	 * @see #DEFAULT_COMMAND_RUNAWAY_LIMIT
+	 */
+	public int getCommandRunawayLimit()
+	{
+		return commandRunawayLimit;
+	}
+	
 	/**
 	 * Sets an index for a subscript entry name in the script.
 	 * Entry names are case-insensitive.
