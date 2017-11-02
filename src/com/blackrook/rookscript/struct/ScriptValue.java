@@ -194,6 +194,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	/**
 	 * Sets a value in this list.
 	 * If the index is outside of the range of the list's indices, it is not added.
+	 * @param index the list index to set.
 	 * @param value the value to add (converted to internal value).
 	 * @return true if set, false if not.
 	 * @see #isList()
@@ -612,6 +613,8 @@ public class ScriptValue implements Comparable<ScriptValue>
 	/**
 	 * Gets this value cast as a different object type.
 	 * Does no conversion nor coersion.
+	 * @param targetType the class type to cast to.
+	 * @param <T> the returned type.
 	 * @return the object representation of this value.
 	 */
 	public <T> T asObjectType(Class<T> targetType)
@@ -766,6 +769,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * Gets this object coerced or converted to another class type.
 	 * Not to be confused with {@link #asObjectType(Class)}, which just recasts.
 	 * @param targetType the target class type to convert to.
+	 * @param <T> the returned type.
 	 * @return a suitable object of type <code>targetType</code>. 
 	 * @throws ClassCastException if the incoming type cannot be converted.
 	 * @see Reflect#createForType(Object, Class)

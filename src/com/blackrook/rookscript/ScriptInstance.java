@@ -64,12 +64,13 @@ public class ScriptInstance
 	 * @param script the script that holds the code.
 	 * @param scriptInstanceStack the instance stack. 
 	 * @param hostInterface the host interface object for host calls.
+	 * @param waitHandler the handler for handling a script in a waiting state (can be null).
 	 */
 	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, Object hostInterface, ScriptWaitHandler waitHandler)
 	{
 		this.script = script;
-		this.hostInterface = hostInterface;
 		this.scriptInstanceStack = scriptInstanceStack;
+		this.hostInterface = hostInterface;
 		this.waitHandler = waitHandler;
 		
 		this.state = State.CREATED;

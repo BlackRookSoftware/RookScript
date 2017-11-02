@@ -30,6 +30,8 @@ public class ScriptInstanceStack
 
 	/**
 	 * Creates a new instance stack.
+	 * @param activationDepth the activation depth to use (function calls).
+	 * @param stackDepth the stack depth to use (script values).
 	 */
 	public ScriptInstanceStack(int activationDepth, int stackDepth)
 	{

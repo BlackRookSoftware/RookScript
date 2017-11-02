@@ -25,6 +25,7 @@ public interface ScriptReaderIncluder
 	 * 		procure a relative path.
 	 * @param path the stream path from the include directive.
 	 * @return an open {@link InputStream} for the requested resource, or null if not found.
+	 * @throws IOException if the next resource to include cannot the opened. 
 	 */
 	public String getIncludeResourceName(String streamName, String path) throws IOException;
 
@@ -33,6 +34,7 @@ public interface ScriptReaderIncluder
 	 * By default, this attempts to open a file at the provided path.
 	 * @param path the stream path.
 	 * @return an open {@link InputStream} for the requested resource, or null if not found.
+	 * @throws IOException if the next resource to include cannot the opened. 
 	 */
 	public InputStream getIncludeResource(String path) throws IOException;
 	

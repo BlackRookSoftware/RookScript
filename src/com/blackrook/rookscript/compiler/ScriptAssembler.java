@@ -24,22 +24,23 @@ public final class ScriptAssembler
 	 * Disassembles a script into a text representation.
 	 * The writer is not closed.
 	 * @param script the compiled script.
-	 * @param out the output stream.
+	 * @param writer the output writer.
+	 * @throws IOException if the writer cannot be written to.
 	 */
-	public static void disassemble(Script script, Writer out) throws IOException
+	public static void disassemble(Script script, Writer writer) throws IOException
 	{
 		int commandCount = script.getCommandCount();
 		for (int i = 0; i < commandCount; i++)
 		{
-			dumpLineLabels(script, out, i);
+			dumpLineLabels(script, writer, i);
 			ScriptCommand command = script.getCommand(i);
-			out.write("\t");
-			out.write(command.toString());
-			out.write("\n");
-			out.flush();
+			writer.write("\t");
+			writer.write(command.toString());
+			writer.write("\n");
+			writer.flush();
 		}
 		
-		dumpLineLabels(script, out, commandCount);
+		dumpLineLabels(script, writer, commandCount);
 	}
 
 	
