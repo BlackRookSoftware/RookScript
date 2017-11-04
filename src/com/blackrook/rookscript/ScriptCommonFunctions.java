@@ -443,8 +443,37 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 		}
 	},
 	
+	/**
+	 * Returns a substring of another string.
+	 * Returns false if either index out of bounds.
+	 * If end index is 0 or less, it is index from the end.
+	 * ARG1: The string (converted). 
+	 * ARG2: The starting index (inclusive). 
+	 * ARG3: The ending index (exclusive). 
+	 */
+	SUBSTR(3)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			int endIndex = scriptInstance.popStackValue().asInt();
+			int startIndex = scriptInstance.popStackValue().asInt();
+			String str = scriptInstance.popStackValue().asString();
+			int length = str.length();
+			if (startIndex < 0 || startIndex >= length)
+				scriptInstance.pushStackValue(false);
+			else if (endIndex <= 0 && -endIndex > length)
+				scriptInstance.pushStackValue(false);
+			else if (endIndex >= length)
+				scriptInstance.pushStackValue(false);
+			else
+				scriptInstance.pushStackValue(str.substring(startIndex, endIndex <= 0 ? length - -endIndex : endIndex));
+			return true;
+		}
+	},
+	
 	/*
-	 * SUBSTR
+	 * STRINDEXOF
 	 * STRSPLIT
 	 * LISTADD
 	 * LISTADDAT

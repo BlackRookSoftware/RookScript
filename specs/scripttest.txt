@@ -5,5 +5,6 @@ main()
 	out(strupper(s)); 
 	out(strlower(s)); 
 	out(strtrim(" apple ")); 
-	out(strchar(s, 7)); 
+	out(strchar(s, 7));
+	out(substr(s, 5, 0));
 }
