@@ -12,7 +12,7 @@ Black Rook Commons 2.31.0+
 Black Rook Common I/O 2.5.0+  
 [https://github.com/BlackRookSoftware/CommonIO](https://github.com/BlackRookSoftware/CommonIO)
 
-Black Rook Common Lang 2.10.0+  
+Black Rook Common Lang 2.10.1+  
 [https://github.com/BlackRookSoftware/CommonLang](https://github.com/BlackRookSoftware/CommonLang)
 
 ### Introduction

@@ -7,7 +7,6 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
-import com.blackrook.commons.AbstractVector;
 import com.blackrook.commons.Common;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.struct.ScriptValue;
@@ -262,8 +261,7 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue lengthValue = scriptInstance.popStackValue();
-			int length = lengthValue.asInt();
+			int length = scriptInstance.popStackValue().asInt();
 
 			ScriptValue[] list = new ScriptValue[length];
 			for (int i = 0; i < length; i++)
@@ -293,30 +291,22 @@ public enum ScriptCommandType
 			ScriptValue indexValue = scriptInstance.popStackValue();
 			int index = indexValue.asInt();
 
-			ScriptValue arrayValue = scriptInstance.popStackValue();
+			ScriptValue listValue = scriptInstance.popStackValue();
 
-			if (!arrayValue.isList())
+			if (!listValue.isList())
 			{
 				scriptInstance.pushStackValue(false);
 				return true;
 			}
 			
-			@SuppressWarnings("unchecked")
-			AbstractVector<ScriptValue> list = (AbstractVector<ScriptValue>)arrayValue.asObject();
-			if (index < 0 || index >= list.size())
-			{
-				scriptInstance.pushStackValue(false);
-				return true;
-			}
-			
-			scriptInstance.pushStackValue(list.getByIndex(index));
+			scriptInstance.pushStackValue(listValue.getByIndex(index));
 			return true;
 		}
 	},
 	
 	/**
 	 * PUSH an array value.
-	 * Pops ZERO values - only inspects two spots down.
+	 * Pops ZERO values - only inspects two spots down in the stack!
 	 * Pushes one value onto stack.
 	 * No operands.
 	 */
@@ -328,23 +318,15 @@ public enum ScriptCommandType
 			ScriptValue indexValue = scriptInstance.getStackValue(0);
 			int index = indexValue.asInt();
 
-			ScriptValue arrayValue = scriptInstance.getStackValue(1);
+			ScriptValue listValue = scriptInstance.getStackValue(1);
 
-			if (!arrayValue.isList())
+			if (!listValue.isList())
 			{
 				scriptInstance.pushStackValue(false);
 				return true;
 			}
 			
-			@SuppressWarnings("unchecked")
-			AbstractVector<ScriptValue> list = (AbstractVector<ScriptValue>)arrayValue.asObject();
-			if (index < 0 || index >= list.size())
-			{
-				scriptInstance.pushStackValue(false);
-				return true;
-			}
-			
-			scriptInstance.pushStackValue(list.getByIndex(index));
+			scriptInstance.pushStackValue(listValue.getByIndex(index));
 			return true;
 		}
 	},
@@ -390,24 +372,13 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			ScriptValue value = scriptInstance.popStackValue();
-
-			ScriptValue indexValue = scriptInstance.popStackValue();
-			int index = indexValue.asInt();
+			int index = scriptInstance.popStackValue().asInt();
+			ScriptValue listValue = scriptInstance.popStackValue();
 			
-			ScriptValue arrayValue = scriptInstance.popStackValue();
-			
-			if (!arrayValue.isList())
+			if (!listValue.isList())
 				return true;
 			
-			@SuppressWarnings("unchecked")
-			AbstractVector<ScriptValue> list = (AbstractVector<ScriptValue>)arrayValue.asObject();
-			if (index < 0 || index >= list.size())
-			{
-				scriptInstance.pushStackValue(false);
-				return true;
-			}
-			
-			list.getByIndex(index).set(value);
+			listValue.setByIndex(index, value);
 			return true;
 		}
 	},
@@ -439,7 +410,7 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			String name = String.valueOf(operand1);
-			String valname = String.valueOf(operand1);
+			String valname = String.valueOf(operand2);
 			ScriptValue value;
 			if ((value = scriptInstance.getValue(valname)) == null)
 				scriptInstance.setValue(name, false);

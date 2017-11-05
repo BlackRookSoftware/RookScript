@@ -1,10 +1,48 @@
+#!/usr/bin/env rookscript -i
 
 main()
 {
+	out(pow(5,2));
+
 	s = "Matt Tropiano";
 	out(strupper(s)); 
 	out(strlower(s)); 
 	out(strtrim(" apple ")); 
 	out(strchar(s, 7));
 	out(substr(s, 5, 0));
+	
+	out(strindex(s, "a"));
+	out(strlastindex(s, "a"));
+	out(strindex(s, "x"));
+	out(strlastindex(s, "x"));
+	out(strsplit(s, "\\s+"));
+	
+	list = [];
+	
+	out(listadd(list, 5));
+	out(listadd(list, 6));
+	out(listadd(list, 7));
+	out(listadd(list, 5));
+	out(list);
+
+	out(listaddat(list, 1, 0));
+	out(listaddat(list, 10, length(list)));
+	out(listaddat(list, 23, 3));
+	out(list);
+
+	out(listremove(list, 6));
+	out(list);
+
+	out(listremoveat(list, 3));
+	out(list);
+
+	listsort(list);
+	out(list);
+	
+	list2 = listnew(list);
+	out(list);
+	out(list2);
+	out(list == list);
+	out(list == list2);
+
 }

@@ -75,6 +75,26 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
+	 * Creates a copy of this value.
+	 * The copy process is DEEP - lists are copied as well, except for native objects.
+	 * @return a new ScriptValue.
+	 */
+	public ScriptValue copy()
+	{
+		if (isList())
+		{
+			@SuppressWarnings("unchecked")
+			List<ScriptValue> list = (List<ScriptValue>)this.ref;
+			ScriptValue[] array = new ScriptValue[list.size()];
+			for (int i = 0; i < array.length; i++)
+				array[i] = list.getByIndex(i).copy();
+			return create(array);
+		}
+		else
+			return create(this);
+	}
+	
+	/**
 	 * Sets this value using another value.
 	 * @param value the source value to use.
 	 */
@@ -206,7 +226,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * @return true if set, false if not.
 	 * @see #isList()
 	 */
-	public boolean set(int index, Object value)
+	public boolean setByIndex(int index, Object value)
 	{
 		if (!isList())
 			return false;
@@ -250,9 +270,8 @@ public class ScriptValue implements Comparable<ScriptValue>
 		
 		@SuppressWarnings("unchecked")
 		List<ScriptValue> list = (List<ScriptValue>)ref;
-		if (isList())
-			list.add(index, create(value));
-		return false;
+		list.add(index, create(value));
+		return true;
 	}
 	
 	/**
@@ -338,6 +357,19 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 
 	/**
+	 * Sorts the contents of a list.
+	 * Does nothing if this is not a list.
+	 */
+	@SuppressWarnings("unchecked")
+	public void sort()
+	{
+		if (!isList())
+			return;
+	
+		((List<ScriptValue>)ref).sort();
+	}
+
+	/**
 	 * Adds a value to this value, if it is a list, 
 	 * treating the structure like a set of discrete items.
 	 * This assumes that the list is sorted - if not, this will have undefined behavior.
@@ -412,7 +444,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 		return list.search(cache.value1, Comparator.naturalOrder()) >= 0;
 	}
 
-	
 	/**
 	 * @return true if this value is strictly false (sorry if this is confusing).
 	 */
@@ -460,7 +491,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		return type == Type.LIST;
 	}
-	
+
 	/**
 	 * @return true if this value is an object type.
 	 */
@@ -817,7 +848,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	public boolean equals(Object obj)
 	{
 		if (obj instanceof ScriptValue)
-			this.equals((ScriptValue)obj);
+			return this.equals((ScriptValue)obj);
 		return super.equals(obj);
 	}
 	
@@ -838,7 +869,11 @@ public class ScriptValue implements Comparable<ScriptValue>
 	@Override
 	public int compareTo(ScriptValue o)
 	{
-		if (type == Type.STRING || o.type == Type.STRING || type == Type.OBJECT || o.type == Type.OBJECT)
+		if (type == Type.OBJECT || o.type == Type.OBJECT)
+			return ref == o.ref ? 0 : -1;
+		else if (type == Type.LIST || o.type == Type.LIST)
+			return ref == o.ref ? 0 : -1;
+		else if (type == Type.STRING || o.type == Type.STRING)
 			return asString().compareTo(o.asString());
 		else
 		{

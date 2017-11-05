@@ -7,6 +7,9 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 import com.blackrook.commons.math.RMath;
 import com.blackrook.rookscript.resolver.EnumResolver;
 import com.blackrook.rookscript.struct.ScriptValue;
@@ -19,6 +22,7 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 {
 	/**
 	 * Prints something to STDOUT.
+	 * Returns void.
 	 * ARG: Value to print.
 	 */
 	OUT(true, 1)
@@ -34,6 +38,7 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 
 	/**
 	 * Prints something to STDERR.
+	 * Returns void.
 	 * ARG: Value to print.
 	 */
 	ERR(true, 1)
@@ -359,6 +364,24 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	},
 	
 	/**
+	 * Raises a number to another mathematical power.
+	 * Always returns a double.
+	 * ARG1: The number.
+	 * ARG2: The power.
+	 */
+	POW(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			double power = scriptInstance.popStackValue().asDouble();
+			double value = scriptInstance.popStackValue().asDouble();
+			scriptInstance.pushStackValue(Math.pow(value, power));
+			return true;
+		}
+	},
+	
+	/**
 	 * Returns the "length" of a value.
 	 * ARG1: The value. 
 	 * 
@@ -445,8 +468,7 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	
 	/**
 	 * Returns a substring of another string.
-	 * Returns false if either index out of bounds.
-	 * If end index is 0 or less, it is index from the end.
+	 * Returns false if either index out of bounds, or end index is less than the start index.
 	 * ARG1: The string (converted). 
 	 * ARG2: The starting index (inclusive). 
 	 * ARG3: The ending index (exclusive). 
@@ -462,26 +484,196 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 			int length = str.length();
 			if (startIndex < 0 || startIndex >= length)
 				scriptInstance.pushStackValue(false);
-			else if (endIndex <= 0 && -endIndex > length)
+			else if (endIndex < 0 && endIndex > length)
 				scriptInstance.pushStackValue(false);
-			else if (endIndex >= length)
+			else if (endIndex < startIndex)
 				scriptInstance.pushStackValue(false);
 			else
-				scriptInstance.pushStackValue(str.substring(startIndex, endIndex <= 0 ? length - -endIndex : endIndex));
+				scriptInstance.pushStackValue(str.substring(startIndex, endIndex));
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns the starting index of a string inside another string.
+	 * If not found, this returns -1.
+	 * ARG1: The string (converted). 
+	 * ARG2: The string to search for (converted). 
+	 */
+	STRINDEX(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			String targetStr = scriptInstance.popStackValue().asString();
+			String str = scriptInstance.popStackValue().asString();
+			scriptInstance.pushStackValue(str.indexOf(targetStr));
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns the starting index of a string inside another string, searching from the end.
+	 * If not found, this returns -1.
+	 * ARG1: The string (converted). 
+	 * ARG2: The string to search for (converted). 
+	 */
+	STRLASTINDEX(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			String targetStr = scriptInstance.popStackValue().asString();
+			String str = scriptInstance.popStackValue().asString();
+			scriptInstance.pushStackValue(str.lastIndexOf(targetStr));
+			return true;
+		}
+	},
+	
+	/**
+	 * Splits a string by a RegEx pattern.
+	 * Returns an array.
+	 * If the pattern is malformed, this returns false.
+	 * ARG1: The string (converted). 
+	 * ARG2: The RegEx pattern to split on.
+	 */
+	STRSPLIT(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			String regex = scriptInstance.popStackValue().asString();
+			String str = scriptInstance.popStackValue().asString();
+			
+			Pattern p = null;
+			try {
+				p = Pattern.compile(regex);
+			} catch (PatternSyntaxException e) {
+				// bad pattern.
+			}
+			if (p != null)
+				scriptInstance.pushStackValue(Pattern.compile(regex).split(str));
+			else
+				scriptInstance.pushStackValue(false);
+			return true;
+		}
+	},
+	
+	/**
+	 * Adds a value to a list. 
+	 * If the "list" argument is not a list or not added, this returns false, else true.
+	 * ARG1: The list to add the item to. 
+	 * ARG2: The item to add.
+	 */
+	LISTADD(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue item = scriptInstance.popStackValue();
+			ScriptValue list = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(list.add(item));
+			return true;
+		}
+	},
+	
+	/**
+	 * Adds a value to a list. 
+	 * If the "list" argument is not a list or not added, this returns false, else true.
+	 * ARG1: The list to add the item to. 
+	 * ARG2: The item to add.
+	 * ARG3: The index to add it to.
+	 */
+	LISTADDAT(3)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			int index = scriptInstance.popStackValue().asInt();
+			ScriptValue item = scriptInstance.popStackValue();
+			ScriptValue list = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(list.addAt(index, item));
+			return true;
+		}
+	},
+	
+	/**
+	 * Removes a value from a list that matches the item. 
+	 * Only removes list-typed items by reference.
+	 * If the "list" argument is not a list or the provided item is not removed, this returns false, else true.
+	 * ARG1: The list to remove the item from. 
+	 * ARG2: The item to remove.
+	 */
+	LISTREMOVE(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue item = scriptInstance.popStackValue();
+			ScriptValue list = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(list.remove(item));
+			return true;
+		}
+	},
+	
+	/**
+	 * Removes a value from a list that matches the item. 
+	 * Only removes list-typed items by reference.
+	 * Returns the removed item, or false if no item removed due to a bad index.
+	 * ARG1: The list to remove the item from. 
+	 * ARG2: The index to remove.
+	 */
+	LISTREMOVEAT(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			int index = scriptInstance.popStackValue().asInt();
+			ScriptValue list = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(list.removeAt(index));
+			return true;
+		}
+	},
+	
+	/**
+	 * Sorts a list in-place.
+	 * Returns the list that was sorted (NOT a new copy!). 
+	 * ARG1: The list to remove the item from. 
+	 */
+	LISTSORT(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue list = scriptInstance.popStackValue();
+			list.sort();
+			scriptInstance.pushStackValue(list);
+			return true;
+		}
+	},
+	
+	/**
+	 * Creates a new list.
+	 * Copies an existing list, or encapsulates a value as a list. 
+	 * ARG1: The value to copy (and re-encapsulate in a list). 
+	 */
+	LISTNEW(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			if (value.isList())
+				scriptInstance.pushStackValue(value.copy());
+			else
+				scriptInstance.pushStackValue(new Object[]{value.copy()});
 			return true;
 		}
 	},
 	
 	/*
-	 * STRINDEXOF
-	 * STRSPLIT
-	 * LISTADD
-	 * LISTADDAT
-	 * LISTREMOVE
-	 * LISTSORT
-	 * LISTCOPY
-	 * LISTSHUFFLE
 	 * LISTINDEX
+	 * LISTLASTINDEX
 	 * LISTTOSET
 	 * SETNEW
 	 * SETADD
