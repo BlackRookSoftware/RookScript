@@ -560,6 +560,25 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	},
 	
 	/**
+	 * Creates a new list.
+	 * Copies an existing list, or encapsulates a value as a list. 
+	 * ARG1: The value to copy (and re-encapsulate in a list). 
+	 */
+	LISTNEW(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			if (value.isList())
+				scriptInstance.pushStackValue(value.copy());
+			else
+				scriptInstance.pushStackValue(new Object[]{value.copy()});
+			return true;
+		}
+	}, 
+	
+	/**
 	 * Adds a value to a list. 
 	 * If the "list" argument is not a list or not added, this returns false, else true.
 	 * ARG1: The list to add the item to. 
@@ -652,29 +671,9 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 		}
 	},
 	
-	/**
-	 * Creates a new list.
-	 * Copies an existing list, or encapsulates a value as a list. 
-	 * ARG1: The value to copy (and re-encapsulate in a list). 
-	 */
-	LISTNEW(1)
-	{
-		@Override
-		public boolean execute(ScriptInstance scriptInstance)
-		{
-			ScriptValue value = scriptInstance.popStackValue();
-			if (value.isList())
-				scriptInstance.pushStackValue(value.copy());
-			else
-				scriptInstance.pushStackValue(new Object[]{value.copy()});
-			return true;
-		}
-	},
-	
 	/*
 	 * LISTINDEX
 	 * LISTLASTINDEX
-	 * LISTTOSET
 	 * SETNEW
 	 * SETADD
 	 * SETREMOVE
