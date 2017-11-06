@@ -1,0 +1,70 @@
+#!/usr/bin/env rookscript -i
+
+main()
+{
+	s = "Matt Tropiano";
+	out(strupper(s)); 
+	out(strlower(s)); 
+	out(strtrim(" apple ")); 
+	out(strchar(s, 7));
+	out(substr(s, 5, 0));
+	
+	out(strindex(s, "a"));
+	out(strlastindex(s, "a"));
+	out(strindex(s, "x"));
+	out(strlastindex(s, "x"));
+	out(strsplit(s, "\\s+"));
+	
+	list = [];
+	
+	out(listadd(list, 5));
+	out(listadd(list, 6));
+	out(listadd(list, 7));
+	out(listadd(list, 5));
+	out(list);
+
+	out(listaddat(list, 1, 0));
+	out(listaddat(list, 10, length(list)));
+	out(listaddat(list, 23, 3));
+	out(list);
+
+	out(listremove(list, 6));
+	out(list);
+
+	out(listremoveat(list, 3));
+	out(list);
+
+	listsort(list);
+	out(list);
+	
+	list2 = listnew(list);
+	list3 = list;
+	out(list);
+	out(list2);
+	out(list == list);
+	out(list == list2);
+	out(list == list3);
+
+	set1 = set([3,4,5,5,2,1]);
+	set2 = set([4,5,6,7,8,9]);
+	out(set1);
+	out(set2);
+	out(setunion(set1, set2));
+	out(setintersect(set1, set2));
+	out(setxor(set1, set2));
+	out(setdiff(set1, set2));
+
+	out(setunion(1, 2));
+	out(setunion(1, [1,2]));
+	out(setunion([1,2], 1));
+	out(setintersect(1, 2));
+	out(setintersect(1, [1,2]));
+	out(setintersect([1,2], 1));
+	out(setxor(1, 2));
+	out(setxor(1, [1,2]));
+	out(setxor([1,2], 1));
+	out(setdiff(1, 2));
+	out(setdiff(1, [1,2]));
+	out(setdiff([1,2], 1));
+
+}

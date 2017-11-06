@@ -2,47 +2,36 @@
 
 main()
 {
-	out(pow(5,2));
-
-	s = "Matt Tropiano";
-	out(strupper(s)); 
-	out(strlower(s)); 
-	out(strtrim(" apple ")); 
-	out(strchar(s, 7));
-	out(substr(s, 5, 0));
-	
-	out(strindex(s, "a"));
-	out(strlastindex(s, "a"));
-	out(strindex(s, "x"));
-	out(strlastindex(s, "x"));
-	out(strsplit(s, "\\s+"));
-	
-	list = [];
-	
-	out(listadd(list, 5));
-	out(listadd(list, 6));
-	out(listadd(list, 7));
-	out(listadd(list, 5));
-	out(list);
-
-	out(listaddat(list, 1, 0));
-	out(listaddat(list, 10, length(list)));
-	out(listaddat(list, 23, 3));
-	out(list);
-
-	out(listremove(list, 6));
-	out(list);
-
-	out(listremoveat(list, 3));
-	out(list);
-
-	listsort(list);
-	out(list);
-	
-	list2 = listnew(list);
-	out(list);
-	out(list2);
-	out(list == list);
-	out(list == list2);
-
+	out(MIN(6,2));
+	out(MAX(6,2));
+	out(POW(6,2));
+	out(ROUND(6.5));
+	out(FLOOR(6.5));
+	out(CEILING(6.5));
+	out(FIX(234.456, 0));
+	out(FIX(234.456, 2));
+	out(FIX(234.456, -2));
+	out(E());
+	out(LOG(e()));
+	out(LOG10(10));
+	out(SQRT(16));
+	out(PI());
+	out(DEG2RAD(90));
+	out(RAD2DEG(PI()*2));
+	out(SIN(0));
+	out(COS(0));
+	out(TAN(0));
+	out(ASIN(1));
+	out(ACOS(1));
+	out(ATAN(1));
+	out(CLAMP(7,0,4));
+	out(WRAP(7,0,4));
+	out(LERP(0.6,0, 10));
+	out(TOBOOLEAN(34));
+	out(TOINT(34.6));
+	out(TOFLOAT(34));
+	out(TOSTRING(34));
+	out(PARSEINT(34,5));
+	out(COLOR(255,255,255,255));
+	out(COLORF(1.0,1.0,1.0,1.0));
 }

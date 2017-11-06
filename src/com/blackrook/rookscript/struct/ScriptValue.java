@@ -377,7 +377,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * @return true if added, false if not.
 	 * @see #isList()
 	 */
-	public boolean addSet(Object value)
+	public boolean setAdd(Object value)
 	{
 		if (!isList())
 			return false;
@@ -402,7 +402,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * @return true if removed, false if not.
 	 * @see #isList()
 	 */
-	public boolean removeSet(Object value)
+	public boolean setRemove(Object value)
 	{
 		if (!isList())
 			return false;
@@ -432,7 +432,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * @return true if found, false if not or not a list.
 	 * @see #isList()
 	 */
-	public boolean containsSet(Object value)
+	public boolean setContains(Object value)
 	{
 		if (!isList())
 			return false;
@@ -442,6 +442,27 @@ public class ScriptValue implements Comparable<ScriptValue>
 		Cache cache = getCache();
 		cache.value1.set(value);
 		return list.search(cache.value1, Comparator.naturalOrder()) >= 0;
+	}
+
+	/**
+	 * Gets a value at an index, if it is a list, 
+	 * treating the structure like a set of discrete items.
+	 * This assumes that the list is sorted - if not, this will have undefined behavior.
+	 * This has better performance than {@link #getIndexOf(Object)}, but only if this is a sorted set.
+	 * @param value the value to look for.
+	 * @return true if found, false if not or not a list.
+	 * @see #isList()
+	 */
+	public int setSearch(Object value)
+	{
+		if (!isList())
+			return -1;
+
+		@SuppressWarnings("unchecked")
+		List<ScriptValue> list = (List<ScriptValue>)ref;
+		Cache cache = getCache();
+		cache.value1.set(value);
+		return list.search(cache.value1, Comparator.naturalOrder());
 	}
 
 	/**

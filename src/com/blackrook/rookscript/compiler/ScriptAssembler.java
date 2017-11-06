@@ -51,9 +51,6 @@ public final class ScriptAssembler
 		Iterable<String> labels = script.getLabelsAtIndex(line);
 		if (!Common.isEmpty(labels)) for (String label : labels)
 		{
-			if (label.startsWith(Script.LABEL_MAIN) || label.startsWith(Script.LABEL_ENTRY_PREFIX) || label.startsWith(Script.LABEL_FUNCTION_PREFIX))
-				out.write("\n");
-			
 			out.write(label);
 			out.write(":");
 			out.write("\n");

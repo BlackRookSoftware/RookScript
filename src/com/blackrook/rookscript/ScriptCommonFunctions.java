@@ -66,6 +66,8 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 			ScriptValue arg1 = scriptInstance.popStackValue();
 			if (arg1.asDouble() < arg2.asDouble())
 				scriptInstance.pushStackValue(arg1);
+			else
+				scriptInstance.pushStackValue(arg2);
 			return true;
 		}
 	},
@@ -84,10 +86,200 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 			ScriptValue arg1 = scriptInstance.popStackValue();
 			if (arg1.asDouble() < arg2.asDouble())
 				scriptInstance.pushStackValue(arg2);
+			else
+				scriptInstance.pushStackValue(arg1);
 			return true;
 		}
 	},
 	
+	/**
+	 * Raises a number to another mathematical power.
+	 * Always returns a float.
+	 * ARG1: The number.
+	 * ARG2: The power.
+	 */
+	POW(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			double power = scriptInstance.popStackValue().asDouble();
+			double value = scriptInstance.popStackValue().asDouble();
+			scriptInstance.pushStackValue(Math.pow(value, power));
+			return true;
+		}
+	},
+	
+	/**
+	 * Rounds a number to the nearest whole number.
+	 * Always returns an integer.
+	 * ARG1: The number.
+	 */
+	ROUND(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			double value = scriptInstance.popStackValue().asDouble();
+			scriptInstance.pushStackValue(Math.round(value));
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns the mathematical floor of a number.
+	 * Always returns a float.
+	 * ARG1: The number.
+	 */
+	FLOOR(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			double value = scriptInstance.popStackValue().asDouble();
+			scriptInstance.pushStackValue(Math.floor(value));
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns the mathematical ceiling of a number.
+	 * Always returns a float.
+	 * ARG1: The number.
+	 */
+	CEILING(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			double value = scriptInstance.popStackValue().asDouble();
+			scriptInstance.pushStackValue(Math.ceil(value));
+			return true;
+		}
+	},
+	
+	/**
+	 * Rounds a number to the nearest arbitrary place.
+	 * The "place" is a power of 10. <code>FIX(n, 0) = ROUND(n)</code>
+	 * Always returns a float.
+	 * ARG1: The number.
+	 * ARG2: The place.
+	 */
+	FIX(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			double place = scriptInstance.popStackValue().asDouble();
+			double value = scriptInstance.popStackValue().asDouble();
+			double p = Math.pow(10, -place);
+			scriptInstance.pushStackValue(Math.round(value * p) / p);
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns Euler's constant.
+	 */
+	E(0)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			scriptInstance.pushStackValue(Math.E);
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns the Natural Log (base e) of a value.
+	 * ARG1: The value.
+	 */
+	LOG(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue arg = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(Math.log(arg.asDouble()));
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns the Base 10 Log of a value.
+	 * ARG1: The value.
+	 */
+	LOG10(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue arg = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(Math.log10(arg.asDouble()));
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns the square root of a number.
+	 * Always returns a float.
+	 * ARG1: The number.
+	 */
+	SQRT(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			double value = scriptInstance.popStackValue().asDouble();
+			scriptInstance.pushStackValue(Math.sqrt(value));
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns PI.
+	 */
+	PI(0)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			scriptInstance.pushStackValue(Math.PI);
+			return true;
+		}
+	},
+	
+	/**
+	 * Degrees to radians.
+	 * ARG1: Value in degrees.
+	 */
+	DEG2RAD(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue arg = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(RMath.degToRad(arg.asDouble()));
+			return true;
+		}
+	}, 
+	
+	/**
+	 * Radians to degrees.
+	 * ARG1: Value in radians.
+	 */
+	RAD2DEG(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue arg = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(RMath.radToDeg(arg.asDouble()));
+			return true;
+		}
+	}, 
+	 
 	/**
 	 * Sine.
 	 * ARG: Number in Radians
@@ -114,6 +306,66 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 		{
 			ScriptValue arg1 = scriptInstance.popStackValue();
 			scriptInstance.pushStackValue(Math.cos(arg1.asDouble()));
+			return true;
+		}
+	},
+	
+	/**
+	 * Tangent.
+	 * ARG: Number in Radians
+	 */
+	TAN(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue arg1 = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(Math.tan(arg1.asDouble()));
+			return true;
+		}
+	},
+	
+	/**
+	 * Arc Sine.
+	 * ARG: Number in Radians
+	 */
+	ASIN(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue arg1 = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(Math.asin(arg1.asDouble()));
+			return true;
+		}
+	},
+	
+	/**
+	 * Arc Cosine.
+	 * ARG: Number in Radians
+	 */
+	ACOS(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue arg1 = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(Math.acos(arg1.asDouble()));
+			return true;
+		}
+	},
+	
+	/**
+	 * Arc Tangent.
+	 * ARG: Number in Radians
+	 */
+	ATAN(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue arg1 = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(Math.atan(arg1.asDouble()));
 			return true;
 		}
 	},
@@ -303,80 +555,6 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 					| ((int)(green.asDouble() * 255.0) & 0x0ff) << 8 
 					| ((int)(blue.asDouble() * 255.0) & 0x0ff);
 			scriptInstance.pushStackValue(argb);
-			return true;
-		}
-	},
-	
-	/**
-	 * Degrees to radians.
-	 * ARG1: Value in degrees.
-	 */
-	DEG2RAD(1)
-	{
-		@Override
-		public boolean execute(ScriptInstance scriptInstance)
-		{
-			ScriptValue arg = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(RMath.degToRad(arg.asDouble()));
-			return true;
-		}
-	},
-	
-	/**
-	 * Radians to degrees.
-	 * ARG1: Value in radians.
-	 */
-	RAD2DEG(1)
-	{
-		@Override
-		public boolean execute(ScriptInstance scriptInstance)
-		{
-			ScriptValue arg = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(RMath.radToDeg(arg.asDouble()));
-			return true;
-		}
-	},
-	
-	/**
-	 * Returns PI.
-	 */
-	PI(0)
-	{
-		@Override
-		public boolean execute(ScriptInstance scriptInstance)
-		{
-			scriptInstance.pushStackValue(Math.PI);
-			return true;
-		}
-	},
-	
-	/**
-	 * Returns Euler's constant.
-	 */
-	E(0)
-	{
-		@Override
-		public boolean execute(ScriptInstance scriptInstance)
-		{
-			scriptInstance.pushStackValue(Math.E);
-			return true;
-		}
-	},
-	
-	/**
-	 * Raises a number to another mathematical power.
-	 * Always returns a double.
-	 * ARG1: The number.
-	 * ARG2: The power.
-	 */
-	POW(2)
-	{
-		@Override
-		public boolean execute(ScriptInstance scriptInstance)
-		{
-			double power = scriptInstance.popStackValue().asDouble();
-			double value = scriptInstance.popStackValue().asDouble();
-			scriptInstance.pushStackValue(Math.pow(value, power));
 			return true;
 		}
 	},
@@ -656,7 +834,8 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	
 	/**
 	 * Sorts a list in-place.
-	 * Returns the list that was sorted (NOT a new copy!). 
+	 * Returns the list that was sorted (NOT a new copy!).
+	 * If this list contains discretely different elements,  
 	 * ARG1: The list to remove the item from. 
 	 */
 	LISTSORT(1)
@@ -671,23 +850,306 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 		}
 	},
 	
-	/*
-	 * LISTINDEX
-	 * LISTLASTINDEX
-	 * SETNEW
-	 * SETADD
-	 * SETREMOVE
-	 * SETCONTAINS
-	 * SETSEARCH
-	 * SETUNION
-	 * SETINTERSECT
-	 * SETXOR
-	 * SETDIFF
-	 * TODO: Finish these.
+	/**
+	 * Checks if a list contains a specific value.
+	 * Sequential search.
+	 * Return true if it contains the value, false if not.
+	 * ARG1: The list to look in. 
+	 * ARG2: The item to look for.
 	 */
-
-	;
+	LISTCONTAINS(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue item = scriptInstance.popStackValue();
+			ScriptValue list = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(list.contains(item));
+			return true;
+		}
+	},
 	
+	/**
+	 * Gets the index of a value in the list. 
+	 * Only finds list-typed items by reference.
+	 * If not found or not a list, this returns -1.
+	 * ARG1: The list to look in. 
+	 * ARG2: The item to look for.
+	 */
+	LISTINDEX(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue item = scriptInstance.popStackValue();
+			ScriptValue list = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(list.getIndexOf(item));
+			return true;
+		}
+	},
+	
+	/**
+	 * Creates a new set of items from a list, such that 
+	 * the contents of the list are discrete and sorted.
+	 * The object returned is a list, but its contents are now suitable for set operations.
+	 * ARG1: The list or value.
+	 */
+	SET(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			ScriptValue out = ScriptValue.createEmptyList();
+			if (value.isList())
+			{
+				for (int i = 0; i < value.size(); i++)
+					out.setAdd(value.getByIndex(i));
+			}
+			else
+			{
+				out.setAdd(value);
+			}
+			
+			scriptInstance.pushStackValue(out);
+			return true;
+		}
+	},
+	
+	/**
+	 * Adds a value to a list, expected to be set up like a set.
+	 * Returns true if value was added (and is not already in the list), false otherwise.
+	 * ARG1: The set (list).
+	 * ARG2: The value to add.
+	 */
+	SETADD(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			ScriptValue set = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(set.setAdd(value));
+			return true;
+		}
+	},
+	
+	/**
+	 * Removes a value from a list, expected to be set up like a set.
+	 * Returns true if value was removed, false otherwise.
+	 * ARG1: The set (list).
+	 * ARG2: The value to remove.
+	 */
+	SETREMOVE(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			ScriptValue set = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(set.setRemove(value));
+			return true;
+		}
+	},
+	
+	/**
+	 * Checks if a value exists in a list, expected to be set up like a set.
+	 * This is more performant than a list - search is binary search.
+	 * Returns true if value was removed, false otherwise.
+	 * ARG1: The set (list).
+	 * ARG2: The value to look for.
+	 */
+	SETCONTAINS(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			ScriptValue set = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(set.setContains(value));
+			return true;
+		}
+	},
+	
+	/**
+	 * Gets the index of a value in a list, expected to be set up like a set.
+	 * This is more performant than a list - search is binary search.
+	 * If not found or not a list, this returns -1.
+	 * ARG1: The set (list).
+	 * ARG2: The value to look for.
+	 */
+	SETSEARCH(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			ScriptValue set = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(set.setSearch(value));
+			return true;
+		}
+	},
+	
+	/**
+	 * Gets the union of two sets, returning a new set with values in both. 
+	 * Returns a new set.
+	 * ARG1: The first set (list).
+	 * ARG2: The second set (list).
+	 */
+	SETUNION(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue set2 = scriptInstance.popStackValue();
+			ScriptValue set1 = scriptInstance.popStackValue();
+			ScriptValue out = ScriptValue.createEmptyList();
+			
+			ScriptValue union1;
+			ScriptValue union2;
+			
+			if (set1.isList())
+				union1 = set1;
+			else
+				union1 = wrapList(set1);
+			
+			if (set2.isList())
+				union2 = set2;
+			else
+				union2 = wrapList(set2);
+
+			for (int i = 0; i < union1.size(); i++)
+				out.setAdd(union1.getByIndex(i));
+			for (int i = 0; i < union2.size(); i++)
+				out.setAdd(union2.getByIndex(i));
+			
+			scriptInstance.pushStackValue(out);
+			return true;
+		}
+	},
+	
+	/**
+	 * Gets the intersection of two sets, returning a new set with values in both. 
+	 * Returns a new set.
+	 * ARG1: The first set (list).
+	 * ARG2: The second set (list).
+	 */
+	SETINTERSECT(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue set2 = scriptInstance.popStackValue();
+			ScriptValue set1 = scriptInstance.popStackValue();
+			ScriptValue out = ScriptValue.createEmptyList();
+			
+			ScriptValue intersect1;
+			ScriptValue intersect2;
+			
+			if (set1.isList())
+				intersect1 = set1;
+			else
+				intersect1 = wrapList(set1);
+			
+			if (set2.isList())
+				intersect2 = set2;
+			else
+				intersect2 = wrapList(set2);
+
+			ScriptValue smallest = intersect1.size() < intersect2.size() ? intersect1 : intersect2;
+			ScriptValue largest = smallest == intersect1 ? intersect2 : intersect1;
+			
+			for (int i = 0; i < smallest.size(); i++)
+			{
+				ScriptValue sv = smallest.getByIndex(i);
+				if (largest.setContains(sv))
+					out.setAdd(sv);
+			}
+			
+			scriptInstance.pushStackValue(out);
+			return true;
+		}
+	},
+	
+	/**
+	 * Gets the xor of two sets, returning the union of both sets minus the intersection. 
+	 * Returns a new set.
+	 * ARG1: The first set (list).
+	 * ARG2: The second set (list).
+	 */
+	SETXOR(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue set2 = scriptInstance.popStackValue();
+			ScriptValue set1 = scriptInstance.popStackValue();
+
+			ScriptValue xor1;
+			ScriptValue xor2;
+			
+			if (set1.isList())
+				xor1 = set1;
+			else
+				xor1 = wrapList(set1);
+			
+			if (set2.isList())
+				xor2 = set2;
+			else
+				xor2 = wrapList(set2);
+
+			ScriptValue out = xor1.copy();
+			for (int i = 0; i < xor2.size(); i++)
+			{
+				ScriptValue sv = xor2.getByIndex(i);
+				if (out.setContains(sv))
+					out.setRemove(sv);
+				else
+					out.setAdd(sv);
+			}
+			
+			scriptInstance.pushStackValue(out);
+			return true;
+		}
+	},
+	
+	/**
+	 * Gets a new set that is the first set minus the values in the second set. 
+	 * Returns a new set.
+	 * ARG1: The first set (list).
+	 * ARG2: The second set (list).
+	 */
+	SETDIFF(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue set2 = scriptInstance.popStackValue();
+			ScriptValue set1 = scriptInstance.popStackValue();
+
+			ScriptValue diff1;
+			ScriptValue diff2;
+			
+			if (set1.isList())
+				diff1 = set1;
+			else
+				diff1 = wrapList(set1);
+			
+			if (set2.isList())
+				diff2 = set2;
+			else
+				diff2 = wrapList(set2);
+
+			ScriptValue out = diff1.copy();
+			for (int i = 0; i < diff2.size(); i++)
+				out.setRemove(diff2.getByIndex(i));
+			
+			scriptInstance.pushStackValue(out);
+			return true;
+		}
+	},
+	
+	;
 	
 	private final boolean isVoid;
 	private final int parameterCount;
@@ -731,4 +1193,12 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	@Override
 	public abstract boolean execute(ScriptInstance scriptInstance);
 
+	// wraps a single value into a list.
+	protected ScriptValue wrapList(ScriptValue sv)
+	{
+		ScriptValue out = ScriptValue.createEmptyList();
+		out.add(sv);
+		return out;
+	}
+	
 }
