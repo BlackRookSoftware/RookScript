@@ -195,7 +195,7 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	 * Returns the Natural Log (base e) of a value.
 	 * ARG1: The value.
 	 */
-	LOG(1)
+	LOGE(1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
