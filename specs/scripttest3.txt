@@ -1,0 +1,18 @@
+#!/usr/bin/env rookscript -i
+
+function double(x)
+{
+	return x * 2;
+}
+
+function factorial(x)
+{
+	if (x <= 0)
+		return 1;
+	return x*factorial(x-1);
+}
+
+main()
+{
+	(4)->double()->factorial()->double()->out();
+}

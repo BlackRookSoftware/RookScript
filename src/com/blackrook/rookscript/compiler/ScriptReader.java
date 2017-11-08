@@ -83,6 +83,13 @@ public final class ScriptReader
 	/** Label prefix. */
 	public static final String LABEL_SSOR_END = "ssor_end_";
 
+	/** Return false. */
+	private static final int PARSEFUNCTION_FALSE = 0;
+	/** Return true. */
+	private static final int PARSEFUNCTION_TRUE = 1;
+	/** Return true - void return. */
+	private static final int PARSEFUNCTION_TRUE_VOID = 2;
+	
 	/** The singular instance for the kernel. */
 	private static final SKernel KERNEL_INSTANCE = new SKernel();
 	/** The singular instance for the default includer. */
@@ -184,6 +191,7 @@ public final class ScriptReader
 		public static final int TYPE_COLON = 10;
 		public static final int TYPE_PERIOD = 11;
 		
+		public static final int TYPE_RIGHTARROW = 19;
 		public static final int TYPE_DASH = 20;
 		public static final int TYPE_PLUS = 21;
 		public static final int TYPE_STAR = 22;
@@ -260,6 +268,7 @@ public final class ScriptReader
 			addDelimiter(";", TYPE_SEMICOLON);
 			addDelimiter(":", TYPE_COLON);
 			addDelimiter("?", TYPE_QUESTIONMARK);
+			addDelimiter("->", TYPE_RIGHTARROW);
 
 			addDelimiter("+", TYPE_PLUS);
 			addDelimiter("-", TYPE_DASH);
@@ -936,7 +945,7 @@ public final class ScriptReader
 			
 			if (!matchType(SKernel.TYPE_RBRACE))
 			{
-				addErrorMessage("Expected \"}\" to close \"main\" body.");
+				addErrorMessage("Expected statement or \"}\" to close \"main\" body.");
 				return false;
 			}
 
@@ -1012,7 +1021,7 @@ public final class ScriptReader
 			// start statement list?
 			if (!matchType(SKernel.TYPE_LBRACE))
 			{
-				addErrorMessage("Expected \"{\" to start \"main\" body.");
+				addErrorMessage("Expected \"{\" to start \"function\" body.");
 				return false;
 			}
 			
@@ -1021,7 +1030,7 @@ public final class ScriptReader
 			
 			if (!matchType(SKernel.TYPE_RBRACE))
 			{
-				addErrorMessage("Expected \"}\" to close \"main\" body.");
+				addErrorMessage("Expected statement or \"}\" to close \"function\" body.");
 				return false;
 			}
 			
@@ -1097,7 +1106,7 @@ public final class ScriptReader
 			// start statement list?
 			if (!matchType(SKernel.TYPE_LBRACE))
 			{
-				addErrorMessage("Expected \"{\" to start \"main\" body.");
+				addErrorMessage("Expected \"{\" to start \"entry\" body.");
 				return false;
 			}
 			
@@ -1106,7 +1115,7 @@ public final class ScriptReader
 			
 			if (!matchType(SKernel.TYPE_RBRACE))
 			{
-				addErrorMessage("Expected \"}\" to close \"main\" body.");
+				addErrorMessage("Expected \"}\" to close \"entry\" body.");
 				return false;
 			}
 		
@@ -1296,6 +1305,25 @@ public final class ScriptReader
 				
 				return true;
 			}
+			else if (matchType(SKernel.TYPE_LPAREN))
+			{
+				if (!parseExpression())
+					return false;
+				
+				if (!matchType(SKernel.TYPE_RPAREN))
+				{
+					addErrorMessage("Expected ending \")\".");
+					return false;
+				}
+				
+				if (!matchType(SKernel.TYPE_RIGHTARROW))
+				{
+					addErrorMessage("Expected a valid statement - loose expressions need to be followed up with a partial application operator (\"->\") to become a statement.");
+					return false;
+				}
+				
+				return parsePartialChain(true);
+			}
 			else
 			{
 				addErrorMessage("Expected a valid statement.");
@@ -1316,49 +1344,24 @@ public final class ScriptReader
 			// function call.
 			if (matchType(SKernel.TYPE_LPAREN))
 			{
-				// test type of call: host function first, then local script function.
-				ScriptFunctionType functionType;
-				if ((functionType = hostFunctionResolver.getFunctionByName(identifierName)) != null)
-				{
-					if (!parseHostFunctionCall(functionType))
-						return false;
-						
-					if (!matchType(SKernel.TYPE_RPAREN))
-					{
-						addErrorMessage("Expected \")\" after a host function call's parameters.");
-						return false;
-					}
-					
-					emit(ScriptCommand.create(ScriptCommandType.CALL_HOST, identifierName));
-					
-					if (!functionType.isVoid())
-						emit(ScriptCommand.create(ScriptCommandType.POP));
-					
-					return true;
-				}
-				else if (functionMap.containsKey(identifierName))
-				{
-					int paramCount = functionMap.get(identifierName);
-					if (!parseFunctionCall(paramCount))
-						return false;
-						
-					if (!matchType(SKernel.TYPE_RPAREN))
-					{
-						addErrorMessage("Expected \")\" after a function call's parameters.");
-						return false;
-					}
-					
-					emit(ScriptCommand.create(ScriptCommandType.CALL, (Script.LABEL_FUNCTION_PREFIX + identifierName).toLowerCase()));
-					// local functions always return things. Must pop.
-					emit(ScriptCommand.create(ScriptCommandType.POP));
-					return true;
-				}
-				else
-				{
-					addErrorMessage("\"" + identifierName + "\" is not the name of a valid function call - not host or local.");
+				int funcret;
+				if ((funcret = parseFunction(identifierName, true, false)) == PARSEFUNCTION_FALSE)
 					return false;
+
+				if (funcret == PARSEFUNCTION_TRUE)
+				{
+					if (matchType(SKernel.TYPE_RIGHTARROW))
+					{
+						return parsePartialChain(true);
+					}
+					else
+					{
+						// local functions always return things. Must pop.
+						emit(ScriptCommand.create(ScriptCommandType.POP));
+					}
 				}
-				
+
+				return true;
 			}
 			// list index assignment.
 			else if (currentType(SKernel.TYPE_LBRACK))
@@ -1422,6 +1425,11 @@ public final class ScriptReader
 				
 				emit(ScriptCommand.create(ScriptCommandType.POP_VARIABLE, identifierName));
 				return true;
+			}
+			else if (matchType(SKernel.TYPE_RIGHTARROW))
+			{
+				emit(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, identifierName));
+				return parsePartialChain(true);
 			}
 			else
 			{
@@ -1634,6 +1642,14 @@ public final class ScriptReader
 						operatorStack.push(nextOperator);
 						lastWasValue = false;
 					}
+					// partial application operator
+					else if (matchType(SKernel.TYPE_RIGHTARROW))
+					{
+						if (!parsePartialChain(false))
+							return false;
+						
+						lastWasValue = true;
+					}
 					// logical and: short circuit
 					else if (matchType(SKernel.TYPE_DOUBLEAMPERSAND))
 					{
@@ -1784,47 +1800,8 @@ public final class ScriptReader
 						// function call?
 						if (matchType(SKernel.TYPE_LPAREN))
 						{
-							// test type of call: host function first, then local script function.
-							ScriptFunctionType functionType;
-							if ((functionType = hostFunctionResolver.getFunctionByName(lexeme)) != null)
-							{
-								if (functionType.isVoid())
-								{
-									addErrorMessage("Host function returns void - cannot be used in expressions.");
-									return false;
-								}
-								
-								if (!parseHostFunctionCall(functionType))
-									return false;
-									
-								if (!matchType(SKernel.TYPE_RPAREN))
-								{
-									addErrorMessage("Expected \")\" after a host function call's parameters.");
-									return false;
-								}
-								
-								emit(ScriptCommand.create(ScriptCommandType.CALL_HOST, lexeme));
-							}
-							else if (functionMap.containsKey(lexeme))
-							{
-								int paramCount = functionMap.get(lexeme);
-								if (!parseFunctionCall(paramCount))
-									return false;
-									
-								if (!matchType(SKernel.TYPE_RPAREN))
-								{
-									addErrorMessage("Expected \")\" after a function call's parameters.");
-									return false;
-								}
-								
-								emit(ScriptCommand.create(ScriptCommandType.CALL,  (Script.LABEL_FUNCTION_PREFIX + lexeme).toLowerCase()));
-							}
-							else
-							{
-								addErrorMessage("\"" + lexeme + "\" is not the name of a valid function call - not host or local.");
+							if (parseFunction(lexeme, false, false) == PARSEFUNCTION_FALSE)
 								return false;
-							}
-
 						}
 						// array resolution?
 						else if (currentType(SKernel.TYPE_LBRACK))
@@ -1889,6 +1866,55 @@ public final class ScriptReader
 			return true;
 		}
 
+		// parses a partial application chain.
+		private boolean parsePartialChain(boolean allowVoidFunction)
+		{
+			boolean sawVoid = false;
+			if (!currentType(SKernel.TYPE_IDENTIFIER))
+			{
+				addErrorMessage("Expected function call after partial operator.");
+				return false;
+			}
+
+			String functionName = currentToken().getLexeme();
+			nextToken();
+			
+			if (!matchType(SKernel.TYPE_LPAREN))
+			{
+				addErrorMessage("Expected function call after partial operator.");
+				return false;
+			}
+			
+			int funcret = parseFunction(functionName, allowVoidFunction, true);
+			if (funcret == PARSEFUNCTION_FALSE)
+				return false;
+			
+			if (funcret == PARSEFUNCTION_TRUE_VOID)
+				sawVoid = true;
+
+			if (currentType(SKernel.TYPE_RIGHTARROW))
+			{
+				if (sawVoid)
+				{
+					addErrorMessage("A statement that uses a partial applcation operator must terminate after a call that returns void.");
+					return false;
+				}
+				else
+				{
+					nextToken();
+					return parsePartialChain(allowVoidFunction);
+				}
+			}
+			
+			if (allowVoidFunction && !sawVoid)
+			{
+				// local functions always return things. Must pop.
+				emit(ScriptCommand.create(ScriptCommandType.POP));
+			}
+			
+			return true;
+		}
+
 		// Parses a literally defined list.
 		// 		[ .... , .... ]
 		private boolean parseListLiteral()
@@ -1916,6 +1942,57 @@ public final class ScriptReader
 			return true;
 		}
 
+		/*
+		 *  <Function> := "(" <Expression> ... ")"
+		 */
+		// Returns a trinary.
+		private int parseFunction(String lexeme, boolean statement, boolean partial)
+		{
+			// test type of call: host function first, then local script function.
+			ScriptFunctionType functionType;
+			if ((functionType = hostFunctionResolver.getFunctionByName(lexeme)) != null)
+			{
+				if (!statement && functionType.isVoid())
+				{
+					addErrorMessage("Host function returns void - cannot be used in expressions.");
+					return PARSEFUNCTION_FALSE;
+				}
+				
+				if (!parseHostFunctionCall(functionType, partial))
+					return PARSEFUNCTION_FALSE;
+					
+				if (!matchType(SKernel.TYPE_RPAREN))
+				{
+					addErrorMessage("Expected \")\" after a host function call's parameters.");
+					return PARSEFUNCTION_FALSE;
+				}
+				
+				emit(ScriptCommand.create(ScriptCommandType.CALL_HOST, lexeme));
+				return functionType.isVoid() ? PARSEFUNCTION_TRUE_VOID : PARSEFUNCTION_TRUE;
+			}
+			else if (functionMap.containsKey(lexeme))
+			{
+				int paramCount = functionMap.get(lexeme);
+				if (!parseFunctionCall(paramCount - (partial ? 1 : 0)))
+					return PARSEFUNCTION_FALSE;
+					
+				if (!matchType(SKernel.TYPE_RPAREN))
+				{
+					addErrorMessage("Expected \")\" after a function call's parameters.");
+					return PARSEFUNCTION_FALSE;
+				}
+				
+				emit(ScriptCommand.create(ScriptCommandType.CALL, (Script.LABEL_FUNCTION_PREFIX + lexeme).toLowerCase()));
+		
+				return PARSEFUNCTION_TRUE;
+			}
+			else
+			{
+				addErrorMessage("\"" + lexeme + "\" is not the name of a valid function call - not host or local.");
+				return PARSEFUNCTION_FALSE;
+			}
+		}
+
 		// Parses a function call.
 		// 		( .... , .... )
 		private boolean parseFunctionCall(int paramCount)
@@ -1929,7 +2006,7 @@ public final class ScriptReader
 				{
 					if (!matchType(SKernel.TYPE_COMMA))
 					{
-						addErrorMessage("Expected \",\" after a host function parameter.");
+						addErrorMessage("Expected \",\" after a function parameter.");
 						return false;
 					}
 				}
@@ -1940,9 +2017,9 @@ public final class ScriptReader
 
 		// Parses a host function call.
 		// 		( .... , .... )
-		private boolean parseHostFunctionCall(ScriptFunctionType functionType)
+		private boolean parseHostFunctionCall(ScriptFunctionType functionType, boolean partial)
 		{
-			int paramCount = functionType.getParameterCount();
+			int paramCount = functionType.getParameterCount() - (partial ? 1 : 0);
 			while (paramCount-- > 0)
 			{
 				if (!parseExpression())
@@ -2185,6 +2262,7 @@ public final class ScriptReader
 				case SKernel.TYPE_CONTINUE:
 				case SKernel.TYPE_RETURN:
 				case SKernel.TYPE_IDENTIFIER:
+				case SKernel.TYPE_LPAREN:
 					return true;
 			}
 		}
