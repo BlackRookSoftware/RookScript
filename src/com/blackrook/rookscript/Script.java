@@ -18,8 +18,6 @@ import com.blackrook.commons.hash.HashedQueueMap;
  */
 public class Script
 {
-	/** Command runaway. */
-	public static final int DEFAULT_COMMAND_RUNAWAY_LIMIT = 500000;
 	/** Function label prefix. */
 	public static final String LABEL_FUNCTION_PREFIX = "function_";
 	/** Script label prefix. */
@@ -53,8 +51,7 @@ public class Script
 		this.scriptLabelMap = new CaseInsensitiveHashMap<>();
 		this.labelMap = new HashMap<>();
 		this.indexMap = null;
-		
-		this.commandRunawayLimit = DEFAULT_COMMAND_RUNAWAY_LIMIT;
+		this.commandRunawayLimit = 0;
 	}
 	
 	/**
@@ -78,8 +75,8 @@ public class Script
 	/**
 	 * Sets the amount of commands that can be executed in one 
 	 * update before the runaway detection is triggered.
+	 * By default, this is 0, which means no detection.
 	 * @param commandRunawayLimit the amount of commands.
-	 * @see #DEFAULT_COMMAND_RUNAWAY_LIMIT
 	 */
 	public void setCommandRunawayLimit(int commandRunawayLimit)
 	{
@@ -89,8 +86,8 @@ public class Script
 	/**
 	 * Gets the amount of commands that can be executed in one 
 	 * update before the runaway detection is triggered.
+	 * By default, this is 0, which means no detection.
 	 * @return the amount of commands.
-	 * @see #DEFAULT_COMMAND_RUNAWAY_LIMIT
 	 */
 	public int getCommandRunawayLimit()
 	{

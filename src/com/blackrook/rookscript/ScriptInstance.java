@@ -49,6 +49,8 @@ public class ScriptInstance
 
 	/** Current script state. */
 	private State state;
+	/** Starting entry name. */
+	private String entryName;
 	/** Waiting type. */
 	private Object waitType;
 	/** Waiting parameter. */
@@ -71,17 +73,23 @@ public class ScriptInstance
 		this.waitHandler = waitHandler;
 		
 		this.state = State.CREATED;
+		this.entryName = null;
 		this.waitType = null;
 		this.waitParameter = null;
 		this.commandsExecuted = 0;
 	}
 	
 	/**
-	 * Resets the stack.
+	 * Resets the instance.
 	 */
 	public void reset()
 	{
 		scriptInstanceStack.reset();
+		state = State.CREATED;
+		entryName = null;
+		waitType = null;
+		waitParameter = null;
+		commandsExecuted = 0;
 	}
 
 	/**
@@ -99,6 +107,14 @@ public class ScriptInstance
 	public State getState()
 	{
 		return state;
+	}
+	
+	/**
+	 * @return the entry name that was used to start this script.
+	 */
+	public String getEntryName()
+	{
+		return entryName;
 	}
 	
 	/**
@@ -189,7 +205,8 @@ public class ScriptInstance
 				commandsExecuted = 0;
 				while (step())
 				{
-					if (++commandsExecuted > script.getCommandRunawayLimit())
+					commandsExecuted++;
+					if (script.getCommandRunawayLimit() > 0 && commandsExecuted > script.getCommandRunawayLimit())
 						throw new ScriptExecutionException("Script runaway triggered. Possible infinite loop. "+commandsExecuted+" commands executed.");
 				}
 				break;
