@@ -16,19 +16,20 @@ public interface ScriptWaitHandler
 {
 	/**
 	 * Called to determine if this waiting script can continue.
+	 * @param scriptInstance the script instance to test.
 	 * @param waitType the waiting type.
 	 * @param waitParameter the waiting type parameter.
 	 * @return true if this script can continue on in a RUNNING state, false if not.
 	 */
-	public boolean waitingScriptCanContinue(Object waitType, Object waitParameter);
+	public boolean waitingScriptCanContinue(ScriptInstance scriptInstance, Object waitType, Object waitParameter);
 	
 	/**
-	 * Called when {@link #waitingScriptCanContinue(Object, Object)} returns false,
+	 * Called when {@link #waitingScriptCanContinue(ScriptInstance, Object, Object)} returns false,
 	 * in case this script's waiting state needs updating.
 	 * @param scriptInstance the script instance to update.
 	 * @param waitType the current waiting type.
 	 * @param waitParameter the current waiting type parameter.
 	 */
-	public void waitingScriptUpdate(ScriptInstance scriptInstance, Object waitType, Object waitParameter); // if can't continue, calls this to update the script waiting params
+	public void waitingScriptUpdate(ScriptInstance scriptInstance, Object waitType, Object waitParameter);
 
 }

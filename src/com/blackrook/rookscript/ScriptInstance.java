@@ -218,7 +218,7 @@ public class ScriptInstance
 			{
 				if (waitHandler == null)
 					break;
-				if (!waitHandler.waitingScriptCanContinue(waitType, waitParameter))
+				if (!waitHandler.waitingScriptCanContinue(this, waitType, waitParameter))
 					waitHandler.waitingScriptUpdate(this, waitType, waitParameter);
 				break;
 			}
