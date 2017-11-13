@@ -93,4 +93,13 @@ public class ScriptInstanceFactory<H extends Object>
 		}
 	}
 	
+	/**
+	 * Gets how many stacks were created but not in use.
+	 * @return the amount of created stacks.
+	 */
+	public int getFreeStackCount()
+	{
+		return availableStacks.size();
+	}
+	
 }
