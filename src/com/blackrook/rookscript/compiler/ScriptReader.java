@@ -1657,9 +1657,9 @@ public final class ScriptReader
 						if (!expressionReduceAll(operatorStack, expressionValueCounter))
 							return false;
 						
-						String labeltrue = getNextLabel("ssand_true_");
-						String labelfalse = getNextLabel("ssand_false_");
-						String labelend = getNextLabel("ssand_end_");
+						String labeltrue = getNextLabel(LABEL_SSAND_TRUE);
+						String labelfalse = getNextLabel(LABEL_SSAND_FALSE);
+						String labelend = getNextLabel(LABEL_SSAND_END);
 						
 						emit(ScriptCommand.create(ScriptCommandType.JUMP_FALSE, labelfalse));
 						
@@ -1680,9 +1680,9 @@ public final class ScriptReader
 						if (!expressionReduceAll(operatorStack, expressionValueCounter))
 							return false;
 						
-						String labeltrue = getNextLabel("ssor_true_");
-						String labelfalse = getNextLabel("ssor_false_");
-						String labelend = getNextLabel("ssor_end_");
+						String labeltrue = getNextLabel(LABEL_SSOR_TRUE);
+						String labelfalse = getNextLabel(LABEL_SSOR_FALSE);
+						String labelend = getNextLabel(LABEL_SSOR_END);
 						
 						emit(ScriptCommand.create(ScriptCommandType.JUMP_TRUE, labeltrue));
 						
