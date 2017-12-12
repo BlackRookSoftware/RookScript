@@ -11,6 +11,7 @@ import com.blackrook.commons.ObjectPair;
 import com.blackrook.commons.hash.CaseInsensitiveHashMap;
 import com.blackrook.commons.hash.HashMap;
 import com.blackrook.commons.hash.HashedQueueMap;
+import com.blackrook.commons.list.List;
 
 /**
  * A compiled script.
@@ -28,7 +29,7 @@ public class Script
 	/** Script host function resolver. */
 	private ScriptFunctionResolver hostFunctionResolver;
 	/** List of script commands. */
-	private ScriptCommand[] commands;
+	private List<ScriptCommand> commands;
 
 	/** Script entry name map (name to index). */
 	private CaseInsensitiveHashMap<Entry> scriptLabelMap;
@@ -69,7 +70,9 @@ public class Script
 	 */
 	public void setCommands(ScriptCommand[] commands)
 	{
-		this.commands = commands;
+		this.commands = new List<>(commands.length, commands.length / 2);
+		for (ScriptCommand command : commands)
+			this.commands.add(command);
 	}
 
 	/**
@@ -161,7 +164,7 @@ public class Script
 	 */
 	public ScriptCommand getCommand(int index)
 	{
-		return index < 0 || index >= commands.length ? null : commands[index]; 
+		return index < 0 || index >= commands.size() ? null : commands.getByIndex(index); 
 	}
 	
 	/**
@@ -170,7 +173,17 @@ public class Script
 	 */
 	public int getCommandCount()
 	{
-		return commands.length;
+		return commands.size();
+	}
+	
+	/**
+	 * Adds a command directive to the script.
+	 * Be very careful with this!
+	 * @param command the command to add.
+	 */
+	public void addCommand(ScriptCommand command)
+	{
+		commands.add(command);
 	}
 	
 	/**
