@@ -16,14 +16,13 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import com.blackrook.commons.Common;
-import com.blackrook.commons.hash.CaseInsensitiveHashMap;
 import com.blackrook.commons.hash.CountMap;
-import com.blackrook.commons.linkedlist.Queue;
 import com.blackrook.commons.linkedlist.Stack;
 import com.blackrook.lang.CommonLexer;
 import com.blackrook.lang.CommonLexerKernel;
 import com.blackrook.lang.Parser;
 import com.blackrook.rookscript.Script;
+import com.blackrook.rookscript.Script.Entry;
 import com.blackrook.rookscript.ScriptCommand;
 import com.blackrook.rookscript.ScriptCommandType;
 import com.blackrook.rookscript.ScriptFunctionResolver;
@@ -95,12 +94,6 @@ public final class ScriptReader
 	/** The singular instance for the default includer. */
 	private static final ScriptReaderOptions DEFAULT_OPTIONS = new ScriptReaderOptions()
 	{
-		@Override
-		public boolean isOptimizing() 
-		{
-			return true;
-		}
-		
 		@Override
 		public String[] getDefines()
 		{
@@ -375,19 +368,13 @@ public final class ScriptReader
 	 */
 	private static class SParser extends Parser
 	{
-		/** The reader options. */
-		private ScriptReaderOptions options;
 		/** The resolver for host functions. */
 		private ScriptFunctionResolver hostFunctionResolver;
 
 		/** Current script. */
 		private Script currentScript;
-		/** Command list. */
-		private Queue<ScriptCommand> commandList;
 		/** Label counter map. */
 		private CountMap<String> labelCounter;
-		/** Map of local function declarations. */
-		private CaseInsensitiveHashMap<Integer> functionMap;
 		
 		// Creates the next parser.
 		private SParser(SLexer lexer, ScriptReaderOptions options, ScriptFunctionResolver hostFunctionResolver)
@@ -395,7 +382,6 @@ public final class ScriptReader
 			super(lexer);
 			for (String def : options.getDefines())
 				lexer.addDefineMacro(def);
-			this.options = options;
 			this.hostFunctionResolver = hostFunctionResolver;
 		}
 		
@@ -423,23 +409,29 @@ public final class ScriptReader
 		private int mark(String label)
 		{
 			int out;
-			currentScript.setIndex(label, out = commandList.size());
+			currentScript.setIndex(label, out = currentScript.getCommandCount());
 			return out;
 		}
 
 		/** Emits a command. */
 		private void emit(ScriptCommand command)
 		{
-			commandList.add(command);
+			currentScript.addCommand(command);
 		}
 		
 		// Starts the script parsing.
 		private Script readScript()
 		{
-			commandList = new Queue<>();
+			Script script = new Script();
+			readScript(script);
+			return script;
+		}
+		
+		// Starts the script parsing for an existing script.
+		private void readScript(Script existingScript)
+		{
+			currentScript = existingScript;
 			labelCounter = new CountMap<>();
-			currentScript = new Script();
-			functionMap = new CaseInsensitiveHashMap<>();
 
 			// prime first token.
 			nextToken();
@@ -470,20 +462,7 @@ public final class ScriptReader
 				}
 			}
 
-			ScriptCommand[] commands = new ScriptCommand[commandList.size()];
-			commandList.toArray(commands);
-			currentScript.setCommands(commands);
-			if (options.isOptimizing())
-			{
-				Script outScript = ScriptAssembler.optimize(currentScript);
-				outScript.setHostFunctionResolver(hostFunctionResolver);
-				return outScript;
-			}
-			else
-			{
-				currentScript.setHostFunctionResolver(hostFunctionResolver);
-				return currentScript;
-			}
+			currentScript.setHostFunctionResolver(hostFunctionResolver);
 		}
 		
 		// Parse a bunch of entries.
@@ -603,14 +582,14 @@ public final class ScriptReader
 			String name = currentToken().getLexeme();
 			nextToken();
 			
-			String label = getFunctionLabel(name);
-			if (currentScript.getIndex(label) >= 0)
+			if (currentScript.getFunctionEntry(name) != null)
 			{
 				addErrorMessage("The function entry \"" + name + "\" was already defined.");
 				return false;
 			}
 			
-			mark(label);
+			int index = currentScript.getCommandCount();
+			mark(getFunctionLabel(name));
 			
 			if (!matchType(SKernel.TYPE_LPAREN))
 			{
@@ -644,7 +623,7 @@ public final class ScriptReader
 				
 			}
 			
-			functionMap.put(name, paramAmount);
+			currentScript.setFunctionEntry(name, paramAmount, index);
 			
 			if (!matchType(SKernel.TYPE_RPAREN))
 			{
@@ -1584,6 +1563,7 @@ public final class ScriptReader
 		{
 			// test type of call: host function first, then local script function.
 			ScriptFunctionType functionType;
+			Entry functionEntry;
 			if ((functionType = hostFunctionResolver.getFunctionByName(lexeme)) != null)
 			{
 				if (!statement && functionType.isVoid())
@@ -1604,9 +1584,9 @@ public final class ScriptReader
 				emit(ScriptCommand.create(ScriptCommandType.CALL_HOST, lexeme));
 				return functionType.isVoid() ? PARSEFUNCTION_TRUE_VOID : PARSEFUNCTION_TRUE;
 			}
-			else if (functionMap.containsKey(lexeme))
+			else if ((functionEntry = currentScript.getFunctionEntry(lexeme)) != null)
 			{
-				int paramCount = functionMap.get(lexeme);
+				int paramCount = functionEntry.getParameterCount();
 				if (!parseFunctionCall(paramCount - (partial ? 1 : 0)))
 					return PARSEFUNCTION_FALSE;
 					
@@ -1616,7 +1596,7 @@ public final class ScriptReader
 					return PARSEFUNCTION_FALSE;
 				}
 				
-				emit(ScriptCommand.create(ScriptCommandType.CALL, (Script.LABEL_FUNCTION_PREFIX + lexeme).toLowerCase()));
+				emit(ScriptCommand.create(ScriptCommandType.CALL, (getFunctionLabel(lexeme)).toLowerCase()));
 		
 				return PARSEFUNCTION_TRUE;
 			}

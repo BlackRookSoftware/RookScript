@@ -15,12 +15,6 @@ package com.blackrook.rookscript.compiler;
 public interface ScriptReaderOptions 
 {
 	/**
-	 * Checks if this reader is supposed to optimize scripts after compile.
-	 * @return true if so, false if not.
-	 */
-	public boolean isOptimizing();
-	
-	/**
 	 * Gets what to predefine in the preprocessor.
 	 * This can affect what gets compiled and what doesn't.
 	 * Must not return null.

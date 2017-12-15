@@ -14,5 +14,5 @@ function factorial(x)
 
 main()
 {
-	(4)->double()->factorial()->double()->out();
+	(4)->double()->factorial()->double()->double()->double()->double()->double()->double()->double();
 }

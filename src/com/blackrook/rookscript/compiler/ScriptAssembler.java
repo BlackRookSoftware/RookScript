@@ -249,6 +249,12 @@ public final class ScriptAssembler
 					Entry e = script.getScriptEntry(name);
 					optimizedScript.setScriptEntry(name, e.getParameterCount(), targetIndex);
 				}
+				else if (label.startsWith(Script.LABEL_FUNCTION_PREFIX))
+				{
+					String name = label.substring(Script.LABEL_FUNCTION_PREFIX.length());
+					Entry e = script.getFunctionEntry(name);
+					optimizedScript.setFunctionEntry(name, e.getParameterCount(), targetIndex);
+				}
 			}
 			return true;
 		}

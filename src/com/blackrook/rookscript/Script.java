@@ -31,7 +31,9 @@ public class Script
 	/** List of script commands. */
 	private List<ScriptCommand> commands;
 
-	/** Script entry name map (name to index). */
+	/** Function name map (name to entry). */
+	private CaseInsensitiveHashMap<Entry> functionLabelMap;
+	/** Script entry name map (name to entry). */
 	private CaseInsensitiveHashMap<Entry> scriptLabelMap;
 	/** Label map (label to index). */
 	private HashMap<String, Integer> labelMap;
@@ -48,7 +50,8 @@ public class Script
 	public Script()
 	{
 		this.hostFunctionResolver = null;
-		this.commands = null;
+		this.commands = new List<>(256);
+		this.functionLabelMap = new CaseInsensitiveHashMap<>();
 		this.scriptLabelMap = new CaseInsensitiveHashMap<>();
 		this.labelMap = new HashMap<>();
 		this.indexMap = null;
@@ -104,9 +107,36 @@ public class Script
 	 * @param parameterCount the amount of parameters that this takes.
 	 * @param index the corresponding index.
 	 */
+	public void setFunctionEntry(String name, int parameterCount, int index)
+	{
+		functionLabelMap.put(name, new Entry(parameterCount, index));
+		setIndex(LABEL_FUNCTION_PREFIX + name, index);
+	}
+
+	/**
+	 * Gets the corresponding index for a subscript function name.
+	 * Entry names are case-insensitive.
+	 * @param name the name to look up.
+	 * @return the corresponding index or -1 if not found.
+	 */
+	public Entry getFunctionEntry(String name)
+	{
+		return functionLabelMap.get(name);
+	}
+
+	/**
+	 * Sets an index for a subscript entry name in the script.
+	 * Also sets the entry label index.
+	 * Entry names are case-insensitive.
+	 * @param name the name.
+	 * @param parameterCount the amount of parameters that this takes.
+	 * @param index the corresponding index.
+	 * @see #setIndex(String, int)
+	 */
 	public void setScriptEntry(String name, int parameterCount, int index)
 	{
 		scriptLabelMap.put(name, new Entry(parameterCount, index));
+		setIndex(LABEL_ENTRY_PREFIX + name, index);
 	}
 
 	/**

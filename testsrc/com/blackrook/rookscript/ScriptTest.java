@@ -27,6 +27,7 @@ public class ScriptTest
 		}
 		
 		Script script = ScriptReader.read(new File(fileName), ScriptCommonFunctions.getResolver());
+		script = ScriptAssembler.optimize(script);
 		ScriptAssembler.disassemble(script, new OutputStreamWriter(System.out));
 
 		ScriptInstanceStack stack = new ScriptInstanceStack(
@@ -34,8 +35,14 @@ public class ScriptTest
 			Common.parseInt(Common.arrayElement(args, 2), 512)
 		);
 		ScriptInstance instance = new ScriptInstance(script, stack, null, null);
-		instance.initialize();
-		instance.update();
+		
+		for (int i = 0; i < 10000; i++)
+		{
+			long nanos = System.nanoTime();
+			instance.initialize();
+			instance.update();
+			System.out.println((System.nanoTime() - nanos) + "ns");
+		}
 
 	}
 	
