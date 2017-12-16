@@ -38,47 +38,47 @@ public final class ScriptReader
 	public static final String STREAMNAME_TEXT = "[Text String]";
 	
 	/** Label prefix. */
-	public static final String LABEL_IF_CONDITIONAL = "if_cond_";
+	public static final String LABEL_IF_CONDITIONAL = "_if_cond_";
 	/** Label prefix. */
-	public static final String LABEL_IF_SUCCESS = "if_true_";
+	public static final String LABEL_IF_SUCCESS = "_if_true_";
 	/** Label prefix. */
-	public static final String LABEL_IF_FAILURE = "if_false_";
+	public static final String LABEL_IF_FAILURE = "_if_false_";
 	/** Label prefix. */
-	public static final String LABEL_IF_END = "if_end_";
+	public static final String LABEL_IF_END = "_if_end_";
 	/** Label prefix. */
-	public static final String LABEL_WHILE_CONDITIONAL = "while_cond_";
+	public static final String LABEL_WHILE_CONDITIONAL = "_while_cond_";
 	/** Label prefix. */
-	public static final String LABEL_WHILE_SUCCESS = "while_true_";
+	public static final String LABEL_WHILE_SUCCESS = "_while_true_";
 	/** Label prefix. */
-	public static final String LABEL_WHILE_END = "while_end_";
+	public static final String LABEL_WHILE_END = "_while_end_";
 	/** Label prefix. */
-	public static final String LABEL_FOR_INIT = "for_init_";
+	public static final String LABEL_FOR_INIT = "_for_init_";
 	/** Label prefix. */
-	public static final String LABEL_FOR_CONDITIONAL = "for_cond_";
+	public static final String LABEL_FOR_CONDITIONAL = "_for_cond_";
 	/** Label prefix. */
-	public static final String LABEL_FOR_STEP = "for_step_";
+	public static final String LABEL_FOR_STEP = "_for_step_";
 	/** Label prefix. */
-	public static final String LABEL_FOR_SUCCESS = "for_true_";
+	public static final String LABEL_FOR_SUCCESS = "_for_true_";
 	/** Label prefix. */
-	public static final String LABEL_FOR_END = "for_end_";
+	public static final String LABEL_FOR_END = "_for_end_";
 	/** Label prefix. */
-	public static final String LABEL_TERNARY_TRUE = "tern_true_";
+	public static final String LABEL_TERNARY_TRUE = "_tern_true_";
 	/** Label prefix. */
-	public static final String LABEL_TERNARY_FALSE = "tern_false_";
+	public static final String LABEL_TERNARY_FALSE = "_tern_false_";
 	/** Label prefix. */
-	public static final String LABEL_TERNARY_END = "tern_end_";
+	public static final String LABEL_TERNARY_END = "_tern_end_";
 	/** Label prefix. */
-	public static final String LABEL_SSAND_TRUE = "ssand_true_";
+	public static final String LABEL_SSAND_TRUE = "_ssand_true_";
 	/** Label prefix. */
-	public static final String LABEL_SSAND_FALSE = "ssand_false_";
+	public static final String LABEL_SSAND_FALSE = "_ssand_false_";
 	/** Label prefix. */
-	public static final String LABEL_SSAND_END = "ssand_end_";
+	public static final String LABEL_SSAND_END = "_ssand_end_";
 	/** Label prefix. */
-	public static final String LABEL_SSOR_TRUE = "ssor_true_";
+	public static final String LABEL_SSOR_TRUE = "_ssor_true_";
 	/** Label prefix. */
-	public static final String LABEL_SSOR_FALSE = "ssor_false_";
+	public static final String LABEL_SSOR_FALSE = "_ssor_false_";
 	/** Label prefix. */
-	public static final String LABEL_SSOR_END = "ssor_end_";
+	public static final String LABEL_SSOR_END = "_ssor_end_";
 
 	/** Return false. */
 	private static final int PARSEFUNCTION_FALSE = 0;
@@ -373,8 +373,6 @@ public final class ScriptReader
 
 		/** Current script. */
 		private Script currentScript;
-		/** Label counter map. */
-		private CountMap<String> labelCounter;
 		
 		// Creates the next parser.
 		private SParser(SLexer lexer, ScriptReaderOptions options, ScriptFunctionResolver hostFunctionResolver)
@@ -397,14 +395,6 @@ public final class ScriptReader
 			return Script.LABEL_ENTRY_PREFIX+name;
 		}
 
-		// Gets the next label for output.
-		private String getNextLabel(String prefix)
-		{
-			int i = labelCounter.getCount(prefix);
-			labelCounter.give(prefix);
-			return prefix+i;
-		}
-		
 		/** Marks a label on the current command. */
 		private int mark(String label)
 		{
@@ -431,7 +421,6 @@ public final class ScriptReader
 		private void readScript(Script existingScript)
 		{
 			currentScript = existingScript;
-			labelCounter = new CountMap<>();
 
 			// prime first token.
 			nextToken();
@@ -1060,10 +1049,10 @@ public final class ScriptReader
 				return false;
 			}
 		
-			String condLabel = getNextLabel(LABEL_IF_CONDITIONAL); 
-			String successLabel = getNextLabel(LABEL_IF_SUCCESS); 
-			String failLabel = getNextLabel(LABEL_IF_FAILURE); 
-			String endLabel = getNextLabel(LABEL_IF_END); 
+			String condLabel = currentScript.getNextGeneratedLabel(LABEL_IF_CONDITIONAL); 
+			String successLabel = currentScript.getNextGeneratedLabel(LABEL_IF_SUCCESS); 
+			String failLabel = currentScript.getNextGeneratedLabel(LABEL_IF_FAILURE); 
+			String endLabel = currentScript.getNextGeneratedLabel(LABEL_IF_END); 
 			
 			mark(condLabel);
 			if (!parseExpression())
@@ -1107,9 +1096,9 @@ public final class ScriptReader
 				return false;
 			}
 		
-			String condLabel = getNextLabel(LABEL_WHILE_CONDITIONAL); 
-			String successLabel = getNextLabel(LABEL_WHILE_SUCCESS); 
-			String endLabel = getNextLabel(LABEL_WHILE_END); 
+			String condLabel = currentScript.getNextGeneratedLabel(LABEL_WHILE_CONDITIONAL); 
+			String successLabel = currentScript.getNextGeneratedLabel(LABEL_WHILE_SUCCESS); 
+			String endLabel = currentScript.getNextGeneratedLabel(LABEL_WHILE_END); 
 			
 			mark(condLabel);
 			if (!parseExpression())
@@ -1142,11 +1131,11 @@ public final class ScriptReader
 				return false;
 			}
 
-			String initLabel = getNextLabel(LABEL_FOR_INIT); 
-			String condLabel = getNextLabel(LABEL_FOR_CONDITIONAL); 
-			String stepLabel = getNextLabel(LABEL_FOR_STEP); 
-			String successLabel = getNextLabel(LABEL_FOR_SUCCESS); 
-			String endLabel = getNextLabel(LABEL_FOR_END); 
+			String initLabel = currentScript.getNextGeneratedLabel(LABEL_FOR_INIT); 
+			String condLabel = currentScript.getNextGeneratedLabel(LABEL_FOR_CONDITIONAL); 
+			String stepLabel = currentScript.getNextGeneratedLabel(LABEL_FOR_STEP); 
+			String successLabel = currentScript.getNextGeneratedLabel(LABEL_FOR_SUCCESS); 
+			String endLabel = currentScript.getNextGeneratedLabel(LABEL_FOR_END); 
 			
 			mark(initLabel);
 			if (!parseStatementClause(null, null))
@@ -1270,9 +1259,9 @@ public final class ScriptReader
 						if (!expressionReduceAll(operatorStack, expressionValueCounter))
 							return false;
 						
-						String labeltrue = getNextLabel(LABEL_SSAND_TRUE);
-						String labelfalse = getNextLabel(LABEL_SSAND_FALSE);
-						String labelend = getNextLabel(LABEL_SSAND_END);
+						String labeltrue = currentScript.getNextGeneratedLabel(LABEL_SSAND_TRUE);
+						String labelfalse = currentScript.getNextGeneratedLabel(LABEL_SSAND_FALSE);
+						String labelend = currentScript.getNextGeneratedLabel(LABEL_SSAND_END);
 						
 						emit(ScriptCommand.create(ScriptCommandType.JUMP_FALSE, labelfalse));
 						
@@ -1293,9 +1282,9 @@ public final class ScriptReader
 						if (!expressionReduceAll(operatorStack, expressionValueCounter))
 							return false;
 						
-						String labeltrue = getNextLabel(LABEL_SSOR_TRUE);
-						String labelfalse = getNextLabel(LABEL_SSOR_FALSE);
-						String labelend = getNextLabel(LABEL_SSOR_END);
+						String labeltrue = currentScript.getNextGeneratedLabel(LABEL_SSOR_TRUE);
+						String labelfalse = currentScript.getNextGeneratedLabel(LABEL_SSOR_FALSE);
+						String labelend = currentScript.getNextGeneratedLabel(LABEL_SSOR_END);
 						
 						emit(ScriptCommand.create(ScriptCommandType.JUMP_TRUE, labeltrue));
 						
@@ -1317,9 +1306,10 @@ public final class ScriptReader
 						if (!expressionReduceAll(operatorStack, expressionValueCounter))
 							return false;
 						
-						String trueLabel = getNextLabel(LABEL_TERNARY_TRUE);
-						String falseLabel = getNextLabel(LABEL_TERNARY_FALSE);
-						String endLabel = getNextLabel(LABEL_TERNARY_END);
+						String trueLabel = currentScript.getNextGeneratedLabel(LABEL_TERNARY_TRUE);
+						String falseLabel = currentScript.getNextGeneratedLabel(LABEL_TERNARY_FALSE);
+						String endLabel = currentScript.getNextGeneratedLabel(LABEL_TERNARY_END);
+						
 						emit(ScriptCommand.create(ScriptCommandType.JUMP_FALSE, falseLabel));
 						
 						mark(trueLabel);

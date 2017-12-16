@@ -9,6 +9,7 @@ package com.blackrook.rookscript;
 
 import com.blackrook.commons.ObjectPair;
 import com.blackrook.commons.hash.CaseInsensitiveHashMap;
+import com.blackrook.commons.hash.CountMap;
 import com.blackrook.commons.hash.HashMap;
 import com.blackrook.commons.hash.HashedQueueMap;
 import com.blackrook.commons.list.List;
@@ -41,6 +42,8 @@ public class Script
 	/** Reverse lookup map (index to labels - for debug). Transient. */
 	private HashedQueueMap<Integer, String> indexMap;
 	
+	/** Label generator sequencer for generated labels. */
+	private CountMap<String> labelGeneratorCounter;
 	/** Pragma setting - runaway limit. */
 	private int commandRunawayLimit;
 	
@@ -55,6 +58,7 @@ public class Script
 		this.scriptLabelMap = new CaseInsensitiveHashMap<>();
 		this.labelMap = new HashMap<>();
 		this.indexMap = null;
+		this.labelGeneratorCounter = null;
 		this.commandRunawayLimit = 0;
 	}
 	
@@ -227,6 +231,56 @@ public class Script
 		indexMap = new HashedQueueMap<>();
 		for (ObjectPair<String, Integer> p : labelMap)
 			indexMap.enqueue(p.getValue(), p.getKey());
+	}
+	
+	/**
+	 * Generates the next label for a specific label prefix.
+	 * @param prefix the label prefix.
+	 * @return a new label to use.
+	 */
+	public String getNextGeneratedLabel(String prefix)
+	{
+		if (labelGeneratorCounter == null)
+			labelGeneratorCounter = new CountMap<>();
+		
+		int i = labelGeneratorCounter.getCount(prefix);
+		labelGeneratorCounter.give(prefix);
+		return prefix + i;
+	}
+	
+	/**
+	 * Returns the current generated label counter for a specific label prefix.
+	 * @param prefix the label prefix.
+	 * @return the current counter value.
+	 */
+	public int getNextGeneratedLabelNumber(String prefix)
+	{
+		if (labelGeneratorCounter == null)
+			return 0;
+		else
+			return labelGeneratorCounter.getCount(prefix);
+	}
+	
+	/**
+	 * @return the map that contains the generated label counters.
+	 */
+	CountMap<String> getLabelGeneratorCounter()
+	{
+		return labelGeneratorCounter;
+	}
+
+	/**
+	 * Sets the next generated label number for a label prefix.
+	 * @param prefix the label prefix.
+	 * @param count the next count.
+	 */
+	void setNextGeneratedLabelNumber(String prefix, int count)
+	{
+		if (labelGeneratorCounter == null)
+			labelGeneratorCounter = new CountMap<>();
+		
+		labelGeneratorCounter.takeAll(prefix);
+		labelGeneratorCounter.give(prefix, count);
 	}
 	
 	/**

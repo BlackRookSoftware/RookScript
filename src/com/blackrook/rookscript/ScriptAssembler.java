@@ -5,18 +5,16 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.compiler;
+package com.blackrook.rookscript;
 
 import java.io.IOException;
 import java.io.Writer;
 
 import com.blackrook.commons.Common;
+import com.blackrook.commons.ObjectPair;
 import com.blackrook.commons.linkedlist.Queue;
 import com.blackrook.commons.linkedlist.Stack;
-import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.Script.Entry;
-import com.blackrook.rookscript.ScriptCommand;
-import com.blackrook.rookscript.ScriptCommandType;
 import com.blackrook.rookscript.struct.ScriptValue;
 
 /**
@@ -48,8 +46,6 @@ public final class ScriptAssembler
 		dumpLineLabels(script, writer, commandCount);
 	}
 
-	
-	
 	// Dumps the line labels.
 	private static void dumpLineLabels(Script script, Writer out, int line) throws IOException
 	{
@@ -221,6 +217,9 @@ public final class ScriptAssembler
 		outCommands.toArray(optimizedCommands);
 		optimizedScript.setCommands(optimizedCommands);
 		optimizedScript.setHostFunctionResolver(script.getHostFunctionResolver());
+		optimizedScript.setCommandRunawayLimit(script.getCommandRunawayLimit());
+		if (script.getLabelGeneratorCounter() != null) for (ObjectPair<String, Integer> count : script.getLabelGeneratorCounter())
+			optimizedScript.setNextGeneratedLabelNumber(count.getKey(), count.getValue());
 		return optimizedScript;
 	}
 
@@ -231,8 +230,6 @@ public final class ScriptAssembler
 	{
 		return script.getLabelsAtIndex(index) != null;
 	}
-
-
 
 	// Emits a script's labels at a command index.
 	private static boolean optimizeEmitLabels(Script script, Script optimizedScript, int srcIndex, int targetIndex)

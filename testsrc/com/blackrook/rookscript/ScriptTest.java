@@ -7,7 +7,6 @@ import com.blackrook.commons.Common;
 import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.ScriptCommonFunctions;
 import com.blackrook.rookscript.ScriptInstance;
-import com.blackrook.rookscript.compiler.ScriptAssembler;
 import com.blackrook.rookscript.compiler.ScriptReader;
 import com.blackrook.rookscript.struct.ScriptInstanceStack;
 
