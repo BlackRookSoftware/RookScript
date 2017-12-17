@@ -16,7 +16,6 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import com.blackrook.commons.Common;
-import com.blackrook.commons.hash.CountMap;
 import com.blackrook.commons.linkedlist.Stack;
 import com.blackrook.lang.CommonLexer;
 import com.blackrook.lang.CommonLexerKernel;

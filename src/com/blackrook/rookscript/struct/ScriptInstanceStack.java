@@ -15,6 +15,13 @@ import com.blackrook.rookscript.exception.ScriptStackException;
  */
 public class ScriptInstanceStack
 {
+	/** Expansion Policy Macro - Double Length. */
+	public static final int EXPANSION_POLICY_DOUBLE = -1;
+	/** Expansion Policy Macro - Never expand. */
+	public static final int EXPANSION_POLICY_NEVER = 0;
+
+	// TODO: Add stack expansion policies.
+	
 	/** Script value stack. */
 	private ScriptValue[] scriptValueStack;
 	/** Script value stack top. */
