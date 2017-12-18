@@ -5,9 +5,11 @@ import java.io.OutputStreamWriter;
 
 import com.blackrook.commons.Common;
 import com.blackrook.rookscript.Script;
-import com.blackrook.rookscript.ScriptCommonFunctions;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.compiler.ScriptReader;
+import com.blackrook.rookscript.functions.MathFunctions;
+import com.blackrook.rookscript.functions.StandardIOFunctions;
+import com.blackrook.rookscript.resolver.MultiResolver;
 import com.blackrook.rookscript.struct.ScriptInstanceStack;
 
 public class ScriptTest
@@ -25,7 +27,11 @@ public class ScriptTest
 			return;
 		}
 		
-		Script script = ScriptReader.read(new File(fileName), ScriptCommonFunctions.getResolver());
+		Script script = ScriptReader.read(new File(fileName), new MultiResolver(
+			ScriptCommonFunctions.getResolver(), 
+			StandardIOFunctions.getResolver(),
+			MathFunctions.getResolver()
+		));
 		script = ScriptAssembler.optimize(script);
 		ScriptAssembler.disassemble(script, new OutputStreamWriter(System.out));
 

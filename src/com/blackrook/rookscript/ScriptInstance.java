@@ -464,7 +464,7 @@ public class ScriptInstance
 	 */
 	public ScriptValue getStackValue(int depth)
 	{
-		return scriptInstanceStack.popStackValue();
+		return scriptInstanceStack.getStackValue(depth);
 	}
 
 	/**
