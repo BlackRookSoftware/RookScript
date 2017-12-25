@@ -57,6 +57,18 @@ public class ScriptInstance
 	private Object waitParameter;
 	/** Commands executed per slice. */
 	private int commandsExecuted;	
+
+	
+	/**
+	 * Creates a new script instance, no wait handler.
+	 * @param script the script that holds the code.
+	 * @param scriptInstanceStack the instance stack. 
+	 * @param hostInterface the host interface object for host calls.
+	 */
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, Object hostInterface)
+	{
+		this(script, scriptInstanceStack, null, hostInterface);
+	}
 	
 	/**
 	 * Creates a new script instance.
