@@ -88,8 +88,13 @@ public enum ScriptCommandType
 			ScriptFunctionType functionType = resolver.getFunctionByName(name);
 			if (functionType == null)
 				throw new ScriptExecutionException("host function "+name+" could not be resolved");
-			
-			return functionType.execute(scriptInstance);
+			try {
+				return functionType.execute(scriptInstance);
+			} catch (ScriptExecutionException e) {
+				throw e;
+			} catch (Throwable t) {
+				throw new ScriptExecutionException("host function "+name+" threw an exception.", t);
+			}
 		}
 	},
 	

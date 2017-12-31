@@ -7,6 +7,8 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
+import com.blackrook.rookscript.exception.ScriptExecutionException;
+
 /**
  * Host function type for scripts.
  * @author Matthew Tropiano
@@ -38,6 +40,8 @@ public interface ScriptFunctionType
 	
 	/**
 	 * Executes this function.
+	 * If a {@link Throwable} is thrown from this call, it is wrapped in a {@link ScriptExecutionException}.
+	 * {@link ScriptExecutionException}s are thrown as-is.
 	 * @param scriptInstance the originating script instance.
 	 * @return if false, this halts script execution, else if true, continue.
 	 */
