@@ -5,11 +5,14 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript;
+package com.blackrook.rookscript.functions;
 
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import com.blackrook.rookscript.ScriptFunctionResolver;
+import com.blackrook.rookscript.ScriptFunctionType;
+import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.resolver.EnumResolver;
 import com.blackrook.rookscript.struct.ScriptValue;
 
@@ -17,7 +20,7 @@ import com.blackrook.rookscript.struct.ScriptValue;
  * Script common functions that work for all scripts.
  * @author Matthew Tropiano
  */
-public enum ScriptCommonFunctions implements ScriptFunctionType
+public enum CommonFunctions implements ScriptFunctionType
 {	
 	/**
 	 * Returns the "length" of a value.
@@ -613,12 +616,12 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	
 	private final boolean isVoid;
 	private final int parameterCount;
-	private ScriptCommonFunctions(int parameterCount)
+	private CommonFunctions(int parameterCount)
 	{
 		this(false, parameterCount);
 	}
 	
-	private ScriptCommonFunctions(boolean isVoid, int parameterCount)
+	private CommonFunctions(boolean isVoid, int parameterCount)
 	{
 		this.isVoid = isVoid;
 		this.parameterCount = parameterCount;
@@ -629,7 +632,7 @@ public enum ScriptCommonFunctions implements ScriptFunctionType
 	 */
 	public static final ScriptFunctionResolver getResolver()
 	{
-		return new EnumResolver(ScriptCommonFunctions.values());
+		return new EnumResolver(CommonFunctions.values());
 	}
 
 	@Override

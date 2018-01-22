@@ -2,9 +2,6 @@ package com.blackrook.rookscript;
 
 import java.io.File;
 
-import com.blackrook.commons.math.Pair;
-import com.blackrook.commons.math.PairGroup;
-import com.blackrook.commons.math.geometry.Point3D;
 import com.blackrook.rookscript.ScriptFunctionType.Usage;
 import com.blackrook.rookscript.resolver.ClassFieldFunctionResolver;
 

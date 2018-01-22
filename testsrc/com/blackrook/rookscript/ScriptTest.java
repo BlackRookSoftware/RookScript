@@ -8,6 +8,7 @@ import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.compiler.ScriptReader;
 import com.blackrook.rookscript.functions.MathFunctions;
+import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
 import com.blackrook.rookscript.resolver.MultiResolver;
 import com.blackrook.rookscript.struct.ScriptInstanceStack;
@@ -28,7 +29,7 @@ public class ScriptTest
 		}
 		
 		Script script = ScriptReader.read(new File(fileName), new MultiResolver(
-			ScriptCommonFunctions.getResolver(), 
+			CommonFunctions.getResolver(), 
 			StandardIOFunctions.getResolver(),
 			MathFunctions.getResolver()
 		));
