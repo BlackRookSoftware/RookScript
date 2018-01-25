@@ -461,7 +461,7 @@ public enum MathFunctions implements ScriptFunctionType
 			ScriptValue arg2 = scriptInstance.popStackValue();
 			ScriptValue arg1 = scriptInstance.popStackValue();
 			try {
-				scriptInstance.pushStackValue(Integer.parseInt(arg1.asString(), arg2.isFalse() ? 10 : arg2.asInt()));
+				scriptInstance.pushStackValue(Integer.parseInt(arg1.asString(), arg2.isNull() ? 10 : arg2.asInt()));
 				return true;
 			} catch (NumberFormatException e) {
 				scriptInstance.pushStackValue(Double.NaN);
@@ -568,7 +568,7 @@ public enum MathFunctions implements ScriptFunctionType
 	protected ScriptValue wrapList(ScriptValue sv)
 	{
 		ScriptValue out = ScriptValue.createEmptyList();
-		out.add(sv);
+		out.listAdd(sv);
 		return out;
 	}
 	

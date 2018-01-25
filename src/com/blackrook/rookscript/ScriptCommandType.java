@@ -304,7 +304,7 @@ public enum ScriptCommandType
 				return true;
 			}
 			
-			scriptInstance.pushStackValue(listValue.getByIndex(index));
+			scriptInstance.pushStackValue(listValue.listGetByIndex(index));
 			return true;
 		}
 	},
@@ -331,7 +331,7 @@ public enum ScriptCommandType
 				return true;
 			}
 			
-			scriptInstance.pushStackValue(listValue.getByIndex(index));
+			scriptInstance.pushStackValue(listValue.listGetByIndex(index));
 			return true;
 		}
 	},
@@ -383,7 +383,7 @@ public enum ScriptCommandType
 			if (!listValue.isList())
 				return true;
 			
-			listValue.setByIndex(index, value);
+			listValue.listSetByIndex(index, value);
 			return true;
 		}
 	},

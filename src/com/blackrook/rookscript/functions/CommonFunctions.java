@@ -30,6 +30,24 @@ public enum CommonFunctions implements ScriptFunctionType
 	 * Lists: list length.
 	 * Others: 1
 	 */
+	TYPEOF(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			scriptInstance.pushStackValue(scriptInstance.popStackValue().getTypeName());
+			return true;
+		}
+	},
+
+	/**
+	 * Returns the "length" of a value.
+	 * ARG1: The value. 
+	 * 
+	 * Strings: string length.
+	 * Lists: list length.
+	 * Others: 1
+	 */
 	LENGTH(1)
 	{
 		@Override
@@ -39,7 +57,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			if (value.isString())
 				scriptInstance.pushStackValue(value.asString().length());
 			else
-				scriptInstance.pushStackValue(value.size());
+				scriptInstance.pushStackValue(value.length());
 			return true;
 		}
 	},
@@ -232,7 +250,7 @@ public enum CommonFunctions implements ScriptFunctionType
 		{
 			ScriptValue item = scriptInstance.popStackValue();
 			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.add(item));
+			scriptInstance.pushStackValue(list.listAdd(item));
 			return true;
 		}
 	},
@@ -252,7 +270,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			int index = scriptInstance.popStackValue().asInt();
 			ScriptValue item = scriptInstance.popStackValue();
 			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.addAt(index, item));
+			scriptInstance.pushStackValue(list.listAddAt(index, item));
 			return true;
 		}
 	},
@@ -271,7 +289,7 @@ public enum CommonFunctions implements ScriptFunctionType
 		{
 			ScriptValue item = scriptInstance.popStackValue();
 			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.remove(item));
+			scriptInstance.pushStackValue(list.listRemove(item));
 			return true;
 		}
 	},
@@ -290,7 +308,7 @@ public enum CommonFunctions implements ScriptFunctionType
 		{
 			int index = scriptInstance.popStackValue().asInt();
 			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.removeAt(index));
+			scriptInstance.pushStackValue(list.listRemoveAt(index));
 			return true;
 		}
 	},
@@ -327,7 +345,7 @@ public enum CommonFunctions implements ScriptFunctionType
 		{
 			ScriptValue item = scriptInstance.popStackValue();
 			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.contains(item));
+			scriptInstance.pushStackValue(list.listContains(item));
 			return true;
 		}
 	},
@@ -346,7 +364,7 @@ public enum CommonFunctions implements ScriptFunctionType
 		{
 			ScriptValue item = scriptInstance.popStackValue();
 			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.getIndexOf(item));
+			scriptInstance.pushStackValue(list.listGetIndexOf(item));
 			return true;
 		}
 	},
@@ -366,8 +384,8 @@ public enum CommonFunctions implements ScriptFunctionType
 			ScriptValue out = ScriptValue.createEmptyList();
 			if (value.isList())
 			{
-				for (int i = 0; i < value.size(); i++)
-					out.setAdd(value.getByIndex(i));
+				for (int i = 0; i < value.length(); i++)
+					out.setAdd(value.listGetByIndex(i));
 			}
 			else
 			{
@@ -481,10 +499,10 @@ public enum CommonFunctions implements ScriptFunctionType
 			else
 				union2 = wrapList(set2);
 
-			for (int i = 0; i < union1.size(); i++)
-				out.setAdd(union1.getByIndex(i));
-			for (int i = 0; i < union2.size(); i++)
-				out.setAdd(union2.getByIndex(i));
+			for (int i = 0; i < union1.length(); i++)
+				out.setAdd(union1.listGetByIndex(i));
+			for (int i = 0; i < union2.length(); i++)
+				out.setAdd(union2.listGetByIndex(i));
 			
 			scriptInstance.pushStackValue(out);
 			return true;
@@ -519,12 +537,12 @@ public enum CommonFunctions implements ScriptFunctionType
 			else
 				intersect2 = wrapList(set2);
 
-			ScriptValue smallest = intersect1.size() < intersect2.size() ? intersect1 : intersect2;
+			ScriptValue smallest = intersect1.length() < intersect2.length() ? intersect1 : intersect2;
 			ScriptValue largest = smallest == intersect1 ? intersect2 : intersect1;
 			
-			for (int i = 0; i < smallest.size(); i++)
+			for (int i = 0; i < smallest.length(); i++)
 			{
-				ScriptValue sv = smallest.getByIndex(i);
+				ScriptValue sv = smallest.listGetByIndex(i);
 				if (largest.setContains(sv))
 					out.setAdd(sv);
 			}
@@ -562,9 +580,9 @@ public enum CommonFunctions implements ScriptFunctionType
 				xor2 = wrapList(set2);
 
 			ScriptValue out = xor1.copy();
-			for (int i = 0; i < xor2.size(); i++)
+			for (int i = 0; i < xor2.length(); i++)
 			{
-				ScriptValue sv = xor2.getByIndex(i);
+				ScriptValue sv = xor2.listGetByIndex(i);
 				if (out.setContains(sv))
 					out.setRemove(sv);
 				else
@@ -604,8 +622,8 @@ public enum CommonFunctions implements ScriptFunctionType
 				diff2 = wrapList(set2);
 
 			ScriptValue out = diff1.copy();
-			for (int i = 0; i < diff2.size(); i++)
-				out.setRemove(diff2.getByIndex(i));
+			for (int i = 0; i < diff2.length(); i++)
+				out.setRemove(diff2.listGetByIndex(i));
 			
 			scriptInstance.pushStackValue(out);
 			return true;
@@ -660,7 +678,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	protected ScriptValue wrapList(ScriptValue sv)
 	{
 		ScriptValue out = ScriptValue.createEmptyList();
-		out.add(sv);
+		out.listAdd(sv);
 		return out;
 	}
 	

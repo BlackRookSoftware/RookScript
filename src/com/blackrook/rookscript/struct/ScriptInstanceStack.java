@@ -137,7 +137,7 @@ public class ScriptInstanceStack
 	 * @param name the name of the variable.
 	 * @param value the value to set.
 	 */
-	public void setValue(String name, Object value)
+	public <T> void setValue(String name, T value)
 	{
 		ScriptValue sv = getValue(name);
 		if (sv != null)
@@ -239,7 +239,7 @@ public class ScriptInstanceStack
 	 * @param value the value to push.
 	 * @throws ScriptStackException if this call would breach the stack capacity. 
 	 */
-	public void pushStackValue(Object value)
+	public <T> void pushStackValue(T value)
 	{
 		if (scriptValueStackTop + 1 >= scriptValueStack.length)
 			throw new ScriptStackException("value stack overflow");

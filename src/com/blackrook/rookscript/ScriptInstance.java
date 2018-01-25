@@ -364,7 +364,7 @@ public class ScriptInstance
 	 * @param name the name of the variable.
 	 * @param value the value to set.
 	 */
-	public void setValue(String name, Object value)
+	public <T> void setValue(String name, T value)
 	{
 		scriptInstanceStack.setValue(name, value);
 	}
@@ -453,7 +453,7 @@ public class ScriptInstance
 	 * @param value the value to push.
 	 * @throws ScriptStackException if this call would breach the stack capacity. 
 	 */
-	public void pushStackValue(Object value)
+	public <T> void pushStackValue(T value)
 	{
 		scriptInstanceStack.pushStackValue(value);
 	}

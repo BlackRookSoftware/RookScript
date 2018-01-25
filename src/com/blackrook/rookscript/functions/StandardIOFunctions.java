@@ -92,7 +92,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	protected ScriptValue wrapList(ScriptValue sv)
 	{
 		ScriptValue out = ScriptValue.createEmptyList();
-		out.add(sv);
+		out.listAdd(sv);
 		return out;
 	}
 	
