@@ -194,10 +194,15 @@ public class ScriptInstance
 			
 		pushFrame(entry.getIndex());
 		
-		if (entry.getParameterCount() != parameters.length)
-			throw new ScriptExecutionException("Attempt to initialize script with mismatched parameter amount. Need "+entry.getParameterCount()+", saw "+parameters.length);
+		int entryParamCount = entry.getParameterCount();
+		if (parameters.length > entryParamCount)
+			throw new ScriptExecutionException("Attempt to initialize script with too many parameters. Requires "+entry.getParameterCount()+", saw "+parameters.length);
+		
+		int leftover = entryParamCount - parameters.length;
 		for (int i = 0; i < parameters.length; i++)
 			pushStackValue(parameters[i]);
+		while (leftover-- > 0)
+			pushStackValue(null);
 	}
 	
 	/**
