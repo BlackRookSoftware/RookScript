@@ -26,6 +26,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 {
 	public static enum Type
 	{
+		NULL,
 		BOOLEAN,
 		INTEGER,
 		FLOAT,
@@ -97,7 +98,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public void setNull()
 	{
-		this.type = Type.OBJECT;
+		this.type = Type.NULL;
 		this.ref = null;
 		this.rawbits = 0L;
 	}
@@ -601,7 +602,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public boolean isNull()
 	{
-		return type == Type.OBJECT && ref == null;
+		return type == Type.NULL && ref == null;
 	}
 
 	/**
@@ -658,6 +659,8 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public boolean asBoolean()
 	{
+		if (isNull())
+			return false;
 		switch (type)
 		{
 			default:
@@ -730,12 +733,15 @@ public class ScriptValue implements Comparable<ScriptValue>
 
 	/**
 	 * Gets this value as a long integer.
-	 * If this is a boolean type, this return <code>-1L</code>.
+	 * If this is a boolean type, this returns <code>-1L</code>.
 	 * If this is a double type, this is cast to a long.
+	 * If this is null (see {@link #isNull()}), this returns <code>0</code>. 
 	 * @return the long value of this value.
 	 */
 	public long asLong()
 	{
+		if (isNull())
+			return 0L;
 		switch (type)
 		{
 			default:
@@ -755,11 +761,14 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * Gets this value as a double-precision float.
 	 * If this is a boolean type, this returns <code>1.0</code>.
 	 * If this is a long type, this is cast to a double.
+	 * If this is null (see {@link #isNull()}), this returns <code>0.0</code>. 
 	 * If anything else, this returns {@link Double#NaN}.
 	 * @return the double value of this value.
 	 */
 	public double asDouble()
 	{
+		if (isNull())
+			return 0.0;
 		switch (type)
 		{
 			default:
@@ -777,13 +786,17 @@ public class ScriptValue implements Comparable<ScriptValue>
 	
 	/**
 	 * Gets this value as a string.
+	 * If this is null (see {@link #isNull()}), this returns <code>"null"</code>. 
 	 * @return the string value of this value.
 	 */
 	public String asString()
 	{
+		if (isNull())
+			return "null";
 		switch (type)
 		{
 			default:
+			case OBJECT:
 			case LIST:
 				return Reflect.isArray(ref) ? Arrays.toString((Object[])ref) : String.valueOf(ref);
 			case BOOLEAN:
@@ -840,11 +853,14 @@ public class ScriptValue implements Comparable<ScriptValue>
 	
 	/**
 	 * Checks if this script value can be cast to the target type.
+	 * If this is null (see {@link #isNull()}), this returns <code>false</code>. 
 	 * @param targetType the type to test.
 	 * @return if the underlying object can be cast to the target type.
 	 */
 	public boolean isObjectType(Class<?> targetType)
 	{
+		if (isNull())
+			return false;
 		switch (type)
 		{
 			default:
@@ -919,6 +935,29 @@ public class ScriptValue implements Comparable<ScriptValue>
 		{
 			default:
 				throw new IllegalArgumentException("Cannot convert current type "+type);
+				
+			case NULL:
+			{
+				switch (newType)
+				{
+					default:
+						throw new IllegalArgumentException("Cannot convert "+type+" to type "+newType);
+					case NULL:
+						return;
+					case BOOLEAN:
+						set(asBoolean());
+						return;
+					case INTEGER:
+						set(asLong());
+						return;
+					case FLOAT:
+						set(asFloat());
+						return;
+					case STRING:
+						set(asString());
+						return;
+				}
+			}
 
 			case BOOLEAN:
 			{
@@ -1054,8 +1093,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	@Override
 	public int compareTo(ScriptValue o)
 	{
-		if (type == Type.OBJECT || o.type == Type.OBJECT)
-			return ref == o.ref ? 0 : -1;
+		if (type == Type.NULL)
+			return o.type != Type.NULL ? -1 : 0;
+		else if (o.type == Type.NULL)
+			return 1;
+		else if (type == Type.OBJECT || o.type == Type.OBJECT)
+			return ref.equals(o.ref) ? 0 : -1;
 		else if (type == Type.LIST || o.type == Type.LIST)
 			return ref == o.ref ? 0 : -1;
 		else if (type == Type.STRING || o.type == Type.STRING)
@@ -1201,12 +1244,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void add(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-		{
-			out.setNull();
-			return;
-		}
-
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1240,12 +1277,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void subtract(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-		{
-			out.setNull();
-			return;
-		}
-
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1277,12 +1308,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void multiply(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-		{
-			out.setNull();
-			return;
-		}
-
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1313,12 +1338,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void divide(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-		{
-			out.setNull();
-			return;
-		}
-
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1353,12 +1372,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void modulo(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-		{
-			out.setNull();
-			return;
-		}
-
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1393,12 +1406,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void and(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-		{
-			out.setNull();
-			return;
-		}
-
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1427,12 +1434,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void or(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-		{
-			out.setNull();
-			return;
-		}
-
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1461,12 +1462,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void xor(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-		{
-			out.setNull();
-			return;
-		}
-
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1495,10 +1490,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void logicalAnd(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-			out.setNull();
-		else
-			out.set(operand.asBoolean() && operand2.asBoolean());
+		out.set(operand.asBoolean() && operand2.asBoolean());
 	}
 
 	/**
@@ -1509,10 +1501,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void logicalOr(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-			out.setNull();
-		else
-			out.set(operand.asBoolean() || operand2.asBoolean());
+		out.set(operand.asBoolean() || operand2.asBoolean());
 	}
 
 	/**
@@ -1523,9 +1512,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void leftShift(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-			out.setNull();
-		else switch (operand.type)
+		switch (operand.type)
 		{
 			default:
 				out.set(Double.NaN);
@@ -1550,9 +1537,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void rightShift(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-			out.setNull();
-		else switch (operand.type)
+		switch (operand.type)
 		{
 			default:
 				out.set(Double.NaN);
@@ -1577,9 +1562,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void rightShiftPadded(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-			out.setNull();
-		else switch (operand.type)
+		switch (operand.type)
 		{
 			default:
 				out.set(Double.NaN);
@@ -1604,10 +1587,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void less(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-			out.set(false);
-		else 
-			out.set(operand.compareTo(operand2) < 0);
+		out.set(operand.compareTo(operand2) < 0);
 	}
 
 	/**
@@ -1618,10 +1598,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void lessOrEqual(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-			out.set(false);
-		else 
-			out.set(operand.compareTo(operand2) <= 0);
+		out.set(operand.compareTo(operand2) <= 0);
 	}
 
 	/**
@@ -1632,10 +1609,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void greater(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-			out.set(false);
-		else 
-			out.set(operand.compareTo(operand2) > 0);
+		out.set(operand.compareTo(operand2) > 0);
 	}
 
 	/**
@@ -1646,10 +1620,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void greaterOrEqual(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (operand.isNull() || operand2.isNull())
-			out.set(false);
-		else 
-			out.set(operand.compareTo(operand2) >= 0);
+		out.set(operand.compareTo(operand2) >= 0);
 	}
 
 	/**

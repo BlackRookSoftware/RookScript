@@ -85,7 +85,10 @@ public final class ScriptReader
 	private static final int PARSEFUNCTION_TRUE = 1;
 	/** Return true - void return. */
 	private static final int PARSEFUNCTION_TRUE_VOID = 2;
-	
+
+	/** Return false. */
+	private static final int PARSEFUNCTIONCALL_FALSE = -1;
+
 	/** The singular instance for the kernel. */
 	private static final SKernel KERNEL_INSTANCE = new SKernel();
 	/** The singular instance for the default includer. */
@@ -220,23 +223,24 @@ public final class ScriptReader
 		public static final int TYPE_TRIPLEGREATEREQUALS = 78;
 		public static final int TYPE_DOUBLELESSEQUALS = 79;
 
-		public static final int TYPE_TRUE = 100;
-		public static final int TYPE_FALSE = 101;
-		public static final int TYPE_LBRACE = 102;
-		public static final int TYPE_RBRACE = 103;
-		public static final int TYPE_INFINITY = 104;
-		public static final int TYPE_NAN = 105;
-		public static final int TYPE_RETURN = 106;
-		public static final int TYPE_IF = 107;
-		public static final int TYPE_ELSE = 108;
-		public static final int TYPE_WHILE = 109;
-		public static final int TYPE_FOR = 110;
-		public static final int TYPE_ENTRY = 111;
-		public static final int TYPE_FUNCTION = 112;
-		public static final int TYPE_PRAGMA = 113;
-		public static final int TYPE_MAIN = 114;
-		public static final int TYPE_BREAK = 115;
-		public static final int TYPE_CONTINUE = 116;
+		public static final int TYPE_NULL = 100;
+		public static final int TYPE_TRUE = 101;
+		public static final int TYPE_FALSE = 102;
+		public static final int TYPE_LBRACE = 103;
+		public static final int TYPE_RBRACE = 104;
+		public static final int TYPE_INFINITY = 105;
+		public static final int TYPE_NAN = 106;
+		public static final int TYPE_RETURN = 107;
+		public static final int TYPE_IF = 108;
+		public static final int TYPE_ELSE = 109;
+		public static final int TYPE_WHILE = 110;
+		public static final int TYPE_FOR = 111;
+		public static final int TYPE_ENTRY = 112;
+		public static final int TYPE_FUNCTION = 113;
+		public static final int TYPE_PRAGMA = 114;
+		public static final int TYPE_MAIN = 115;
+		public static final int TYPE_BREAK = 116;
+		public static final int TYPE_CONTINUE = 117;
 		
 		private SKernel()
 		{
@@ -298,6 +302,7 @@ public final class ScriptReader
 			addDelimiter(">>>=", TYPE_TRIPLEGREATEREQUALS);
 			addDelimiter("<<=", TYPE_DOUBLELESSEQUALS);
 			
+			addCaseInsensitiveKeyword("null", TYPE_NULL);
 			addCaseInsensitiveKeyword("true", TYPE_TRUE);
 			addCaseInsensitiveKeyword("false", TYPE_FALSE);
 			addCaseInsensitiveKeyword("infinity", TYPE_INFINITY);
@@ -635,7 +640,7 @@ public final class ScriptReader
 				return false;
 			}
 			
-			emit(ScriptCommand.create(ScriptCommandType.PUSH, false));
+			emit(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 			emit(ScriptCommand.create(ScriptCommandType.RETURN));
 			return true;
 		}
@@ -1561,14 +1566,19 @@ public final class ScriptReader
 					return PARSEFUNCTION_FALSE;
 				}
 				
-				if (!parseHostFunctionCall(functionType, partial))
+				int parsedCount;
+				if ((parsedCount = parseHostFunctionCall(functionType, partial)) == PARSEFUNCTIONCALL_FALSE)
 					return PARSEFUNCTION_FALSE;
-					
+								
 				if (!matchType(SKernel.TYPE_RPAREN))
 				{
 					addErrorMessage("Expected \")\" after a host function call's parameters.");
 					return PARSEFUNCTION_FALSE;
 				}
+				
+				// fill last arguments left with null.
+				while (functionType.getParameterCount() - (parsedCount++) > 0)
+					emit(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 				
 				emit(ScriptCommand.create(ScriptCommandType.CALL_HOST, lexeme));
 				return functionType.isVoid() ? PARSEFUNCTION_TRUE_VOID : PARSEFUNCTION_TRUE;
@@ -1576,14 +1586,21 @@ public final class ScriptReader
 			else if ((functionEntry = currentScript.getFunctionEntry(lexeme)) != null)
 			{
 				int paramCount = functionEntry.getParameterCount();
-				if (!parseFunctionCall(paramCount - (partial ? 1 : 0)))
+				int parsedCount;
+				if ((parsedCount = parseFunctionCall(paramCount - (partial ? 1 : 0))) == PARSEFUNCTIONCALL_FALSE)
 					return PARSEFUNCTION_FALSE;
-					
+				if (partial)
+					parsedCount++;
+								
 				if (!matchType(SKernel.TYPE_RPAREN))
 				{
 					addErrorMessage("Expected \")\" after a function call's parameters.");
 					return PARSEFUNCTION_FALSE;
 				}
+				
+				// fill last arguments left with null.
+				while (paramCount - (parsedCount++) > 0)
+					emit(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 				
 				emit(ScriptCommand.create(ScriptCommandType.CALL, (getFunctionLabel(lexeme)).toLowerCase()));
 		
@@ -1598,47 +1615,51 @@ public final class ScriptReader
 
 		// Parses a function call.
 		// 		( .... , .... )
-		private boolean parseFunctionCall(int paramCount)
+		// Returns amount of arguments parsed.
+		private int parseFunctionCall(int paramCount)
 		{
+			int parsed = 0;
+			if (currentType(SKernel.TYPE_RPAREN))
+				return 0;
 			while (paramCount-- > 0)
 			{
 				if (!parseExpression())
-					return false;
+					return PARSEFUNCTIONCALL_FALSE;
+				
+				parsed++;
 				
 				if (paramCount > 0)
 				{
 					if (!matchType(SKernel.TYPE_COMMA))
-					{
-						addErrorMessage("Expected \",\" after a function parameter.");
-						return false;
-					}
+						return parsed; 
 				}
 			}
 		
-			return true;
+			return parsed;
 		}
 
 		// Parses a host function call.
 		// 		( .... , .... )
-		private boolean parseHostFunctionCall(ScriptFunctionType functionType, boolean partial)
+		// Returns amount of arguments parsed.
+		private int parseHostFunctionCall(ScriptFunctionType functionType, boolean partial)
 		{
 			int paramCount = functionType.getParameterCount() - (partial ? 1 : 0);
+			int parsed = partial ? 1 : 0;
 			while (paramCount-- > 0)
 			{
 				if (!parseExpression())
-					return false;
+					return PARSEFUNCTIONCALL_FALSE;
+				
+				parsed++;
 				
 				if (paramCount > 0)
 				{
 					if (!matchType(SKernel.TYPE_COMMA))
-					{
-						addErrorMessage("Expected \",\" after a host function parameter.");
-						return false;
-					}
+						return parsed; 
 				}
 			}
 		
-			return true;
+			return parsed;
 		}
 
 		// <ExpressionValue> :
@@ -1646,7 +1667,12 @@ public final class ScriptReader
 		// If null, bad parse.
 		private boolean parseSingleValue()
 		{
-			if (matchType(SKernel.TYPE_TRUE))
+			if (matchType(SKernel.TYPE_NULL))
+			{
+				emit(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
+				return true;
+			}
+			else if (matchType(SKernel.TYPE_TRUE))
 			{
 				emit(ScriptCommand.create(ScriptCommandType.PUSH, true));
 				return true;
@@ -1895,6 +1921,7 @@ public final class ScriptReader
 				case SKernel.TYPE_INFINITY:
 				case SKernel.TYPE_NAN:
 				case SKernel.TYPE_STRING:
+				case SKernel.TYPE_NULL:
 					return true;
 				default:
 					return false;

@@ -217,6 +217,23 @@ public enum ScriptCommandType
 	},
 	
 	/**
+	 * PUSH null literal.
+	 * No Operands.
+	 * Pushes one value.
+	 */
+	PUSH_NULL
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			Cache cache = getCache();
+			cache.tempValue.setNull();
+			scriptInstance.pushStackValue(cache.tempValue);
+			return true;
+		}
+	},
+	
+	/**
 	 * PUSH variable.
 	 * Operand1 is String - variable name.
 	 * Pushes one value.
@@ -240,7 +257,6 @@ public enum ScriptCommandType
 	
 	/**
 	 * PUSH a new blank array.
-	 * Pops a value for array length.
 	 * Pushes array value into stack.
 	 * No operands.
 	 */
