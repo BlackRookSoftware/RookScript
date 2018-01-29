@@ -342,7 +342,7 @@ public enum ScriptCommandType
 
 			if (!listValue.isList())
 			{
-				scriptInstance.pushStackValue(false);
+				scriptInstance.pushStackValue(null);
 				return true;
 			}
 			
@@ -369,7 +369,7 @@ public enum ScriptCommandType
 
 			if (!listValue.isList())
 			{
-				scriptInstance.pushStackValue(false);
+				scriptInstance.pushStackValue(null);
 				return true;
 			}
 			

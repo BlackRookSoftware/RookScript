@@ -3,10 +3,8 @@
 main()
 {
 	stdout(x);
-	x = null;
-	y = [];
-	z = 5;
+	y = [1,2,3];
 	
-	stdout(x ?: y ?: z);
+	stdout(y[4] ?: y[3] ?: y[2]);
 }
 
