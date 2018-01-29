@@ -78,6 +78,10 @@ public final class ScriptReader
 	public static final String LABEL_SSOR_FALSE = "_ssor_false_";
 	/** Label prefix. */
 	public static final String LABEL_SSOR_END = "_ssor_end_";
+	/** Label prefix. */
+	public static final String LABEL_COALESCE_START = "_coalesce_start_";
+	/** Label prefix. */
+	public static final String LABEL_COALESCE_END = "_coalesce_end_";
 
 	/** Return false. */
 	private static final int PARSEFUNCTION_FALSE = 0;
@@ -184,6 +188,7 @@ public final class ScriptReader
 		public static final int TYPE_COLON = 10;
 		public static final int TYPE_PERIOD = 11;
 		
+		public static final int TYPE_COALESCE = 18;
 		public static final int TYPE_RIGHTARROW = 19;
 		public static final int TYPE_DASH = 20;
 		public static final int TYPE_PLUS = 21;
@@ -263,6 +268,7 @@ public final class ScriptReader
 			addDelimiter(":", TYPE_COLON);
 			addDelimiter("?", TYPE_QUESTIONMARK);
 			addDelimiter("->", TYPE_RIGHTARROW);
+			addDelimiter("?:", TYPE_COALESCE);
 
 			addDelimiter("+", TYPE_PLUS);
 			addDelimiter("-", TYPE_DASH);
@@ -1302,6 +1308,26 @@ public final class ScriptReader
 						emit(ScriptCommand.create(ScriptCommandType.PUSH, true));
 						mark(labelend);	
 						
+					}
+					// null coalesce "Elvis" operator.
+					else if (matchType(SKernel.TYPE_COALESCE))
+					{
+						// treat with lowest possible precedence.
+						if (!expressionReduceAll(operatorStack, expressionValueCounter))
+							return false;
+						
+						String startLabel = currentScript.getNextGeneratedLabel(LABEL_COALESCE_START);
+						String endLabel = currentScript.getNextGeneratedLabel(LABEL_COALESCE_END);
+						
+						mark(startLabel);
+						emit(ScriptCommand.create(ScriptCommandType.JUMP_COALESCE, endLabel));
+
+						if (!parseExpression())
+							return false;
+
+						emit(ScriptCommand.create(ScriptCommandType.JUMP, endLabel));
+						
+						mark(endLabel);
 					}
 					// ternary operator type.
 					else if (matchType(SKernel.TYPE_QUESTIONMARK))

@@ -136,7 +136,6 @@ public enum ScriptCommandType
 			int index = scriptInstance.getCommandIndex(labelName);
 			if (index <= 0)
 				throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-			
 			scriptInstance.setCurrentCommandIndex(index);
 			return true;
 		}
@@ -177,6 +176,33 @@ public enum ScriptCommandType
 		{
 			ScriptValue sv = scriptInstance.popStackValue();
 			if (!sv.asBoolean())
+			{
+				String labelName =  String.valueOf(operand1);
+				int index = scriptInstance.getCommandIndex(labelName);
+				if (index <= 0)
+					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
+				scriptInstance.setCurrentCommandIndex(index);
+			}
+			return true;
+		}
+	},
+	
+	/**
+	 * Jump to label if stack top is not null, else pop.
+	 * Operand is label if false.
+	 * Sets a new command index.
+	 */
+	JUMP_COALESCE
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue sv = scriptInstance.getStackValue(0);
+			if (sv == null)
+				throw new ScriptExecutionException("stack is empty.");
+			else if (sv.isNull())
+				scriptInstance.popStackValue();
+			else
 			{
 				String labelName =  String.valueOf(operand1);
 				int index = scriptInstance.getCommandIndex(labelName);
@@ -246,7 +272,7 @@ public enum ScriptCommandType
 			String name = String.valueOf(operand1);
 			ScriptValue value;
 			if ((value = scriptInstance.getValue(name)) == null)
-				scriptInstance.pushStackValue(false);
+				scriptInstance.pushStackValue(null);
 			else
 				scriptInstance.pushStackValue(value);
 			
@@ -286,7 +312,7 @@ public enum ScriptCommandType
 
 			ScriptValue[] list = new ScriptValue[length];
 			for (int i = 0; i < length; i++)
-				list[i] = ScriptValue.create(false);
+				list[i] = ScriptValue.create(null);
 			
 			while (length-- > 0)
 			{
@@ -434,7 +460,7 @@ public enum ScriptCommandType
 			String valname = String.valueOf(operand2);
 			ScriptValue value;
 			if ((value = scriptInstance.getValue(valname)) == null)
-				scriptInstance.setValue(name, false);
+				scriptInstance.setValue(name, null);
 			else
 				scriptInstance.setValue(name, value);
 			return true;
@@ -940,7 +966,7 @@ public enum ScriptCommandType
 		
 		public Cache()
 		{
-			this.tempValue = ScriptValue.create(false);
+			this.tempValue = ScriptValue.create(null);
 		}
 		
 	}

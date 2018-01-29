@@ -1,0 +1,12 @@
+#!/usr/bin/env rookscript -i
+
+main()
+{
+	stdout(x);
+	x = null;
+	y = [];
+	z = 5;
+	
+	stdout(x ?: y ?: z);
+}
+
