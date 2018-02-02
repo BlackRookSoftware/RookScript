@@ -373,7 +373,7 @@ public class ScriptParser extends Parser
 		}
 		else
 		{
-			addErrorMessage("Expected \"{\" to start scriptlet body.");
+			addErrorMessage("Expected \"{\" to start scriptlet body or function name.");
 			return false;
 		}
 	}
