@@ -329,38 +329,53 @@ public class ScriptParser extends Parser
 	/**
 	 * Parses a scriptlet to the main script.
 	 * <pre>
-	 * [Scriptlet] := 
-	 *     "{" [StatementList] "}"
-	 *     [e]
+	 * [Scriptlet] :=
+	 * 		[IDENTIFIER] [FunctionCall] 
+	 * 		"{" [StatementList] "}"
 	 * </pre>
 	 * @return true if parse is good, false if not.
 	 */
 	protected boolean parseScriptlet(Script script)
 	{
 		// start statement list?
-		if (!matchType(ScriptKernel.TYPE_LBRACE))
+		if (matchType(ScriptKernel.TYPE_LBRACE))
+		{
+			String startLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_START);
+			String endLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_END);
+			
+			mark(script, startLabel);
+			
+			if (!parseStatementList(script, null, null))
+				return false;
+			
+			mark(script, endLabel);
+
+			if (!matchType(ScriptKernel.TYPE_RBRACE))
+			{
+				addErrorMessage("Expected \"}\" to close scriptlet body.");
+				return false;
+			}
+		
+			return true;
+		}
+		else if (currentType(ScriptKernel.TYPE_IDENTIFIER))
+		{
+			String name = currentToken().getLexeme();
+			nextToken();
+			int ret;
+			if ((ret = parseFunctionCall(script, name, true, false)) == PARSEFUNCTION_FALSE)
+				return false;
+			
+			if (ret == PARSEFUNCTION_TRUE)
+				script.addCommand(ScriptCommand.create(ScriptCommandType.POP));
+			
+			return true;
+		}
+		else
 		{
 			addErrorMessage("Expected \"{\" to start scriptlet body.");
 			return false;
 		}
-
-		String startLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_START);
-		String endLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_END);
-		
-		mark(script, startLabel);
-		
-		if (!parseStatementList(script, null, null))
-			return false;
-		
-		mark(script, endLabel);
-
-		if (!matchType(ScriptKernel.TYPE_RBRACE))
-		{
-			addErrorMessage("Expected \"}\" to close scriptlet body.");
-			return false;
-		}
-	
-		return true;
 	}
 
 	// Parse a single value to add to an object.
@@ -1851,7 +1866,6 @@ public class ScriptParser extends Parser
 			case ScriptKernel.TYPE_EXCLAMATION: 
 			case ScriptKernel.TYPE_TILDE: 
 			case ScriptKernel.TYPE_NEGATE: 
-			case ScriptKernel.TYPE_DOUBLEPIPE:
 				return true;
 			default:
 				return false;
