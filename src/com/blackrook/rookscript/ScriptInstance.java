@@ -158,23 +158,6 @@ public class ScriptInstance
 	}
 	
 	/**
-	 * Initializes the script at the main entry point.
-	 */
-	public void initialize()
-	{
-		this.state = State.INIT;
-		this.waitType = null;
-		this.waitParameter = null;
-		this.scriptInstanceStack.reset();
-		
-		int mainIndex = script.getIndex(Script.LABEL_MAIN);
-		if (mainIndex < 0)
-			throw new ScriptExecutionException("Main entry point does not exist.");
-
-		pushFrame(mainIndex);
-	}
-	
-	/**
 	 * Initializes the script with parameters.
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.

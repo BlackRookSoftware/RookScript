@@ -41,7 +41,7 @@ public class ScriptTest
 			Common.parseInt(Common.arrayElement(args, 2), 512)
 		);
 		ScriptInstance instance = new ScriptInstance(script, stack, null);
-		instance.initialize();
+		instance.initialize("main");
 		instance.update();
 
 		/*

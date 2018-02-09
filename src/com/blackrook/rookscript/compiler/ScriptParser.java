@@ -123,53 +123,6 @@ public class ScriptParser extends Parser
 	}
 	
 	/* 
-	 	<InitEntry> := 
-	 		"(" ")" "{" <StatementList> "}"
-	 */
-	protected boolean parseMainEntry(Script currentScript)
-	{
-		if (currentScript.getIndex(Script.LABEL_MAIN) >= 0)
-		{
-			addErrorMessage("The \"main\" entry was already defined.");
-			return false;
-		}
-		
-		mark(currentScript, Script.LABEL_MAIN);
-		
-		if (!matchType(ScriptKernel.TYPE_LPAREN))
-		{
-			addErrorMessage("Expected \"(\" after \"main\".");
-			return false;
-		}
-
-		if (!matchType(ScriptKernel.TYPE_RPAREN))
-		{
-			addErrorMessage("Expected \")\".");
-			return false;
-		}
-
-		// start statement list?
-		if (!matchType(ScriptKernel.TYPE_LBRACE))
-		{
-			addErrorMessage("Expected \"{\" to start \"main\" body.");
-			return false;
-		}
-		
-		if (!parseStatementList(currentScript, null, null))
-			return false;
-		
-		if (!matchType(ScriptKernel.TYPE_RBRACE))
-		{
-			addErrorMessage("Expected statement or \"}\" to close \"main\" body.");
-			return false;
-		}
-
-		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, false));
-		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
-		return true;
-	}
-	
-	/* 
 	 	<FunctionEntry> := 
 	 		<IDENTIFIER> "(" <FunctionArgumentList> ")" "{" <StatementList> "}"
 	 */
@@ -504,13 +457,7 @@ public class ScriptParser extends Parser
 	 */
 	private boolean parseEntry(Script currentScript)
 	{
-		// main entry.
-		if (matchType(ScriptKernel.TYPE_MAIN))
-		{
-			return parseMainEntry(currentScript);
-		}
-		// function entry.
-		else if (matchType(ScriptKernel.TYPE_FUNCTION))
+		if (matchType(ScriptKernel.TYPE_FUNCTION))
 		{
 			return parseFunctionEntry(currentScript);
 		}
@@ -1713,7 +1660,6 @@ public class ScriptParser extends Parser
 		{
 			default:
 				return false;
-			case ScriptKernel.TYPE_MAIN:
 			case ScriptKernel.TYPE_FUNCTION:
 			case ScriptKernel.TYPE_ENTRY:
 			case ScriptKernel.TYPE_PRAGMA:

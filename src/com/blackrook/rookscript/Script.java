@@ -24,8 +24,6 @@ public class Script
 	public static final String LABEL_FUNCTION_PREFIX = "function_";
 	/** Script label prefix. */
 	public static final String LABEL_ENTRY_PREFIX = "entry_";
-	/** Init label. */
-	public static final String LABEL_MAIN = "main";
 
 	/** Script host function resolver. */
 	private ScriptFunctionResolver hostFunctionResolver;

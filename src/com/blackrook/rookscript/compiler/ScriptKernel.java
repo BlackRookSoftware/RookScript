@@ -74,9 +74,8 @@ public class ScriptKernel extends CommonLexerKernel
 	public static final int TYPE_ENTRY = 112;
 	public static final int TYPE_FUNCTION = 113;
 	public static final int TYPE_PRAGMA = 114;
-	public static final int TYPE_MAIN = 115;
-	public static final int TYPE_BREAK = 116;
-	public static final int TYPE_CONTINUE = 117;
+	public static final int TYPE_BREAK = 115;
+	public static final int TYPE_CONTINUE = 116;
 	
 	/**
 	 * Creates a new script lexer kernel.
@@ -154,7 +153,6 @@ public class ScriptKernel extends CommonLexerKernel
 		addCaseInsensitiveKeyword("for", TYPE_FOR);
 		addCaseInsensitiveKeyword("entry", TYPE_ENTRY);
 		addCaseInsensitiveKeyword("function", TYPE_FUNCTION);
-		addCaseInsensitiveKeyword("main", TYPE_MAIN);
 		addCaseInsensitiveKeyword("break", TYPE_BREAK);
 		addCaseInsensitiveKeyword("continue", TYPE_CONTINUE);
 		addCaseInsensitiveKeyword("pragma", TYPE_PRAGMA);
