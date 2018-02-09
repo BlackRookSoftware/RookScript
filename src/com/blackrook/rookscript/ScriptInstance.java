@@ -56,8 +56,7 @@ public class ScriptInstance
 	/** Waiting parameter. */
 	private Object waitParameter;
 	/** Commands executed per slice. */
-	private int commandsExecuted;	
-
+	private int commandsExecuted;
 	
 	/**
 	 * Creates a new script instance, no wait handler.
@@ -186,6 +185,42 @@ public class ScriptInstance
 			pushStackValue(parameters[i]);
 		while (leftover-- > 0)
 			pushStackValue(null);
+	}
+
+	/**
+	 * Initializes the script at an arbitrary label.
+	 * Use with caution - this is assuming manual setup of a script instance.
+	 * @param entryName the entry point name.
+	 * @param parameters the starting parameters to push onto the stack.
+	 * @throws ScriptExecutionException if the provided label does not exist.
+	 */
+	public void initializeLabel(String labelName)
+	{
+		int index = script.getIndex(labelName);
+		if (index < 0)
+			throw new ScriptExecutionException("Script label \""+labelName+"\" does not exist.");
+		
+		initializeIndex(index);
+	}
+	
+	/**
+	 * Initializes the script at an arbitrary index.
+	 * Use with caution - this is assuming manual setup of a script instance.
+	 * @param entryName the entry point name.
+	 * @param parameters the starting parameters to push onto the stack.
+	 * @throws ScriptExecutionException if the provided index is out of script command bounds.
+	 */
+	public void initializeIndex(int index)
+	{
+		this.state = State.INIT;
+		this.waitType = null;
+		this.waitParameter = null;
+		this.scriptInstanceStack.reset();
+
+		if (index < 0 || index >= script.getCommandCount())
+			throw new ScriptExecutionException("Script index \""+index+"\" is out of bounds.");
+		
+		pushFrame(index);
 	}
 	
 	/**
