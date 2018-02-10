@@ -110,7 +110,7 @@ public enum ScriptCommandType
 		{
 			String labelName = String.valueOf(operand1);
 			int index = scriptInstance.getCommandIndex(labelName);
-			if (index <= 0)
+			if (index < 0)
 				throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
 			
 			scriptInstance.setCurrentCommandIndex(index);
@@ -134,7 +134,7 @@ public enum ScriptCommandType
 			labelName = sv.asBoolean() ? String.valueOf(operand1) : String.valueOf(operand2);
 			
 			int index = scriptInstance.getCommandIndex(labelName);
-			if (index <= 0)
+			if (index < 0)
 				throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
 			scriptInstance.setCurrentCommandIndex(index);
 			return true;
@@ -156,7 +156,7 @@ public enum ScriptCommandType
 			{
 				String labelName =  String.valueOf(operand1);
 				int index = scriptInstance.getCommandIndex(labelName);
-				if (index <= 0)
+				if (index < 0)
 					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
 				scriptInstance.setCurrentCommandIndex(index);
 			}
@@ -179,7 +179,7 @@ public enum ScriptCommandType
 			{
 				String labelName =  String.valueOf(operand1);
 				int index = scriptInstance.getCommandIndex(labelName);
-				if (index <= 0)
+				if (index < 0)
 					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
 				scriptInstance.setCurrentCommandIndex(index);
 			}
@@ -206,7 +206,7 @@ public enum ScriptCommandType
 			{
 				String labelName =  String.valueOf(operand1);
 				int index = scriptInstance.getCommandIndex(labelName);
-				if (index <= 0)
+				if (index < 0)
 					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
 				scriptInstance.setCurrentCommandIndex(index);
 			}
