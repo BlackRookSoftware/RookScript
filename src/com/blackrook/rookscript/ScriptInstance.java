@@ -190,8 +190,7 @@ public class ScriptInstance
 	/**
 	 * Initializes the script at an arbitrary label.
 	 * Use with caution - this is assuming manual setup of a script instance.
-	 * @param entryName the entry point name.
-	 * @param parameters the starting parameters to push onto the stack.
+	 * @param labelName the script label name.
 	 * @throws ScriptExecutionException if the provided label does not exist.
 	 */
 	public void initializeLabel(String labelName)
@@ -206,8 +205,7 @@ public class ScriptInstance
 	/**
 	 * Initializes the script at an arbitrary index.
 	 * Use with caution - this is assuming manual setup of a script instance.
-	 * @param entryName the entry point name.
-	 * @param parameters the starting parameters to push onto the stack.
+	 * @param index the command index.
 	 * @throws ScriptExecutionException if the provided index is out of script command bounds.
 	 */
 	public void initializeIndex(int index)
