@@ -145,7 +145,7 @@ public class Script
 	 * Gets the corresponding index for a subscript entry name.
 	 * Entry names are case-insensitive.
 	 * @param name the name to look up.
-	 * @return the corresponding index or -1 if not found.
+	 * @return the corresponding entry or null if not found.
 	 */
 	public Entry getScriptEntry(String name)
 	{
