@@ -1,6 +1,6 @@
 #!/usr/bin/env rookscript -i
 
-main()
+entry main()
 {
 	s = "Matt Tropiano";
 	stdout(strupper(s)); 

@@ -1,6 +1,6 @@
 #!/usr/bin/env rookscript -i
 
-main()
+entry main()
 {
 	stdout(x);
 	y = [1,2,3];
