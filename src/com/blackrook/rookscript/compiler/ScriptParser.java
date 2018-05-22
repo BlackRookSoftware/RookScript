@@ -260,7 +260,7 @@ public class ScriptParser extends Parser
 			while (paramCount - (parsedCount++) > 0)
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 			
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL, (getFunctionLabel(lexeme)).toLowerCase()));
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL, getFunctionLabel(lexeme)));
 	
 			return PARSEFUNCTION_TRUE;
 		}
