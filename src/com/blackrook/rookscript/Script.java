@@ -103,16 +103,19 @@ public class Script
 	}
 	
 	/**
-	 * Sets an index for a subscript entry name in the script.
+	 * Creates/sets an index for a subscript entry name in the script.
 	 * Entry names are case-insensitive.
 	 * @param name the name.
 	 * @param parameterCount the amount of parameters that this takes.
 	 * @param index the corresponding index.
+	 * @return the entry created as a result of the set.
 	 */
-	public void setFunctionEntry(String name, int parameterCount, int index)
+	public Entry createFunctionEntry(String name, int parameterCount, int index)
 	{
-		functionLabelMap.put(name, new Entry(parameterCount, index));
+		Entry out = new Entry(parameterCount, index);
+		functionLabelMap.put(name, out);
 		setIndex(LABEL_FUNCTION_PREFIX + name, index);
+		return out;
 	}
 
 	/**

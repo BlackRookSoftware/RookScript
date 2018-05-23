@@ -178,7 +178,7 @@ public class ScriptParser extends Parser
 			
 		}
 		
-		currentScript.setFunctionEntry(name, paramAmount, index);
+		currentScript.createFunctionEntry(name, paramAmount, index);
 		
 		if (!matchType(ScriptKernel.TYPE_RPAREN))
 		{

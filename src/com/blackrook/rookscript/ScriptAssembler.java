@@ -250,7 +250,7 @@ public final class ScriptAssembler
 				{
 					String name = label.substring(Script.LABEL_FUNCTION_PREFIX.length());
 					Entry e = script.getFunctionEntry(name);
-					optimizedScript.setFunctionEntry(name, e.getParameterCount(), targetIndex);
+					optimizedScript.createFunctionEntry(name, e.getParameterCount(), targetIndex);
 				}
 			}
 			return true;
