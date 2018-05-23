@@ -315,6 +315,13 @@ public class ScriptParser extends Parser
 		{
 			String name = currentToken().getLexeme();
 			nextToken();
+			
+			if (!matchType(ScriptKernel.TYPE_LPAREN))
+			{
+				addErrorMessage("Expected \"(\" after a function name.");
+				return false;
+			}
+
 			int ret;
 			if ((ret = parseFunctionCall(script, name, true, false)) == PARSEFUNCTION_FALSE)
 				return false;
