@@ -74,8 +74,10 @@
         	notree="false"
     		>
         	<link href="https://blackrooksoftware.com/docs/common/" packagelistloc="element-list"/>
-            <link href="http://blackrooksoftware.com/docs/commonio/"/>
-            <link href="http://blackrooksoftware.com/docs/commonlang/"/>
+            <link href="https://blackrooksoftware.com/docs/commonio/"/>
+            <link href="https://blackrooksoftware.com/docs/commonlang/"/>
+            <link href="https://blackrooksoftware.com/docs/filesystem/"/>
+            <link href="https://blackrooksoftware.com/docs/archetext/"/>
             <link href="https://docs.oracle.com/javase/10/docs/api/" packagelistloc="element-list"/>
         </javadoc>
     </target>	
