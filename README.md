@@ -1,8 +1,13 @@
 # Black Rook RookScript
 
-Copyright (c) 2017 Black Rook Software. All rights reserved.  
+Copyright (c) 2017-2018 Black Rook Software. All rights reserved.  
 [http://blackrooksoftware.com/projects.htm?name=rookscript](http://blackrooksoftware.com/projects.htm?name=rookscript)  
 [https://github.com/BlackRookSoftware/RookScript](https://github.com/BlackRookSoftware/RookScript)
+
+### NOTICE
+
+This library is currently in **EXPERIMENTAL** status. This library's API
+may change many times in different ways over the course of its development!
 
 ### Required Libraries
 
@@ -15,6 +20,10 @@ Black Rook Common I/O 2.5.0+
 Black Rook Common Lang 2.10.1+  
 [https://github.com/BlackRookSoftware/CommonLang](https://github.com/BlackRookSoftware/CommonLang)
 
+### Required Java Modules
+
+[java.base](https://docs.oracle.com/javase/10/docs/api/java.base-summary.html)  
+
 ### Introduction
 
 This library assists in compiling/running RookScript, a non-host-specific scripting language.
@@ -23,6 +32,24 @@ This library assists in compiling/running RookScript, a non-host-specific script
 
 Contained in this release is a series of classes that should be used for RookScript functions. 
 The javadocs contain basic outlines of each package's contents.
+
+### Compiling with Ant
+
+To download the dependencies for this project (if you didn't set that up yourself already), type:
+
+	ant dependencies
+
+A *build.properties* file will be created/appended to with the *dev.base* property set.
+	
+To compile this library with Apache Ant, type:
+
+	ant compile
+
+To make a JAR of this library, type:
+
+	ant jar
+
+And it will be placed in the *build/jar* directory.
 
 ### Other
 
