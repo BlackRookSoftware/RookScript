@@ -72,19 +72,12 @@ function mult(int x, y)
 	return x * y;
 }
 	
-script name(arg0, arg1, ...)
+entry name(arg0, arg1, ...)
 {
-	game.x = 4; // game scope
-	hub.x = 3; // hub scope
-	map.x = 2; // map scope
-	x = 1; // local scope
-	
 	decb = true;
 	deci = 2;
 	decf = 0.0;
 	decs = "asdfasdf";
-	decq = query("#menu");
-	dece = qobject(decq, 0);
 
 	if (mult(deci, 2) >= 4)
 	{
