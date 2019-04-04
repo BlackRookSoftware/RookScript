@@ -1,6 +1,6 @@
 # Black Rook RookScript
 
-Copyright (c) 2017-2018 Black Rook Software. All rights reserved.  
+Copyright (c) 2017-2019 Black Rook Software. All rights reserved.  
 [http://blackrooksoftware.com/projects.htm?name=rookscript](http://blackrooksoftware.com/projects.htm?name=rookscript)  
 [https://github.com/BlackRookSoftware/RookScript](https://github.com/BlackRookSoftware/RookScript)
 
@@ -11,13 +11,13 @@ may change many times in different ways over the course of its development!
 
 ### Required Libraries
 
-Black Rook Commons 2.31.0+  
+Black Rook Commons 2.32.0+  
 [https://github.com/BlackRookSoftware/Common](https://github.com/BlackRookSoftware/Common)
 
-Black Rook Common I/O 2.5.0+  
+Black Rook Common I/O 2.6.0+  
 [https://github.com/BlackRookSoftware/CommonIO](https://github.com/BlackRookSoftware/CommonIO)
 
-Black Rook Common Lang 2.10.1+  
+Black Rook Common Lang 2.11.0+  
 [https://github.com/BlackRookSoftware/CommonLang](https://github.com/BlackRookSoftware/CommonLang)
 
 ### Required Java Modules

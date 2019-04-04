@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2018 Black Rook Software
+ * Copyright (c) 2017-2019 Black Rook Software
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser Public License v2.1
  * which accompanies this distribution, and is available at
@@ -10,10 +10,10 @@ package com.blackrook.rookscript;
 import java.io.IOException;
 import java.io.Writer;
 
-import com.blackrook.commons.Common;
 import com.blackrook.commons.ObjectPair;
 import com.blackrook.commons.linkedlist.Queue;
 import com.blackrook.commons.linkedlist.Stack;
+import com.blackrook.commons.util.ObjectUtils;
 import com.blackrook.rookscript.Script.Entry;
 import com.blackrook.rookscript.struct.ScriptValue;
 
@@ -50,7 +50,7 @@ public final class ScriptAssembler
 	private static void dumpLineLabels(Script script, Writer out, int line) throws IOException
 	{
 		Iterable<String> labels = script.getLabelsAtIndex(line);
-		if (!Common.isEmpty(labels)) for (String label : labels)
+		if (!ObjectUtils.isEmpty(labels)) for (String label : labels)
 		{
 			out.write(label);
 			out.write(":");

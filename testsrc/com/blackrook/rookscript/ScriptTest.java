@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2018 Black Rook Software
+ * Copyright (c) 2017-2019 Black Rook Software
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser Public License v2.1
  * which accompanies this distribution, and is available at
@@ -10,7 +10,8 @@ package com.blackrook.rookscript;
 import java.io.File;
 import java.io.OutputStreamWriter;
 
-import com.blackrook.commons.Common;
+import com.blackrook.commons.util.ArrayUtils;
+import com.blackrook.commons.util.ValueUtils;
 import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.compiler.ScriptReader;
@@ -25,7 +26,7 @@ public class ScriptTest
 	public static void main(String[] args) throws Exception
 	{
 		String fileName;
-		if ((fileName = Common.arrayElement(args, 0)) == null)
+		if ((fileName = ArrayUtils.arrayElement(args, 0)) == null)
 		{
 			System.out.println("ERROR: No file name for script.");
 			System.out.println("Usage: command [filename] [activationStackDepth] [valueStackDepth]");
@@ -44,8 +45,8 @@ public class ScriptTest
 		ScriptAssembler.disassemble(script, new OutputStreamWriter(System.out));
 
 		ScriptInstanceStack stack = new ScriptInstanceStack(
-			Common.parseInt(Common.arrayElement(args, 1), 16), 
-			Common.parseInt(Common.arrayElement(args, 2), 512)
+			ValueUtils.parseInt(ArrayUtils.arrayElement(args, 1), 16), 
+			ValueUtils.parseInt(ArrayUtils.arrayElement(args, 2), 512)
 		);
 		ScriptInstance instance = new ScriptInstance(script, stack, null);
 		instance.initialize("main");

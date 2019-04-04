@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2018 Black Rook Software
+ * Copyright (c) 2017-2019 Black Rook Software
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser Public License v2.1
  * which accompanies this distribution, and is available at
@@ -12,11 +12,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 
-import com.blackrook.commons.Common;
 import com.blackrook.commons.Reflect;
 import com.blackrook.commons.ResettableIterator;
 import com.blackrook.commons.Sizable;
 import com.blackrook.commons.list.List;
+import com.blackrook.commons.util.ObjectUtils;
+import com.blackrook.commons.util.ThreadUtils;
+import com.blackrook.commons.util.ValueUtils;
 
 /**
  * Script value encapsulation.
@@ -672,7 +674,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 				return !isNaN() && Double.longBitsToDouble(rawbits) != 0.0; 
 			case STRING:
 			case OBJECT:
-				return !Common.isEmpty(ref); 
+				return !ObjectUtils.isEmpty(ref); 
 		}
 	}
 
@@ -753,7 +755,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			case FLOAT:
 				return (long)asDouble(); 
 			case STRING:
-				return Common.parseLong((String)ref, 0L); 
+				return ValueUtils.parseLong((String)ref, 0L); 
 		}
 	}
 
@@ -780,7 +782,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			case FLOAT:
 				return Double.longBitsToDouble(rawbits); 
 			case STRING:
-				return Common.parseDouble((String)ref, Double.NaN); 
+				return ValueUtils.parseDouble((String)ref, Double.NaN); 
 		}
 	}
 	
@@ -1153,7 +1155,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		else switch (operand.type)
 		{
 			default:
-				out.set(!Common.isEmpty(operand.ref));
+				out.set(!ObjectUtils.isEmpty(operand.ref));
 			case BOOLEAN:
 				out.set(!operand.asBoolean());
 				return;
@@ -1673,8 +1675,8 @@ public class ScriptValue implements Comparable<ScriptValue>
 	private static Cache getCache()
 	{
 		Cache out;
-		if ((out = (Cache)Common.getLocal(CACHE_NAME)) == null)
-			Common.setLocal(CACHE_NAME, out = new Cache());
+		if ((out = (Cache)ThreadUtils.getLocal(CACHE_NAME)) == null)
+			ThreadUtils.setLocal(CACHE_NAME, out = new Cache());
 		return out;
 	}
 	

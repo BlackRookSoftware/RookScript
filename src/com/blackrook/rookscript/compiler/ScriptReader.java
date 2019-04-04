@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2018 Black Rook Software
+ * Copyright (c) 2017-2019 Black Rook Software
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser Public License v2.1
  * which accompanies this distribution, and is available at
@@ -15,7 +15,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 
-import com.blackrook.commons.Common;
+import com.blackrook.commons.util.IOUtils;
+import com.blackrook.commons.util.OSUtils;
 import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.exception.ScriptParseException;
@@ -58,7 +59,7 @@ public final class ScriptReader
 		@Override
 		public String getIncludeResourceName(String streamName, String path) throws IOException
 		{
-			if (Common.isWindows() && streamName.contains("\\")) // check for Windows paths.
+			if (OSUtils.isWindows() && streamName.contains("\\")) // check for Windows paths.
 				streamName = streamName.replace('\\', '/');
 			
 			String streamParent = null;
@@ -90,7 +91,7 @@ public final class ScriptReader
 		public InputStream getIncludeResource(String path) throws IOException
 		{
 			if (path.startsWith(CLASSPATH_PREFIX))
-				return Common.openResource(path.substring(CLASSPATH_PREFIX.length()));
+				return IOUtils.openResource(path.substring(CLASSPATH_PREFIX.length()));
 			else
 				return new FileInputStream(new File(path));
 		}
@@ -174,7 +175,7 @@ public final class ScriptReader
 		try {
 			return read(file.getPath(), fis, resolver, DEFAULT_INCLUDER);
 		} finally {
-			Common.close(fis);
+			IOUtils.close(fis);
 		}
 	}
 
@@ -195,7 +196,7 @@ public final class ScriptReader
 		try {
 			return read(file.getPath(), fis, resolver, includer);
 		} finally {
-			Common.close(fis);
+			IOUtils.close(fis);
 		}
 	}
 

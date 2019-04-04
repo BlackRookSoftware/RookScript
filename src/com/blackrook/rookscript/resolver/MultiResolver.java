@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2018 Black Rook Software
+ * Copyright (c) 2017-2019 Black Rook Software
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the GNU Lesser Public License v2.1
  * which accompanies this distribution, and is available at
@@ -7,8 +7,8 @@
  ******************************************************************************/
 package com.blackrook.rookscript.resolver;
 
-import com.blackrook.commons.Common;
 import com.blackrook.commons.linkedlist.Queue;
+import com.blackrook.commons.util.ArrayUtils;
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
 
@@ -68,7 +68,7 @@ public class MultiResolver implements ScriptFunctionResolver
 		ScriptFunctionType[][] resolverSets = new ScriptFunctionType[resolvers.size()][];
 		for (ScriptFunctionResolver r : resolvers)
 			resolverSets[i++] = r.getFunctions();
-		return Common.joinArrays(resolverSets);
+		return ArrayUtils.joinArrays(resolverSets);
 	}
 
 }
