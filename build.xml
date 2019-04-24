@@ -16,17 +16,17 @@
 
 	<!-- Project Libs -->
 	<property name="common.lib" value="${dev.base}/Common/bin" />
-	<property name="common.io.lib" value="${dev.base}/CommonIO/bin"/>
 	<property name="common.lang.lib" value="${dev.base}/CommonLang/bin" />
 	
 	<!-- Project Info -->
 	<property name="project.archive" value="blackrook-rookscript" />
 	<property name="project.javadoc.title" value="Black Rook RookScript" />
-	<property name="project.classpath" value="${common.lib}${S}${common.io.lib}${S}${common.lang.lib}" />
+	<property name="project.classpath" value="${common.lib}${S}${common.lang.lib}" />
 	<property name="project.javadoc.packages" value="
 		com.blackrook.rookscript,
 		com.blackrook.rookscript.compiler,
 		com.blackrook.rookscript.exception,
+		com.blackrook.rookscript.functions,
 		com.blackrook.rookscript.resolver,
 		com.blackrook.rookscript.struct
 		"
@@ -39,10 +39,6 @@
 		<git-export repository="https://github.com/BlackRookSoftware/Common" dest="${dependencies.dir}/Common" />
 		<ant antfile="${dependencies.dir}/Common/build.xml" useNativeBasedir="true" inheritAll="false" target="compile" />
 	</target>
-	<target name="dependency.commonio">
-		<git-export repository="https://github.com/BlackRookSoftware/CommonIO" dest="${dependencies.dir}/CommonIO" />
-		<ant antfile="${dependencies.dir}/CommonIO/build.xml" useNativeBasedir="true" inheritAll="false" target="compile" />
-	</target>
 	<target name="dependency.commonlang">
 		<git-export repository="https://github.com/BlackRookSoftware/CommonLang" dest="${dependencies.dir}/CommonLang" />
 		<ant antfile="${dependencies.dir}/CommonLang/build.xml" useNativeBasedir="true" inheritAll="false" target="compile" />
@@ -52,7 +48,7 @@
 		<echo message="dev.base=${dependencies.dir}&#10;" file="build.properties" append="true" />
 	</target>
 
-	<target name="dependencies" depends="init.dependencies, dependency.common, dependency.commonio, dependency.commonlang, dependency.properties" description="Downloads and compiles the dependencies.">
+	<target name="dependencies" depends="init.dependencies, dependency.common, dependency.commonlang, dependency.properties" description="Downloads and compiles the dependencies.">
 	</target>
 
 	<target name="javadoc" depends="init.docs" description="Builds the documentation.">
@@ -74,10 +70,7 @@
         	notree="false"
     		>
         	<link href="https://blackrooksoftware.com/docs/common/" packagelistloc="element-list"/>
-            <link href="https://blackrooksoftware.com/docs/commonio/"/>
             <link href="https://blackrooksoftware.com/docs/commonlang/"/>
-            <link href="https://blackrooksoftware.com/docs/filesystem/"/>
-            <link href="https://blackrooksoftware.com/docs/archetext/"/>
             <link href="https://docs.oracle.com/javase/10/docs/api/" packagelistloc="element-list"/>
         </javadoc>
     </target>	

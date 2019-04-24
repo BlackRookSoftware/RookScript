@@ -14,9 +14,6 @@ may change many times in different ways over the course of its development!
 Black Rook Commons 2.32.0+  
 [https://github.com/BlackRookSoftware/Common](https://github.com/BlackRookSoftware/Common)
 
-Black Rook Common I/O 2.6.0+  
-[https://github.com/BlackRookSoftware/CommonIO](https://github.com/BlackRookSoftware/CommonIO)
-
 Black Rook Common Lang 2.11.0+  
 [https://github.com/BlackRookSoftware/CommonLang](https://github.com/BlackRookSoftware/CommonLang)
 
