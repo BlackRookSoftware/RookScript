@@ -34,6 +34,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		FLOAT,
 		STRING,
 		LIST,
+		MAP,
 		OBJECT;
 	}
 	
@@ -76,6 +77,19 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
+	 * Creates a script value that is an empty map.
+	 * @return a new expression value.
+	 */
+	public static ScriptValue createEmptyMap()
+	{
+		ScriptValue out = new ScriptValue();
+		out.type = Type.MAP;
+		out.ref = new ScriptVariableScope(4);
+		out.rawbits = 0L;
+		return out;
+	}
+	
+	/**
 	 * Creates a copy of this value.
 	 * The copy process is DEEP - lists are copied as well, except for native objects.
 	 * @return a new ScriptValue.
@@ -90,6 +104,11 @@ public class ScriptValue implements Comparable<ScriptValue>
 			for (int i = 0; i < array.length; i++)
 				array[i] = list.getByIndex(i).copy();
 			return create(array);
+		}
+		else if (isMap())
+		{
+			// TODO: Finish this.
+			return null;
 		}
 		else
 			return create(this);
@@ -353,6 +372,38 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
+	 * Gets if this value is considered "empty".
+	 * <p>
+	 * Null is empty.<br>
+	 * If boolean, false is empty.<br>
+	 * If integer, 0 is empty.<br>
+	 * If float, 0.0 or NaN.<br>
+	 * If string, trimmed and zero length.<br>
+	 * If list or map, 0 keys or 0 items is empty.<br>
+	 * @return true if so, false if not.
+	 */
+	public boolean empty()
+	{
+		switch (type)
+		{
+			case NULL:
+				return true;
+			case BOOLEAN:
+				return rawbits == 0L;
+			case INTEGER:
+				return rawbits == 0L;
+			case FLOAT:
+				return isNaN() || Double.longBitsToDouble(rawbits) == 0.0;
+			default:
+			case STRING:
+			case LIST:
+			case MAP:
+			case OBJECT:
+				return ObjectUtils.isEmpty(ref);
+		}
+	}
+	
+	/**
 	 * Sets a value in this list.
 	 * If the index is outside of the range of the list's indices, it is not added.
 	 * @param index the list index to set.
@@ -579,7 +630,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 
 	/**
-	 * Gets a value at an index, if it is a list, 
+	 * Gets a value's index, if it is a list, 
 	 * treating the structure like a set of discrete items.
 	 * This assumes that the list is sorted - if not, this will have undefined behavior.
 	 * This has better performance than {@link #listGetIndexOf(Object)}, but only if this is a sorted set.
@@ -599,6 +650,53 @@ public class ScriptValue implements Comparable<ScriptValue>
 		return list.search(cache.value1, Comparator.naturalOrder());
 	}
 
+	/**
+	 * If this is a map, sets a key on it to a value.
+	 * @param key the key. 
+	 * @param value the associated value.
+	 * @return true if this is a map and the value was assigned, false otherwise.
+	 * @see #isMap()
+	 */
+	public boolean mapSet(String key, Object value)
+	{
+		if (!isMap())
+			return false;
+		
+		ScriptVariableScope map = (ScriptVariableScope)ref;
+		map.setValue(key, value);
+		return true;
+	}
+	
+	/**
+	 * If this is a map, gets the value that corresponds to a provided key.
+	 * @param key the key. 
+	 * @return the corresponding value, or <code>null</code> if no corresponding value.
+	 * @see #isMap()
+	 */
+	public ScriptValue mapGet(String key)
+	{
+		if (!isMap())
+			return null;
+		
+		ScriptVariableScope map = (ScriptVariableScope)ref;
+		return map.getValue(key);
+	}
+	
+	/**
+	 * If this is a map, removes the value that corresponds to a provided key.
+	 * @param key the key. 
+	 * @return true if the value existed and was removed, false otherwise.
+	 * @see #isMap()
+	 */
+	public boolean mapRemove(String key)
+	{
+		if (!isMap())
+			return false;
+		
+		ScriptVariableScope map = (ScriptVariableScope)ref;
+		return map.clearValue(key);
+	}
+	
 	/**
 	 * @return true if this value is null.
 	 */
@@ -647,6 +745,14 @@ public class ScriptValue implements Comparable<ScriptValue>
 		return type == Type.LIST;
 	}
 
+	/**
+	 * @return true if this value is a map type.
+	 */
+	public boolean isMap()
+	{
+		return type == Type.MAP;
+	}
+	
 	/**
 	 * @return true if this value is an object type.
 	 */

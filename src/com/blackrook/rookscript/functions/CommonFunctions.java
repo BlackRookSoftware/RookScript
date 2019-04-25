@@ -63,6 +63,28 @@ public enum CommonFunctions implements ScriptFunctionType
 	},
 
 	/**
+	 * Returns if a value is "empty".
+	 * ARG1: The value. 
+	 * 
+	 * Object: is Sizeable and empty, or is a Collection and empty, or null.
+	 * Boolean: is false.
+	 * Numeric: is 0 or NaN
+	 * Strings: length = 0.
+	 * Lists: length = 0.
+	 * Maps: length = 0.
+	 */
+	EMPTY(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			scriptInstance.pushStackValue(value.empty());
+			return true;
+		}
+	},
+
+	/**
 	 * Returns a string in full uppercase.
 	 * ARG1: The value (converted to string, first). 
 	 */
@@ -281,6 +303,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	 * If the "list" argument is not a list or the provided item is not removed, this returns false, else true.
 	 * ARG1: The list to remove the item from. 
 	 * ARG2: The item to remove.
+	 * FIXME: May not be working!
 	 */
 	LISTREMOVE(2)
 	{

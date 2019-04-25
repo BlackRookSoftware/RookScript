@@ -8,31 +8,25 @@
 package com.blackrook.rookscript.struct;
 
 import java.util.Comparator;
+import java.util.Iterator;
 
-import com.blackrook.commons.Sizable;
 import com.blackrook.commons.comparators.CaseInsensitiveComparator;
 import com.blackrook.commons.util.ArrayUtils;
 
 /**
  * An single, scoped open variable set in which values can be set.
  * All variable names are CASE-INSENSITIVE.
- * The internals are written so that the storage uses few memory allocations/deletions. 
+ * The internals are written so that the storage uses few memory allocations/deletions.
+ * None of the variables are read-only. This implementation is thread-safe.
  * @author Matthew Tropiano
  */
-public class ScriptVariableScope implements Sizable
+public class ScriptVariableScope implements ScriptVariableResolver, Iterable<ScriptVariableScope.Entry>
 {
 	/** Default capacity. */
 	public static final int DEFAULT_CAPACITY = 4;
 
-	private static final Comparator<Entry> ENTRY_COMPARATOR = new Comparator<Entry>()
-	{
-		@Override
-		public int compare(Entry e1, Entry e2)
-		{
-			return CaseInsensitiveComparator.getInstance().compare(e1.name, e2.name);
-		}
-		
-	};
+	private static final Comparator<Entry> ENTRY_COMPARATOR = (e1, e2) -> 
+		CaseInsensitiveComparator.getInstance().compare(e1.name, e2.name);
 	
 	/** List of entries. */
 	private Entry[] entries;
@@ -77,34 +71,18 @@ public class ScriptVariableScope implements Sizable
 		entries = newEntries;
 	}
 	
-	/**
-	 * Clears the scope.
-	 */
-	public void clear()
+	// Get or return null;
+	private ScriptValue get(String name)
 	{
-		int prevCount = this.entryCount;
-		this.entryCount = 0;
-		// nullify object refs (to reduce chance of memory leaks).
-		for (int i = 0; i < prevCount; i++)
-			entries[i].value.set(0L);
-	}
-	
-	/**
-	 * Checks if a script value by name exists.
-	 * @param name the name of the variable.
-	 * @return the value or null if no variable.
-	 */
-	public boolean contains(String name)
-	{
-		return get(name) != null;
+		int i;
+		if ((i = getIndex(name)) < 0)
+			return null;
+		else
+			return entries[i].value;
 	}
 
-	/**
-	 * Gets a corresponding script value by name.
-	 * @param name the name of the variable.
-	 * @return the value or null if no variable.
-	 */
-	public ScriptValue get(String name)
+	// Get or return -1;
+	private int getIndex(String name)
 	{
 		int u = entryCount, l = 0;
 		int i = (u+l)/2;
@@ -113,14 +91,14 @@ public class ScriptVariableScope implements Sizable
 		while (i != prev)
 		{
 			if (entries[i].name.equalsIgnoreCase(name))
-				return entries[i].value;
-
+				return i;
+	
 			int c = entries[i].name.compareTo(name); 
 			
 			if (c < 0)
 				l = i;
 			else if (c == 0)
-				return entries[i].value;
+				return i;
 			else
 				u = i;
 			
@@ -128,15 +106,51 @@ public class ScriptVariableScope implements Sizable
 			i = (u+l)/2;
 		}
 		
-		return null;
+		return -1;
+	}
+
+	private void removeIndex(int i)
+	{
+		Entry e = entries[i];
+		e.name = null;
+		e.value.setNull();
+		entryCount--;
+		
+		while (i < entryCount)
+		{
+			entries[i] = entries[i + 1];
+			i++;
+		}
+		
+		entries[i] = e;
 	}
 
 	/**
-	 * Sets a corresponding script value by name.
-	 * @param name the name of the variable.
-	 * @param value the value to set.
+	 * Clears the scope.
 	 */
-	public void set(String name, Object value)
+	public synchronized void clear()
+	{
+		int prevCount = this.entryCount;
+		this.entryCount = 0;
+		// nullify object refs (to reduce chance of memory leaks).
+		for (int i = 0; i < prevCount; i++)
+			entries[i].value.setNull();
+	}
+	
+	@Override
+	public synchronized boolean containsValue(String name)
+	{
+		return get(name) != null;
+	}
+
+	@Override
+	public synchronized ScriptValue getValue(String name)
+	{
+		return get(name);
+	}
+
+	@Override
+	public synchronized void setValue(String name, Object value)
 	{
 		ScriptValue ev = get(name); 
 		if (ev != null)
@@ -153,22 +167,39 @@ public class ScriptVariableScope implements Sizable
 	}
 
 	@Override
-	public int size()
+	public synchronized boolean clearValue(String name)
+	{
+		int i;
+		if ((i = getIndex(name)) < 0)
+			return false;
+
+		removeIndex(i);
+		return true;
+	}
+	
+	@Override
+	public boolean isReadOnly(String name)
+	{
+		return false;
+	}
+
+	@Override
+	public synchronized int size()
 	{
 		return entryCount;
 	}
 
 	@Override
-	public boolean isEmpty()
+	public synchronized boolean isEmpty()
 	{
 		return size() == 0;
 	}
 
 	@Override
-	public String toString()
+	public synchronized String toString()
 	{
 		StringBuilder sb = new StringBuilder();
-		sb.append('[');
+		sb.append('{');
 		int i = 0;
 		while (i < entryCount)
 		{
@@ -177,28 +208,75 @@ public class ScriptVariableScope implements Sizable
 				sb.append(", ");
 			i++;
 		}
-		sb.append(']');
+		sb.append('}');
 		return sb.toString();
 	}
 	
 	/**
 	 * A single entry.
 	 */
-	private static class Entry
+	public static class Entry
 	{
 		private String name;
 		private ScriptValue value;
 		
-		Entry()
+		private Entry()
 		{
 			this.name = null;
-			this.value = ScriptValue.create(false);
+			this.value = ScriptValue.create(null);
+		}
+		
+		public String getName()
+		{
+			return name;
+		}
+		
+		public ScriptValue getValue()
+		{
+			return value;
 		}
 		
 		@Override
 		public String toString()
 		{
 			return name + ": " + value;
+		}
+		
+	}
+
+	@Override
+	public Iterator<Entry> iterator()
+	{
+		return new EntryIterator();
+	}
+	
+	private class EntryIterator implements Iterator<Entry>
+	{
+		private int cur = 0;
+		private boolean removed = false;
+		
+		@Override
+		public boolean hasNext()
+		{
+			return cur < entryCount;
+		}
+		
+		@Override
+		public Entry next()
+		{
+			removed = false;
+			return entries[cur++];
+		}
+		
+		@Override
+		public void remove()
+		{
+			if (removed)
+				return;
+			
+			removeIndex(cur);
+			removed = true;
+			cur--;
 		}
 		
 	}

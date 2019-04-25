@@ -90,7 +90,7 @@ public class ScriptInstanceStack
 	/**
 	 * Clears the local scopes.
 	 */
-	public void clearLocalScopes()
+	private void clearLocalScopes()
 	{
 		while (scopeStackTop >= 0)
 			popLocalScope();
@@ -101,7 +101,7 @@ public class ScriptInstanceStack
 	 * This becomes the new local scope.
 	 * @throws ScriptStackException if this call would breach the stack capacity. 
 	 */
-	public void pushLocalScope()
+	private void pushLocalScope()
 	{
 		if (scopeStackTop + 1 >= scopeStack.length)
 			throw new ScriptStackException("scope stack overflow");
@@ -112,12 +112,36 @@ public class ScriptInstanceStack
 	 * Pops the most local context.
 	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
 	 */
-	public void popLocalScope()
+	private void popLocalScope()
 	{
 		if (scopeStackTop < 0)
 			throw new ScriptStackException("scope stack underflow");
 		scopeStack[scopeStackTop].clear();
 		scopeStackTop--;
+	}
+
+	/**
+	 * Pushes the current command index onto the activation stack and sets the program counter.
+	 * @param index the next script command index.
+	 * @throws ScriptStackException if this call would breach the stack capacity. 
+	 */
+	private void pushCommandIndex(int index)
+	{
+		if (activationStackTop + 1 >= activationStack.length)
+			throw new ScriptStackException("activation stack overflow");
+		activationStackTop++;
+		setCommandIndex(index);
+	}
+
+	/**
+	 * Restores a command index from the activation stack.
+	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
+	 */
+	private void popCommandIndex()
+	{
+		if (activationStackTop < 0)
+			throw new ScriptStackException("activation stack underflow");
+		activationStackTop--;
 	}
 
 	/**
@@ -128,7 +152,7 @@ public class ScriptInstanceStack
 	 */
 	public ScriptValue getValue(String name)
 	{
-		return scopeStack[scopeStackTop].get(name);
+		return scopeStack[scopeStackTop].getValue(name);
 	}
 
 	/**
@@ -146,7 +170,7 @@ public class ScriptInstanceStack
 			return;
 		}
 		
-		scopeStack[scopeStackTop].set(name, value);
+		scopeStack[scopeStackTop].setValue(name, value);
 	}
 
 	/**
@@ -176,35 +200,11 @@ public class ScriptInstanceStack
 	}
 
 	/**
-	 * Pushes the current command index onto the activation stack and sets the program counter.
-	 * @param index the next script command index.
-	 * @throws ScriptStackException if this call would breach the stack capacity. 
-	 */
-	public void pushCommandIndex(int index)
-	{
-		if (activationStackTop + 1 >= activationStack.length)
-			throw new ScriptStackException("activation stack overflow");
-		activationStackTop++;
-		setCommandIndex(index);
-	}
-
-	/**
-	 * Restores a command index from the activation stack.
-	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
-	 */
-	public void popCommandIndex()
-	{
-		if (activationStackTop < 0)
-			throw new ScriptStackException("activation stack underflow");
-		activationStackTop--;
-	}
-
-	/**
 	 * Gets the command index depth.
 	 * If 0, then this is 0 functions deep.
 	 * @return the depth of the activation stack. 
 	 */
-	public int getCommandIndexDepth()
+	public int getFrameDepth()
 	{
 		return activationStackTop;
 	}
@@ -213,8 +213,6 @@ public class ScriptInstanceStack
 	 * Pushes a new activation frame (local scope and command index).
 	 * @param nextCommandIndex the next command index.
 	 * @throws ScriptStackException if this call would breach the stack capacity. 
-	 * @see #pushCommandIndex(int)
-	 * @see #pushLocalScope()
 	 */
 	public void pushFrame(int nextCommandIndex)
 	{
@@ -225,8 +223,6 @@ public class ScriptInstanceStack
 	/**
 	 * Pops an activation frame (local scope and command index).
 	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
-	 * @see #popCommandIndex()
-	 * @see #popLocalScope()
 	 */
 	public void popFrame()
 	{
@@ -290,7 +286,7 @@ public class ScriptInstanceStack
 		this.scriptValueStackTop = -1;
 		// nullify object refs (to reduce chance of memory leaks).
 		for (int i = 0; i < prevCount; i++)
-			scriptValueStack[i].set(0L);
+			scriptValueStack[i].setNull();
 	}
 
 }

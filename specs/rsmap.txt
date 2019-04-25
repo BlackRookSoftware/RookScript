@@ -1,0 +1,140 @@
+Maps
+====
+
+m = {};
+    PUSH_MAP_NEW
+    POP_VARIABLE "m"
+
+m = {
+    x: 8,
+    y: -3
+};
+    PUSH_MAP_NEW
+    PUSH "x"
+    PUSH 8
+    POP_MAP
+    PUSH "y"
+    PUSH 3
+    NEGATE
+    POP_MAP
+    POP_VARIABLE "m"
+
+a = m.x;
+    PUSH_VARIABLE "m"
+    PUSH "x"
+    PUSH_MAP
+    POP_VARIABLE "a"
+
+m.x = 3;
+    PUSH_VARIABLE "m"
+    PUSH "x"
+    PUSH 3
+    POP_MAP
+
+m.m.x = 3;
+    PUSH_VARIABLE "m"
+    PUSH "m"
+    PUSH_MAP
+    PUSH "x"
+    PUSH 3
+    POP_MAP
+
+ScriptVariable
+--------------
++MAP
+
+Operator
+--------
+
+map.name = Dereference map, fetch name - left-associative.
+map[name] = Deref map, fetch name
+
+Commands
+--------
+
+PUSH_MAP_NEW
+    Create empty Map value -> [MAP]
+    Push [MAP]
+
+POP_MAP
+    Pop [VALUE]
+    Pop [NAME]
+    Pop [MAP]
+    Put [VALUE] -> [MAP].[NAME]
+
+PUSH_MAP
+    Pop [NAME]
+    Pop [MAP]
+    PUSH [MAP].[NAME]
+
+PUSH_MAP_CONTENTS
+    Stack:0 -> [NAME]
+    Stack:-1 -> [MAP]
+    PUSH [MAP].[NAME]
+
+Scopes
+======
+
+Scopes are variable providers that are set on script instance.
+
++interface ScriptVariableResolver
+    +getValue(String) : ScriptValue
+    +getValue(String, ScriptValue) : void
+    +setValue(String, Object) : void (throws IllegalOperationExcption)
+    +clearValue(String) : void (throws IllegalOperationExcption)
+    +containsValue(String) : void
+    +isReadOnly(String) : void
+
+:ScriptVariableContext : ScriptVariableResolver
+
+ScriptInstance
+    +setScope(String, ScriptVariableResolver)
+
+ScriptInstanceFactory
+    +addScope(String, ScriptVariableResolver)
+    +removeScope(String)
+
+Operator
+--------
+
+:: - Deref scope variable - left-associative
+
+scopename:value
+
+Commands
+--------
+
+PUSH_SCOPE_VARIABLE
+    Pop [NAME]
+    Pop [SCOPE]
+    Push [SCOPE].[NAME]
+
+POP_SCOPE_VARIABLE
+    Pop [VALUE]
+    Pop [NAME]
+    Pop [SCOPE]
+    Set [SCOPE].[NAME] <- [VALUE]
+
+==============================================================================
+
+entry update()
+{
+    if (keyboard::a)
+        println("a was pressed");
+}
+
+==============================================================================
+
+New Standard Commands
+=====================
+
+mapkeys(map)
+    Return all keys in a map.
+mapmerge(map1, map2)
+    Returns a new map by taking map1 by replacing/adding all key-values from map2.
+
+:length(x)
+    If map, return amount of keys
+:empty(x)
+    If map, is length(x) 0?
+ 

@@ -40,15 +40,15 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			if (scriptInstance.getCommandIndexDepth() == 0)
+			if (scriptInstance.getFrameDepth() == 0)
 			{
-				scriptInstance.popCommandIndex();
+				scriptInstance.popFrame();
 				scriptInstance.terminate();
 				return false;
 			}
 			else
 			{
-				scriptInstance.popCommandIndex();
+				scriptInstance.popFrame();
 				return true;
 			}
 		}
@@ -69,7 +69,7 @@ public enum ScriptCommandType
 			if (index < 0)
 				throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
 			
-			scriptInstance.pushCommandIndex(index);
+			scriptInstance.pushFrame(index);
 			return true;
 		}
 	},

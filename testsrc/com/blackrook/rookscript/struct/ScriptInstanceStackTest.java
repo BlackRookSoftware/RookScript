@@ -14,9 +14,9 @@ public class ScriptInstanceStackTest
 	public static void main(String[] args)
 	{
 		ScriptInstanceStack stack = new ScriptInstanceStack(16, 128);
+		stack.pushFrame(0);
 		stack.setValue("x", 5);
 		System.out.println(stack.getValue("x"));
-		stack.pushLocalScope();
 		stack.setValue("x", 10);
 		System.out.println(stack.getValue("x"));
 		
@@ -26,8 +26,6 @@ public class ScriptInstanceStackTest
 		stack.pushStackValue(true);
 
 		stack.setCommandIndex(20);
-		stack.pushCommandIndex(10);
-		stack.pushCommandIndex(30);
 
 		stack.reset();
 	}

@@ -173,7 +173,9 @@ public class ScriptInstance
 		Entry entry = script.getScriptEntry(entryName);
 		if (entry == null)
 			throw new ScriptExecutionException("Entry point \""+entryName+"\" does not exist.");
-			
+		
+		this.entryName = entryName;	
+		
 		pushFrame(entry.getIndex());
 		
 		int entryParamCount = entry.getParameterCount();
@@ -342,33 +344,6 @@ public class ScriptInstance
 	}
 
 	/**
-	 * Clears the local scopes.
-	 */
-	public void clearLocalScopes()
-	{
-		scriptInstanceStack.clearLocalScopes();
-	}
-
-	/**
-	 * Pushes a new scope into the instance.
-	 * This becomes the new local scope.
-	 * @throws ScriptStackException if this call would breach the stack capacity. 
-	 */
-	public void pushLocalScope()
-	{
-		scriptInstanceStack.pushLocalScope();
-	}
-
-	/**
-	 * Pops the most local context.
-	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
-	 */
-	public void popLocalScope()
-	{
-		scriptInstanceStack.popLocalScope();
-	}
-
-	/**
 	 * Gets a corresponding script value by name.
 	 * Only looks at the topmost scope.
 	 * @param name the name of the variable.
@@ -418,20 +393,8 @@ public class ScriptInstance
 	}
 
 	/**
-	 * Pushes the current command index onto the activation stack and sets the program counter.
-	 * @param index the next script command index.
-	 * @throws ScriptStackException if this call would breach the stack capacity. 
-	 */
-	public void pushCommandIndex(int index)
-	{
-		scriptInstanceStack.pushCommandIndex(index);
-	}
-
-	/**
 	 * Pushes a new activation frame (local scope and command index).
 	 * @param nextCommandIndex the next command index.
-	 * @see #pushCommandIndex(int)
-	 * @see #pushLocalScope()
 	 * @throws ScriptStackException if this call would breach the stack capacity. 
 	 */
 	public void pushFrame(int nextCommandIndex)
@@ -441,8 +404,6 @@ public class ScriptInstance
 	
 	/**
 	 * Pops an activation frame (local scope and command index).
-	 * @see #popCommandIndex()
-	 * @see #popLocalScope()
 	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
 	 */
 	public void popFrame()
@@ -451,22 +412,13 @@ public class ScriptInstance
 	}
 	
 	/**
-	 * Restores a command index from the activation stack.
-	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
-	 */
-	public void popCommandIndex()
-	{
-		scriptInstanceStack.popCommandIndex();
-	}
-
-	/**
-	 * Gets the command index depth.
-	 * If 0, then this is 0 functions deep.
+	 * Gets the frame depth.
+	 * If 0, then this is 0 functions deep - the starting entry point.
 	 * @return the depth of the activation stack. 
 	 */
-	public int getCommandIndexDepth()
+	public int getFrameDepth()
 	{
-		return scriptInstanceStack.getCommandIndexDepth();
+		return scriptInstanceStack.getFrameDepth();
 	}
 
 	/**
@@ -515,7 +467,7 @@ public class ScriptInstance
 		sb.append(state);
 		sb.append(" Commands:").append(' ').append(commandsExecuted);
 		sb.append(" Index:").append(' ').append(scriptInstanceStack.getCommandIndex());
-		sb.append(" Activation:").append(' ').append(scriptInstanceStack.getCommandIndexDepth());
+		sb.append(" Activation:").append(' ').append(scriptInstanceStack.getFrameDepth());
 		sb.append(" Stack:").append(' ').append(scriptInstanceStack.getValueStackDepth());
 		return sb.toString();
 	}
