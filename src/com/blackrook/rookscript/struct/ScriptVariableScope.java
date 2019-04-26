@@ -8,8 +8,8 @@
 package com.blackrook.rookscript.struct;
 
 import java.util.Comparator;
-import java.util.Iterator;
 
+import com.blackrook.commons.ResettableIterator;
 import com.blackrook.commons.comparators.CaseInsensitiveComparator;
 import com.blackrook.commons.util.ArrayUtils;
 
@@ -93,7 +93,7 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 			if (entries[i].name.equalsIgnoreCase(name))
 				return i;
 	
-			int c = entries[i].name.compareTo(name); 
+			int c = CaseInsensitiveComparator.getInstance().compare(entries[i].name, name); 
 			
 			if (c < 0)
 				l = i;
@@ -245,12 +245,12 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 	}
 
 	@Override
-	public Iterator<Entry> iterator()
+	public ResettableIterator<Entry> iterator()
 	{
 		return new EntryIterator();
 	}
 	
-	private class EntryIterator implements Iterator<Entry>
+	private class EntryIterator implements ResettableIterator<Entry>
 	{
 		private int cur = 0;
 		private boolean removed = false;
@@ -279,6 +279,11 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 			cur--;
 		}
 		
+		@Override
+		public void reset()
+		{
+			cur = 0;
+		}
 	}
 	
 }

@@ -32,6 +32,7 @@ import com.blackrook.rookscript.struct.ScriptValue;
  * Public fields are prioritized over getters/setters.
  * <p>
  * Good for POJOs, mostly.
+ * TODO: Obey @ScriptIgnore annotation.
  * @author Matthew Tropiano
  */
 public class ClassFieldFunctionResolver implements ScriptFunctionResolver

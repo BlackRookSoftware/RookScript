@@ -19,10 +19,13 @@ import com.blackrook.commons.list.List;
 import com.blackrook.commons.util.ObjectUtils;
 import com.blackrook.commons.util.ThreadUtils;
 import com.blackrook.commons.util.ValueUtils;
+import com.blackrook.rookscript.util.ScriptReflection;
+import com.blackrook.rookscript.util.ScriptReflection.Profile;
 
 /**
  * Script value encapsulation.
  * @author Matthew Tropiano
+ * FIXME: Arithmetic should just output NaN if the types are not combineable.
  */
 public class ScriptValue implements Comparable<ScriptValue>
 {
@@ -53,6 +56,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 
 	/**
 	 * Creates a script value.
+	 * NOTE: Objects are turned into maps.
 	 * @param value the source value.
 	 * @return a new script value.
 	 */
@@ -60,6 +64,18 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		ScriptValue out = new ScriptValue();
 		out.set(value);
+		return out;
+	}
+	
+	/**
+	 * Creates a script value that is an object reference.
+	 * @param value the source value.
+	 * @return a new script value.
+	 */
+	public static ScriptValue createObjectRef(Object value)
+	{
+		ScriptValue out = new ScriptValue();
+		out.setObjectRef(value);
 		return out;
 	}
 	
@@ -125,7 +141,25 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
+	 * Sets this value as an object reference.
+	 * If null, this is set to the null value.
+	 * @param value the source value to use.
+	 */
+	public void setObjectRef(Object value)
+	{
+		if (value == null)
+			setNull();
+		else
+		{
+			this.type = Type.OBJECT;
+			this.ref = value;
+			this.rawbits = 0L;
+		}
+	}
+	
+	/**
 	 * Sets this value using another value.
+	 * If null, this is set to the null value.
 	 * @param value the source value to use.
 	 */
 	public void set(Object value)
@@ -135,21 +169,21 @@ public class ScriptValue implements Comparable<ScriptValue>
 		else if (value instanceof ScriptValue)
 			set((ScriptValue)value);
 		else if (value instanceof Boolean)
-			set((Boolean)value);
+			set((boolean)value);
 		else if (value instanceof Byte)
-			set((Byte)value);
+			set((byte)value);
 		else if (value instanceof Short)
-			set((Short)value);
+			set((short)value);
 		else if (value instanceof Character)
-			set((Character)value);
+			set((char)value);
 		else if (value instanceof Integer)
-			set((Integer)value);
+			set((int)value);
 		else if (value instanceof Long)
-			set((Long)value);
+			set((long)value);
 		else if (value instanceof Float)
-			set((Float)value);
+			set((float)value);
 		else if (value instanceof Double)
-			set((Double)value);
+			set((double)value);
 		else if (value instanceof String)
 			set((String)value);
 		else
@@ -167,15 +201,17 @@ public class ScriptValue implements Comparable<ScriptValue>
 			}
 			else
 			{
-				this.type = Type.OBJECT;
-				this.ref = value;
+				this.type = Type.MAP;
+				this.ref = new ScriptVariableScope(4);
 				this.rawbits = 0L;
+				mapExtract(value);
 			}
 		}
 	}
 
 	/**
 	 * Sets this value using another value.
+	 * If null, this is set to the null value.
 	 * @param value the source value to use.
 	 */
 	public void set(ScriptValue value)
@@ -196,144 +232,88 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * Sets this value using another value.
 	 * @param value the source value to use.
 	 */
-	public void set(Boolean value)
+	public void set(boolean value)
 	{
-		if (value == null)
-		{
-			setNull();
-		}
-		else
-		{
-			this.type = Type.BOOLEAN;
-			this.ref = null;
-			this.rawbits = value ? 1L : 0L;
-		}
+		this.type = Type.BOOLEAN;
+		this.ref = null;
+		this.rawbits = value ? 1L : 0L;
 	}
 
 	/**
 	 * Sets this value using another value.
 	 * @param value the source value to use.
 	 */
-	public void set(Byte value)
+	public void set(byte value)
 	{
-		if (value == null)
-		{
-			setNull();
-		}
-		else
-		{
-			this.type = Type.INTEGER;
-			this.ref = null;
-			this.rawbits = (long)value;
-		}
+		this.type = Type.INTEGER;
+		this.ref = null;
+		this.rawbits = (long)value;
 	}
 
 	/**
 	 * Sets this value using another value.
 	 * @param value the source value to use.
 	 */
-	public void set(Short value)
+	public void set(short value)
 	{
-		if (value == null)
-		{
-			setNull();
-		}
-		else
-		{
-			this.type = Type.INTEGER;
-			this.ref = null;
-			this.rawbits = (long)value;
-		}
+		this.type = Type.INTEGER;
+		this.ref = null;
+		this.rawbits = (long)value;
 	}
 
 	/**
 	 * Sets this value using another value.
 	 * @param value the source value to use.
 	 */
-	public void set(Character value)
+	public void set(char value)
 	{
-		if (value == null)
-		{
-			setNull();
-		}
-		else
-		{
-			this.type = Type.INTEGER;
-			this.ref = null;
-			this.rawbits = (long)value & 0x00ffff;
-		}
+		this.type = Type.INTEGER;
+		this.ref = null;
+		this.rawbits = (long)value & 0x00ffff;
 	}
 
 	/**
 	 * Sets this value using another value.
 	 * @param value the source value to use.
 	 */
-	public void set(Integer value)
+	public void set(int value)
 	{
-		if (value == null)
-		{
-			setNull();
-		}
-		else
-		{
-			this.type = Type.INTEGER;
-			this.ref = null;
-			this.rawbits = (long)value;
-		}
+		this.type = Type.INTEGER;
+		this.ref = null;
+		this.rawbits = (long)value;
 	}
 
 	/**
 	 * Sets this value using another value.
 	 * @param value the source value to use.
 	 */
-	public void set(Long value)
+	public void set(long value)
 	{
-		if (value == null)
-		{
-			setNull();
-		}
-		else
-		{
-			this.type = Type.INTEGER;
-			this.ref = null;
-			this.rawbits = value;
-		}
+		this.type = Type.INTEGER;
+		this.ref = null;
+		this.rawbits = value;
 	}
 
 	/**
 	 * Sets this value using another value.
 	 * @param value the source value to use.
 	 */
-	public void set(Float value)
+	public void set(float value)
 	{
-		if (value == null)
-		{
-			setNull();
-		}
-		else
-		{
-			this.type = Type.FLOAT;
-			this.ref = null;
-			this.rawbits = Double.doubleToRawLongBits(value.doubleValue());
-		}
+		this.type = Type.FLOAT;
+		this.ref = null;
+		this.rawbits = Double.doubleToRawLongBits((double)value);
 	}
 
 	/**
 	 * Sets this value using another value.
 	 * @param value the source value to use.
 	 */
-	public void set(Double value)
+	public void set(double value)
 	{
-		if (value == null)
-		{
-			setNull();
-		}
-		else
-		{
-			this.type = Type.FLOAT;
-			this.ref = null;
-			this.rawbits = Double.doubleToRawLongBits(value);
-		}
+		this.type = Type.FLOAT;
+		this.ref = null;
+		this.rawbits = Double.doubleToRawLongBits(value);
 	}
 
 	/**
@@ -697,6 +677,42 @@ public class ScriptValue implements Comparable<ScriptValue>
 		return map.clearValue(key);
 	}
 	
+	/**
+	 * Extracts an object's fields/getters and sets those values to this map.
+	 * This can be expensive, depending on what needs converting. 
+	 * <p>If you are passing an object to a script repeatedly, it may be better to just pass it
+	 * as an object reference, if there are associated host functions that manipulate it.
+	 * @param object the source object.
+	 * @return true if this is a map and extraction was successful.
+	 */
+	public <T> boolean mapExtract(T object)
+	{
+		if (!isMap())
+			return false;
+	
+		@SuppressWarnings("unchecked")
+		Profile<T> profile = ScriptReflection.getProfile((Class<T>)object.getClass());
+		profile.objectToMap(object, this);
+		return true;
+	}
+
+	/**
+	 * Applies this map to an object's fields/setters.
+	 * This can be expensive, depending on what needs converting. 
+	 * @param object the source object.
+	 * @return true if this is a map and application was successful.
+	 */
+	public <T> boolean mapApply(T object)
+	{
+		if (!isMap())
+			return false;
+	
+		@SuppressWarnings("unchecked")
+		Profile<T> profile = ScriptReflection.getProfile((Class<T>)object.getClass());
+		profile.mapToObject(this, object);
+		return true;
+	}
+
 	/**
 	 * @return true if this value is null.
 	 */
@@ -1152,6 +1168,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	/**
 	 * Gets this object coerced or converted to another class type.
 	 * Not to be confused with {@link #asObjectType(Class)}, which just recasts.
+	 * If this is a map, this applies its fields to the new object's setter methods and fields.
 	 * @param targetType the target class type to convert to.
 	 * @param <T> the returned type.
 	 * @return a suitable object of type <code>targetType</code>. 

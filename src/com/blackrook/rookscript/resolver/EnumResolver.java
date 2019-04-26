@@ -14,6 +14,7 @@ import com.blackrook.rookscript.ScriptFunctionType;
 
 /**
  * A special kind of host function resolver that wraps an {@link Enum} of {@link ScriptFunctionType}.
+ * TODO: Obey @ScriptIgnore annotation.
  * @author Matthew Tropiano 
  */
 public class EnumResolver implements ScriptFunctionResolver

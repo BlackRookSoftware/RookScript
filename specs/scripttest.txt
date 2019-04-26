@@ -7,7 +7,6 @@ entry main()
 	stdout(typeof(0.5));
 	stdout(typeof("asd"));
 	stdout(typeof([]));
-
 	stdout(MIN(6,2));
 	stdout(MAX(6,2));
 	stdout(POW(6,2));
