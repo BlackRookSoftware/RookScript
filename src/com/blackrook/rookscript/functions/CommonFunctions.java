@@ -15,6 +15,9 @@ import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.resolver.EnumResolver;
 import com.blackrook.rookscript.struct.ScriptValue;
+import com.blackrook.rookscript.struct.ScriptVariableScope;
+import com.blackrook.rookscript.struct.ScriptValue.ErrorType;
+import com.blackrook.rookscript.struct.ScriptVariableScope.Entry;
 
 /**
  * Script common functions that work for all scripts.
@@ -36,6 +39,110 @@ public enum CommonFunctions implements ScriptFunctionType
 		public boolean execute(ScriptInstance scriptInstance)
 		{
 			scriptInstance.pushStackValue(scriptInstance.popStackValue().getTypeName());
+			return true;
+		}
+	},
+
+	/**
+	 * Returns if the provided value is an error type. True if so, false if not.
+	 * ARG1: The value. 
+	 */
+	ISERROR(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			scriptInstance.pushStackValue(scriptInstance.popStackValue().isError());
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns the error type.
+	 * If not an error, this returns false.
+	 * ARG1: The value. 
+	 */
+	ERRORTYPE(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue sv = scriptInstance.popStackValue();
+			if (!sv.isError())
+			{
+				scriptInstance.pushStackValue(false);
+				return true;
+			}
+			
+			scriptInstance.pushStackValue(sv.asObjectType(ErrorType.class).getType());
+			return true;
+		}
+	},
+
+	/**
+	 * Returns the error message.
+	 * If not an error, this returns false.
+	 * ARG1: The value. 
+	 */
+	ERRORMSG(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue sv = scriptInstance.popStackValue();
+			if (!sv.isError())
+			{
+				scriptInstance.pushStackValue(false);
+				return true;
+			}
+			
+			scriptInstance.pushStackValue(sv.asObjectType(ErrorType.class).getMessage());
+			return true;
+		}
+	},
+
+	/**
+	 * Returns the localized error message.
+	 * If not an error, this returns false.
+	 * ARG1: The value. 
+	 */
+	ERRORLOCALMSG(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue sv = scriptInstance.popStackValue();
+			if (!sv.isError())
+			{
+				scriptInstance.pushStackValue(false);
+				return true;
+			}
+			
+			scriptInstance.pushStackValue(sv.asObjectType(ErrorType.class).getLocalizedMessage());
+			return true;
+		}
+	},
+
+	/**
+	 * Returns an error type as a map.
+	 * If not an error, this returns false.
+	 * ARG1: The value. 
+	 */
+	ERRORMAP(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue sv = scriptInstance.popStackValue();
+			if (!sv.isError())
+			{
+				scriptInstance.pushStackValue(false);
+				return true;
+			}
+			
+			ScriptValue out = ScriptValue.createEmptyMap();
+			out.mapExtract(sv.asObjectType(ErrorType.class));
+			scriptInstance.pushStackValue(out);
 			return true;
 		}
 	},
@@ -652,6 +759,73 @@ public enum CommonFunctions implements ScriptFunctionType
 			return true;
 		}
 	},
+	
+	/**
+	 * Gets a list of all of the keys in a map.
+	 * Returns a new list, or false if not a map.
+	 * ARG1: The map.
+	 */
+	MAPKEYS(1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance) 
+		{
+			ScriptValue sv = scriptInstance.popStackValue();
+			if (!sv.isMap())
+			{
+				scriptInstance.pushStackValue(false);
+				return true;
+			}
+			
+			ScriptValue out = ScriptValue.createEmptyList();
+			for (Entry e : sv.asObjectType(ScriptVariableScope.class))
+				out.listAdd(e.getName());
+			scriptInstance.pushStackValue(out);
+			return true;
+		}
+	},
+	
+	/**
+	 * Gets a map that is the result of taking the first map and adding all
+	 * of the keys of the second, replacing the keys that exist in the first.
+	 * The copies are shallow - references are preserved. 
+	 * Returns a new map. 
+	 * If the first value is not a map, this returns an empty map.
+	 * If the second value is not a map, a shallow copy of the first map is returned. 
+	 * ARG1: The first map.
+	 * ARG2: The second map.
+	 */
+	MAPMERGE(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance) 
+		{
+			ScriptValue map2 = scriptInstance.popStackValue();
+			ScriptValue map1 = scriptInstance.popStackValue();
+			ScriptValue out = ScriptValue.createEmptyMap();
+			if (!map1.isMap())
+			{
+				scriptInstance.pushStackValue(out);
+				return true;
+			}
+			
+			for (Entry e : map1.asObjectType(ScriptVariableScope.class))
+				out.mapSet(e.getName(), e.getValue());
+			
+			if (!map2.isMap())
+			{
+				scriptInstance.pushStackValue(out);
+				return true;
+			}
+
+			for (Entry e : map2.asObjectType(ScriptVariableScope.class))
+				out.mapSet(e.getName(), e.getValue());
+			
+			scriptInstance.pushStackValue(out);
+			return true;
+		}
+	},
+	
 	
 	;
 	

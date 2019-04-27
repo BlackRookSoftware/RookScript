@@ -19,6 +19,7 @@ import com.blackrook.commons.list.List;
 import com.blackrook.commons.util.ObjectUtils;
 import com.blackrook.commons.util.ThreadUtils;
 import com.blackrook.commons.util.ValueUtils;
+import com.blackrook.rookscript.struct.ScriptVariableScope.Entry;
 import com.blackrook.rookscript.util.ScriptReflection;
 import com.blackrook.rookscript.util.ScriptReflection.Profile;
 
@@ -36,9 +37,10 @@ public class ScriptValue implements Comparable<ScriptValue>
 		INTEGER,
 		FLOAT,
 		STRING,
+		OBJECTREF,
 		LIST,
 		MAP,
-		OBJECT;
+		ERROR;
 	}
 	
 	/** Value internal type. */
@@ -81,7 +83,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	
 	/**
 	 * Creates a script value that is an empty list.
-	 * @return a new expression value.
+	 * @return a new script value.
 	 */
 	public static ScriptValue createEmptyList()
 	{
@@ -94,7 +96,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	
 	/**
 	 * Creates a script value that is an empty map.
-	 * @return a new expression value.
+	 * @return a new script value.
 	 */
 	public static ScriptValue createEmptyMap()
 	{
@@ -106,8 +108,52 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
+	 * Creates an error value from a Throwable.
+	 * Copies the simple class name, the message, and the localized message.
+	 * @param t the Throwable to use.
+	 * @return a new script value.
+	 * @see #createError(String, String, String)
+	 * @see Throwable#getClass()
+	 * @see Class#getSimpleName()
+	 * @see Throwable#getMessage()
+	 * @see Throwable#getLocalizedMessage()
+	 */
+	public static ScriptValue createError(Throwable t)
+	{
+		ScriptValue sv = new ScriptValue();
+		sv.set(t);
+		return sv;
+	}
+	
+	/**
+	 * Creates an error value.
+	 * @param type the error type.
+	 * @param message the error message (will be same as localized).
+	 * @return a new script value.
+	 */
+	public static ScriptValue createError(String type, String message)
+	{
+		return createError(type, message, message);
+	}
+	
+	/**
+	 * Creates an error value.
+	 * @param type the error type.
+	 * @param message the error message.
+	 * @param localizedMessage a localized version of the error message.
+	 * @return a new script value.
+	 */
+	public static ScriptValue createError(String type, String message, String localizedMessage)
+	{
+		ScriptValue sv = new ScriptValue();
+		sv.set(ErrorType.create(type, message, localizedMessage));
+		return sv;
+	}
+	
+	/**
 	 * Creates a copy of this value.
-	 * The copy process is DEEP - lists are copied as well, except for native objects.
+	 * The copy process is DEEP - lists and maps are copied as well, except for native objects
+	 * (the references are copied, but not what points to them).
 	 * @return a new ScriptValue.
 	 */
 	public ScriptValue copy()
@@ -123,8 +169,11 @@ public class ScriptValue implements Comparable<ScriptValue>
 		}
 		else if (isMap())
 		{
-			// TODO: Finish this.
-			return null;
+			ScriptVariableScope scope = (ScriptVariableScope)this.ref;
+			ScriptValue copy = createEmptyMap();
+			for (Entry e : scope)
+				copy.mapSet(e.getName(), create(e.getValue().copy()));
+			return copy;
 		}
 		else
 			return create(this);
@@ -141,7 +190,41 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
-	 * Sets this value as an object reference.
+	 * Sets this value as an error.
+	 * If null, this is set to the null value.
+	 * @param value the source error to use.
+	 */
+	public void set(ErrorType value)
+	{
+		if (value == null)
+			setNull();
+		else
+		{
+			this.type = Type.ERROR;
+			this.ref = value;
+			this.rawbits = 0L;
+		}
+	}
+	
+	/**
+	 * Sets this value as an error.
+	 * If null, this is set to the null value.
+	 * @param value the source error to use.
+	 */
+	public void set(Throwable value)
+	{
+		if (value == null)
+			setNull();
+		else
+		{
+			this.type = Type.ERROR;
+			this.ref = ErrorType.create(value);
+			this.rawbits = 0L;
+		}
+	}
+	
+	/**
+	 * Explicitly sets this value as an object reference.
 	 * If null, this is set to the null value.
 	 * @param value the source value to use.
 	 */
@@ -151,7 +234,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			setNull();
 		else
 		{
-			this.type = Type.OBJECT;
+			this.type = Type.OBJECTREF;
 			this.ref = value;
 			this.rawbits = 0L;
 		}
@@ -166,6 +249,10 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		if (value == null)
 			setNull();
+		else if (value instanceof ErrorType)
+			set((ErrorType)value);
+		else if (value instanceof Throwable)
+			set((Throwable)value);
 		else if (value instanceof ScriptValue)
 			set((ScriptValue)value);
 		else if (value instanceof Boolean)
@@ -378,7 +465,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			case STRING:
 			case LIST:
 			case MAP:
-			case OBJECT:
+			case OBJECTREF:
 				return ObjectUtils.isEmpty(ref);
 		}
 	}
@@ -770,11 +857,19 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
+	 * @return true if this value is an error type.
+	 */
+	public boolean isError()
+	{
+		return type == Type.ERROR;
+	}
+	
+	/**
 	 * @return true if this value is an object type.
 	 */
 	public boolean isObject()
 	{
-		return type == Type.OBJECT;
+		return type == Type.OBJECTREF;
 	}
 	
 	/**
@@ -795,7 +890,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			case FLOAT:
 				return !isNaN() && Double.longBitsToDouble(rawbits) != 0.0; 
 			case STRING:
-			case OBJECT:
+			case OBJECTREF:
 				return !ObjectUtils.isEmpty(ref); 
 		}
 	}
@@ -920,9 +1015,15 @@ public class ScriptValue implements Comparable<ScriptValue>
 		switch (type)
 		{
 			default:
-			case OBJECT:
 			case LIST:
+				return String.valueOf(ref);
+			case OBJECTREF:
 				return Reflect.isArray(ref) ? Arrays.toString((Object[])ref) : String.valueOf(ref);
+			case ERROR:
+			{
+				ErrorType err = (ErrorType)ref;
+				return err.getType() + ": " + err.getLocalizedMessage();
+			}
 			case BOOLEAN:
 				return String.valueOf(asBoolean()); 
 			case INTEGER:
@@ -1007,7 +1108,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		switch (type)
 		{
-			case OBJECT:
+			case OBJECTREF:
 			{
 				Class<?> clazz = ref.getClass();
 				return Reflect.isArray(clazz) && targetType.isAssignableFrom(Reflect.getArrayType(clazz));
@@ -1030,11 +1131,11 @@ public class ScriptValue implements Comparable<ScriptValue>
 		else switch (type)
 		{
 			default:
-			case OBJECT:
+			case OBJECTREF:
 				if (Reflect.isArray(ref))
-					return "object:array:"+Reflect.getArrayType(ref).getSimpleName();
+					return "objectref:array:"+Reflect.getArrayType(ref).getSimpleName();
 				else
-					return "object:"+ref.getClass().getSimpleName();
+					return "objectref:"+ref.getClass().getSimpleName();
 			case BOOLEAN:
 				return "boolean";
 			case FLOAT:
@@ -1045,6 +1146,10 @@ public class ScriptValue implements Comparable<ScriptValue>
 				return "string";
 			case LIST:
 				return "list";
+			case MAP:
+				return "map";
+			case ERROR:
+				return "error";
 		}
 	}
 	
@@ -1222,7 +1327,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return o.type != Type.NULL ? -1 : 0;
 		else if (o.type == Type.NULL)
 			return 1;
-		else if (type == Type.OBJECT || o.type == Type.OBJECT)
+		else if (type == Type.OBJECTREF || o.type == Type.OBJECTREF)
 			return ref.equals(o.ref) ? 0 : -1;
 		else if (type == Type.LIST || o.type == Type.LIST)
 			return ref == o.ref ? 0 : -1;
@@ -1250,7 +1355,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			case STRING:
 				return String.valueOf("\""+ref+"\"");
 			default:
-			case OBJECT:
+			case OBJECTREF:
 				if (Reflect.isArray(ref))
 					return Arrays.toString((Object[])ref);
 				else
@@ -1792,6 +1897,72 @@ public class ScriptValue implements Comparable<ScriptValue>
 		out.set(!operand.equals(operand2));
 	}
 
+	/**
+	 * The class used as an error type.
+	 * Errors are a completely separate type, in order to differentiate them from objects,
+	 * and check them in return from host functions (or other functions).
+	 */
+	public static class ErrorType
+	{
+		private String type;
+		private String message;
+		private String localizedMessage;
+		
+		/**
+		 * Creates an error value.
+		 * @param type the error type.
+		 * @param message the error message.
+		 * @param localizedMessage a localized version of the error message.
+		 * @return a new ErrorType.
+		 */
+		public static ErrorType create(String type, String message, String localizedMessage)
+		{
+			ErrorType out = new ErrorType();
+			out.type = type;
+			out.message = message;
+			out.localizedMessage = localizedMessage;
+			return out;
+		}
+		
+		/**
+		 * Creates an error value from a Throwable.
+		 * Copies the simple class name, the message, and the localized message.
+		 * @param t the Throwable to use.
+		 * @return a new ErrorType.
+		 * @see #createError(String, String, String)
+		 * @see Throwable#getClass()
+		 * @see Class#getSimpleName()
+		 * @see Throwable#getMessage()
+		 * @see Throwable#getLocalizedMessage()
+		 */
+		public static ErrorType create(Throwable t)
+		{
+			ErrorType out = new ErrorType();
+			out.type = t.getClass().getSimpleName();
+			out.message = t.getMessage();
+			out.localizedMessage = t.getLocalizedMessage();
+			return out;
+		}
+		
+		private ErrorType() {}
+		
+		public String getType() 
+		{
+			return type;
+		}
+
+		public String getMessage() 
+		{
+			return message;
+		}
+		
+		public String getLocalizedMessage() 
+		{
+			return localizedMessage;
+		}
+		
+	}
+	
 	private static final String CACHE_NAME = "$$"+Cache.class.getCanonicalName();
 
 	// Get the cache.
