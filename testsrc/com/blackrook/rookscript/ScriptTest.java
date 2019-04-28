@@ -19,6 +19,7 @@ import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
 import com.blackrook.rookscript.resolver.MultiResolver;
+import com.blackrook.rookscript.scope.ScriptVariableScope;
 import com.blackrook.rookscript.struct.ScriptInstanceStack;
 
 public class ScriptTest
@@ -41,27 +42,40 @@ public class ScriptTest
 			StandardIOFunctions.getResolver(),
 			MathFunctions.getResolver()
 		));
-		script = ScriptAssembler.optimize(script);
 		ScriptAssembler.disassemble(script, new OutputStreamWriter(System.out));
 
 		ScriptInstanceStack stack = new ScriptInstanceStack(
 			ValueUtils.parseInt(ArrayUtils.arrayElement(args, 1), 16), 
 			ValueUtils.parseInt(ArrayUtils.arrayElement(args, 2), 512)
 		);
-		ScriptInstance instance = new ScriptInstance(script, stack, null);
-		instance.initialize("main");
-		instance.update();
-
-		/*
-		for (int i = 0; i < 10000; i++)
+		
+		final ScriptVariableScope scriptScope = new ScriptVariableScope();
+		ScriptScopeResolver ssr = new ScriptScopeResolver()
 		{
-			long nanos = System.nanoTime();
-			instance.initialize();
-			instance.update();
-			System.out.println((System.nanoTime() - nanos) + "ns");
-		}
-		*/
-
+			@Override
+			public boolean isReadOnly(String name)
+			{
+				return false;
+			}
+			
+			@Override
+			public ScriptVariableResolver getScope(String name)
+			{
+				if (name.equalsIgnoreCase("script"))
+					return scriptScope;
+				return null;
+			}
+			
+			@Override
+			public boolean containsScope(String name)
+			{
+				return name.equalsIgnoreCase("script");
+			}
+		};
+		
+		ScriptInstance instance = new ScriptInstance(script, stack, ssr, null);
+		instance.call("main");
+		System.out.println("Script returns: "+instance.popStackValue());
 	}
 	
 }

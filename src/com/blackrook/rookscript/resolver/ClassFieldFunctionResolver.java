@@ -21,6 +21,8 @@ import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptFunctionType.Usage;
 import com.blackrook.rookscript.ScriptInstance;
+import com.blackrook.rookscript.annotations.ScriptIgnore;
+import com.blackrook.rookscript.annotations.ScriptName;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.struct.ScriptValue;
 
@@ -32,7 +34,10 @@ import com.blackrook.rookscript.struct.ScriptValue;
  * Public fields are prioritized over getters/setters.
  * <p>
  * Good for POJOs, mostly.
- * TODO: Obey @ScriptIgnore annotation.
+ * <p>
+ * Constructors/fields/getters/setters annotated with @ScriptIgnore are ignored.
+ * Constructors/getters/setters annotated with @ScriptName use the provided name instead of the generated one.
+ * Fields annotated with @ScriptName use the provided name, but still prefixed with the get/setname.
  * @author Matthew Tropiano
  */
 public class ClassFieldFunctionResolver implements ScriptFunctionResolver
@@ -84,13 +89,25 @@ public class ClassFieldFunctionResolver implements ScriptFunctionResolver
 		
 		for (Constructor<?> constructor : clazz.getConstructors())
 		{
-			sb.append(baseName).append(separator).append(constructorName);
-			if (constructorCount > 0)
-				sb.append(separator).append(constructorCount - 1);
+			if (constructor.getAnnotation(ScriptIgnore.class) != null)
+				continue;
 			
-			String name = sb.toString().toLowerCase();
-			sb.delete(0, sb.length());
-
+			String name;
+			ScriptName anno;
+			if ((anno = constructor.getAnnotation(ScriptName.class)) != null)
+			{
+				name = anno.value();
+			}
+			else
+			{
+				sb.append(baseName).append(separator).append(constructorName);
+				if (constructorCount > 0)
+					sb.append(separator).append(constructorCount - 1);
+				
+				name = sb.toString().toLowerCase();
+				sb.delete(0, sb.length());
+			}
+			
 			if (constructor.getParameterCount() == 0)
 				mappedFunctions.put(name, new DefaultConstructorInvoker(name, new InvokerUsage("Creates a new "+objName+".")));
 			else
@@ -107,42 +124,86 @@ public class ClassFieldFunctionResolver implements ScriptFunctionResolver
 		
 		for (ObjectPair<String, Field> fieldPair : profile.getPublicFields())
 		{
+			Field field = fieldPair.getValue();
+			if (field.getAnnotation(ScriptIgnore.class) != null)
+				continue;
+
 			String fieldName = fieldPair.getKey();
 			String fieldUsageGet = "Gets the value of the \"" + fieldName + "\" field on a " + objName + " object (via public field).";
 			String fieldUsageSet = "Sets the value of the \"" + fieldName + "\" field on a " + objName + " object (via public field).";
 			
-			String getter = (sb.append(baseName).append(separator).append(getName).append(separator).append(fieldName).toString()).toLowerCase();
-			sb.delete(0, sb.length());
-			String setter = (sb.append(baseName).append(separator).append(setName).append(separator).append(fieldName).toString()).toLowerCase();
-			sb.delete(0, sb.length());
-			mappedFunctions.put(getter, new GetterInvoker(getter, fieldPair.getValue(), new InvokerUsage(fieldUsageGet, "The source object.")));
-			mappedFunctions.put(setter, new SetterInvoker(setter, fieldPair.getValue(), new InvokerUsage(fieldUsageSet, "The target object.", "The value to set (will be converted to "+fieldPair.getValue().getType().getSimpleName()+" if possible).")));
+			String getter;
+			String setter;
+			ScriptName anno;
+			if ((anno = field.getAnnotation(ScriptName.class)) != null)
+			{
+				getter = getName + separator + anno.value();
+				setter = setName + separator + anno.value();
+			}
+			else
+			{
+				getter = (sb.append(baseName).append(separator).append(getName).append(separator).append(fieldName).toString()).toLowerCase();
+				sb.delete(0, sb.length());
+				setter = (sb.append(baseName).append(separator).append(setName).append(separator).append(fieldName).toString()).toLowerCase();
+				sb.delete(0, sb.length());
+			}
+			
+			mappedFunctions.put(getter, new GetterInvoker(getter, field, new InvokerUsage(fieldUsageGet, "The source object.")));
+			mappedFunctions.put(setter, new SetterInvoker(setter, field, new InvokerUsage(fieldUsageSet, "The target object.", "The value to set (will be converted to "+fieldPair.getValue().getType().getSimpleName()+" if possible).")));
 		}
 
 		for (ObjectPair<String, MethodSignature> methodPair : profile.getGetterMethods())
 		{
+			Method method = methodPair.getValue().getMethod();
+			if (method.getAnnotation(ScriptIgnore.class) != null)
+				continue;
+
 			String fieldName = methodPair.getKey();
-			String getter = (sb.append(baseName).append(separator).append(getName).append(separator).append(fieldName).toString()).toLowerCase();
-			sb.delete(0, sb.length());
+			
+			String getter;
+			ScriptName anno;
+			if ((anno = method.getAnnotation(ScriptName.class)) != null)
+			{
+				getter = anno.value();
+			}
+			else
+			{
+				getter = (sb.append(baseName).append(separator).append(getName).append(separator).append(fieldName).toString()).toLowerCase();
+				sb.delete(0, sb.length());
+			}
 			
 			if (mappedFunctions.containsKey(getter))
 				continue;
 
 			String fieldUsageGet = "Gets the value of the \"" + fieldName + "\" field on a " + objName + " object (via getter method).";
-			mappedFunctions.put(getter, new GetterInvoker(getter, methodPair.getValue().getMethod(), new InvokerUsage(fieldUsageGet, "The source object.")));
+			mappedFunctions.put(getter, new GetterInvoker(getter, method, new InvokerUsage(fieldUsageGet, "The source object.")));
 		}
 		
 		for (ObjectPair<String, MethodSignature> methodPair : profile.getSetterMethods())
 		{
+			Method method = methodPair.getValue().getMethod();
+			if (method.getAnnotation(ScriptIgnore.class) != null)
+				continue;
+
 			String fieldName = methodPair.getKey();
-			String setter = (sb.append(baseName).append(separator).append(setName).append(separator).append(fieldName).toString()).toLowerCase();
-			sb.delete(0, sb.length());
+			
+			String setter;
+			ScriptName anno;
+			if ((anno = method.getAnnotation(ScriptName.class)) != null)
+			{
+				setter = anno.value();
+			}
+			else
+			{
+				setter = (sb.append(baseName).append(separator).append(setName).append(separator).append(fieldName).toString()).toLowerCase();
+				sb.delete(0, sb.length());
+			}
 			
 			if (mappedFunctions.containsKey(setter))
 				continue;
 
 			String fieldUsageSet = "Sets the value of the \"" + fieldName + "\" field on a " + objName + " object (via setter method).";
-			mappedFunctions.put(setter, new GetterInvoker(setter, methodPair.getValue().getMethod(), new InvokerUsage(fieldUsageSet, "The target object.", "The value to set (will be converted to "+methodPair.getValue().getType().getSimpleName()+" if possible).")));
+			mappedFunctions.put(setter, new GetterInvoker(setter, method, new InvokerUsage(fieldUsageSet, "The target object.", "The value to set (will be converted to "+methodPair.getValue().getType().getSimpleName()+" if possible).")));
 		}
 		
 	}

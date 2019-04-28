@@ -38,8 +38,38 @@ public class ScriptInstance
 		ENDED;
 	}
 	
+	/**
+	 * A scope resolver with no scopes.
+	 */
+	public static final ScriptScopeResolver NO_SCOPES = new ScriptScopeResolver()
+	{
+		@Override
+		public boolean isReadOnly(String name)
+		{
+			return false;
+		}
+		
+		@Override
+		public ScriptVariableResolver getScope(String name)
+		{
+			return null;
+		}
+		
+		@Override
+		public boolean containsScope(String name)
+		{
+			return false;
+		}
+	};
+	
+	// ======================================================================
+	// Environment
+	// ======================================================================
+
 	/** Script reference. */
 	private Script script;
+	/** Scope mapping. */
+	private ScriptScopeResolver scopeResolver;
 	/** Host interface reference. */
 	private Object hostInterface;
 	/** Script instance stack. */
@@ -47,6 +77,10 @@ public class ScriptInstance
 	/** The script's wait handler. */
 	private ScriptWaitHandler waitHandler;
 
+	// ======================================================================
+	// State
+	// ======================================================================
+	
 	/** Current script state. */
 	private State state;
 	/** Starting entry name. */
@@ -70,16 +104,29 @@ public class ScriptInstance
 	}
 	
 	/**
+	 * Creates a new script instance, no wait handler.
+	 * @param script the script that holds the code.
+	 * @param scriptInstanceStack the instance stack. 
+	 * @param hostInterface the host interface object for host calls.
+	 */
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, Object hostInterface)
+	{
+		this(script, scriptInstanceStack, NO_SCOPES, null, hostInterface);
+	}
+	
+	/**
 	 * Creates a new script instance.
 	 * @param script the script that holds the code.
 	 * @param scriptInstanceStack the instance stack. 
+	 * @param scopeResolver the scope resolver for this script.
 	 * @param waitHandler the handler for handling a script in a waiting state (can be null).
 	 * @param hostInterface the host interface object for host calls.
 	 */
-	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptWaitHandler waitHandler, Object hostInterface)
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, Object hostInterface)
 	{
 		this.script = script;
 		this.scriptInstanceStack = scriptInstanceStack;
+		this.scopeResolver = scopeResolver;
 		this.hostInterface = hostInterface;
 		this.waitHandler = waitHandler;
 		
@@ -121,7 +168,9 @@ public class ScriptInstance
 	}
 	
 	/**
-	 * @return the entry name that was used to start this script.
+	 * Gets the entry name that was used to start this script.
+	 * Can be null if not started from an entry.
+	 * @return the entry name that was used to start this script or null. 
 	 */
 	public String getEntryName()
 	{
@@ -136,6 +185,15 @@ public class ScriptInstance
 	public Object getHostInterface()
 	{
 		return hostInterface;
+	}
+	
+	/**
+	 * Returns this script's scope resolver.
+	 * @return the scope resolver.
+	 */
+	public ScriptScopeResolver getScopeResolver()
+	{
+		return scopeResolver;
 	}
 	
 	/**
@@ -154,6 +212,21 @@ public class ScriptInstance
 	ScriptInstanceStack getScriptInstanceStack()
 	{
 		return scriptInstanceStack;
+	}
+
+	/**
+	 * Initializes the script with parameters and calls {@link #update()} to execute it.
+	 * @param entryName the entry point name.
+	 * @param parameters the starting parameters to push onto the stack.
+	 * @throws ScriptExecutionException if the provided amount parameters do not match the amount of parameters that the script requires, 
+	 * 		or the provided entry point does not exist.
+	 * @see #initialize(String, Object...)
+	 * @see #update()
+	 */
+	public void call(String entryName, Object ... parameters)
+	{
+		initialize(entryName, parameters);
+		update();
 	}
 	
 	/**
@@ -282,6 +355,7 @@ public class ScriptInstance
 	
 	/**
 	 * Sets the ENDED state.
+	 * This clears a wait state, if currently waiting.
 	 */
 	public void terminate()
 	{
@@ -303,7 +377,7 @@ public class ScriptInstance
 	
 	/**
 	 * Sets the RUNNING state.
-	 * This also clears a wait state.
+	 * This clears a wait state, if currently waiting.
 	 */
 	public void resume()
 	{
@@ -345,7 +419,7 @@ public class ScriptInstance
 
 	/**
 	 * Gets a corresponding script value by name.
-	 * Only looks at the topmost scope.
+	 * Only looks at the topmost stack scope.
 	 * @param name the name of the variable.
 	 * @return the value or null if no variable.
 	 */
@@ -356,7 +430,7 @@ public class ScriptInstance
 
 	/**
 	 * Sets a corresponding script value by name.
-	 * If the value does not exist, it is set on the topmost scope in the stack.
+	 * If the value does not exist, it is set on the topmost stack scope in the stack.
 	 * @param name the name of the variable.
 	 * @param value the value to set.
 	 */

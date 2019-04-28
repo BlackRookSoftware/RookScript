@@ -1,6 +1,7 @@
-package com.blackrook.rookscript.struct;
+package com.blackrook.rookscript;
 
 import com.blackrook.commons.Sizable;
+import com.blackrook.rookscript.struct.ScriptValue;
 
 /**
  * An interface for structures that map string keys to

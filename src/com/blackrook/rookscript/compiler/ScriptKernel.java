@@ -24,7 +24,8 @@ public class ScriptKernel extends CommonLexerKernel
 	public static final int TYPE_RBRACK = 8;
 	public static final int TYPE_QUESTIONMARK = 9;
 	public static final int TYPE_COLON = 10;
-	public static final int TYPE_PERIOD = 11;
+	public static final int TYPE_DOUBLECOLON = 11;
+	public static final int TYPE_PERIOD = 12;
 	
 	public static final int TYPE_COALESCE = 18;
 	public static final int TYPE_RIGHTARROW = 19;
@@ -106,6 +107,7 @@ public class ScriptKernel extends CommonLexerKernel
 		addDelimiter(".", TYPE_PERIOD);
 		addDelimiter(";", TYPE_SEMICOLON);
 		addDelimiter(":", TYPE_COLON);
+		addDelimiter("::", TYPE_DOUBLECOLON);
 		addDelimiter("?", TYPE_QUESTIONMARK);
 		addDelimiter("->", TYPE_RIGHTARROW);
 		addDelimiter("?:", TYPE_COALESCE);

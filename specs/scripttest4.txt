@@ -7,9 +7,9 @@ function stuff(a)
 
 function test(a,b,c)
 {
-	stdout("a:"+a);
-	stdout("b:"+b);
-	stdout("c:"+c);
+	print("a:"+a);
+	print("b:"+b);
+	print("c:"+c);
 } 
 
 function morestuff()
@@ -18,9 +18,9 @@ function morestuff()
 
 entry main()
 {
-	stdout(stuff(5));
-	stdout(stuff());
-	morestuff()->stdout();
+	print(stuff(5));
+	print(stuff());
+	morestuff()->print();
 	test(1,2,3);
 	test(1,2);
 	test(1);

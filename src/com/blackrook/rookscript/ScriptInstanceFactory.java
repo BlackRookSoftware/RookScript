@@ -21,33 +21,76 @@ public class ScriptInstanceFactory<H extends Object>
 	public static final int DEFAULT_ACTIVATION_DEPTH = 16;
 	public static final int DEFAULT_STACK_DEPTH = 512;
 	
-	/** New instance Stack depth. */
+	/** The script to use for each instance. */
+	private Script script;
+	/** New instance activation depth. */
 	private int activationDepth;
 	/** New instance Stack depth. */
 	private int stackDepth;
+	/** Scope resolver to use with each instance. */
+	private ScriptScopeResolver scopeResolver;
+	/** Wait handler to use with each instance. */
+	private ScriptWaitHandler waitHandler;
+	/** The host interface to use for each instance. */
+	private H hostInterface;
 
 	/** Queue of available stacks. */
 	private final Queue<ScriptInstanceStack> availableStacks;
 
 	/**
 	 * Creates a new instance factory, default depths.
+	 * @param script the script to use for each instance.
+	 * @param hostInterface the host to use for each instance.
 	 * @see #DEFAULT_ACTIVATION_DEPTH
 	 * @see #DEFAULT_STACK_DEPTH
 	 */
-	public ScriptInstanceFactory()
+	public ScriptInstanceFactory(Script script, H hostInterface)
 	{
-		this(DEFAULT_ACTIVATION_DEPTH, DEFAULT_STACK_DEPTH);
+		this(script, DEFAULT_ACTIVATION_DEPTH, DEFAULT_STACK_DEPTH, ScriptInstance.NO_SCOPES, null, hostInterface);
+	}
+
+	/**
+	 * Creates a new instance factory.
+	 * @param script the script to use for each instance.
+	 * @param activationDepth the activation stack depth for new instances.
+	 * @param stackDepth the value stack depth for new instances.
+	 * @param hostInterface the host to use for each instance.
+	 */
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, H hostInterface)
+	{
+		this(script, activationDepth, stackDepth, ScriptInstance.NO_SCOPES, null, hostInterface);
 	}
 	
 	/**
 	 * Creates a new instance factory.
+	 * @param script the script to use for each instance.
 	 * @param activationDepth the activation stack depth for new instances.
 	 * @param stackDepth the value stack depth for new instances.
+	 * @param scopeResolver the scope resolver to use for each instance.
+	 * @param hostInterface the host to use for each instance.
 	 */
-	public ScriptInstanceFactory(int activationDepth, int stackDepth)
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, H hostInterface)
 	{
+		this(script, activationDepth, stackDepth, scopeResolver, null, hostInterface);
+	}
+	
+	/**
+	 * Creates a new instance factory.
+	 * @param script the script to use for each instance.
+	 * @param activationDepth the activation stack depth for new instances.
+	 * @param stackDepth the value stack depth for new instances.
+	 * @param scopeResolver the scope resolver to use for each instance.
+	 * @param waitHandler the wait handler to use for each instance.
+	 * @param hostInterface the host to use for each instance.
+	 */
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, H hostInterface)
+	{
+		this.script = script;
 		this.activationDepth = activationDepth;
 		this.stackDepth = stackDepth;
+		this.scopeResolver = scopeResolver;
+		this.waitHandler = waitHandler;
+		this.hostInterface = hostInterface;
 		
 		this.availableStacks = new Queue<>();
 	}
@@ -69,21 +112,18 @@ public class ScriptInstanceFactory<H extends Object>
 	
 	/**
 	 * Creates a new instance.
-	 * @param script the script to instantiate.
-	 * @param waitHandler the waiting handler to use. 
-	 * @param hostInterface the host interface object.
-	 * @return a new instance.
+	 * @return a new instance with all of the associated resolvers and handlers attached to it.
 	 */
-	public ScriptInstance create(Script script, ScriptWaitHandler waitHandler, H hostInterface)
+	public ScriptInstance create()
 	{
-		return new ScriptInstance(script, acquireStack(), waitHandler, hostInterface);
+		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, hostInterface);
 	}
 	
 	/**
 	 * Destroys an instance and releases pooled objects.
 	 * @param instance the script instance.
 	 */
-	public void destroy(ScriptInstance instance)
+	public void release(ScriptInstance instance)
 	{
 		ScriptInstanceStack stack = instance.getScriptInstanceStack();
 		stack.reset();

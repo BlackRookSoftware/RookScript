@@ -8,6 +8,7 @@
 package com.blackrook.rookscript.struct;
 
 import com.blackrook.rookscript.exception.ScriptStackException;
+import com.blackrook.rookscript.scope.ScriptVariableScope;
 
 /**
  * The combined stack for a script instance.

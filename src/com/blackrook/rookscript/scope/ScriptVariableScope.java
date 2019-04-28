@@ -5,13 +5,15 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.struct;
+package com.blackrook.rookscript.scope;
 
 import java.util.Comparator;
 
 import com.blackrook.commons.ResettableIterator;
 import com.blackrook.commons.comparators.CaseInsensitiveComparator;
 import com.blackrook.commons.util.ArrayUtils;
+import com.blackrook.rookscript.ScriptVariableResolver;
+import com.blackrook.rookscript.struct.ScriptValue;
 
 /**
  * An single, scoped open variable set in which values can be set.

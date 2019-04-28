@@ -14,10 +14,10 @@ import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.resolver.EnumResolver;
+import com.blackrook.rookscript.scope.ScriptVariableScope;
+import com.blackrook.rookscript.scope.ScriptVariableScope.Entry;
 import com.blackrook.rookscript.struct.ScriptValue;
-import com.blackrook.rookscript.struct.ScriptVariableScope;
 import com.blackrook.rookscript.struct.ScriptValue.ErrorType;
-import com.blackrook.rookscript.struct.ScriptVariableScope.Entry;
 
 /**
  * Script common functions that work for all scripts.
@@ -352,7 +352,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	 * Copies an existing list, or encapsulates a value as a list. 
 	 * ARG1: The value to copy (and re-encapsulate in a list). 
 	 */
-	LISTNEW(1)
+	LIST(1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
@@ -762,7 +762,8 @@ public enum CommonFunctions implements ScriptFunctionType
 	
 	/**
 	 * Gets a list of all of the keys in a map.
-	 * Returns a new list, or false if not a map.
+	 * Returns a new list, or null if not a map.
+	 * The returned list is suitable for set operations.
 	 * ARG1: The map.
 	 */
 	MAPKEYS(1)
@@ -779,8 +780,31 @@ public enum CommonFunctions implements ScriptFunctionType
 			
 			ScriptValue out = ScriptValue.createEmptyList();
 			for (Entry e : sv.asObjectType(ScriptVariableScope.class))
-				out.listAdd(e.getName());
+				out.setAdd(e.getName());
 			scriptInstance.pushStackValue(out);
+			return true;
+		}
+	},
+	
+	/**
+	 * Returns a value that corresponds to a key in the map.
+	 * ARG1: The map.
+	 * ARG2: The key.
+	 */
+	MAPVALUE(2)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance) 
+		{
+			ScriptValue keyValue = scriptInstance.popStackValue();
+			ScriptValue sv = scriptInstance.popStackValue();
+			if (!sv.isMap())
+			{
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+			
+			scriptInstance.pushStackValue(sv.mapGet(keyValue.asString()));
 			return true;
 		}
 	},

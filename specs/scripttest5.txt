@@ -2,9 +2,9 @@
 
 entry main()
 {
-	stdout(x);
+	print(x);
 	y = [1,2,3];
 	
-	stdout(y[4] ?: y[3] ?: y[2]);
+	print(y[4] ?: y[3] ?: y[2]);
 }
 

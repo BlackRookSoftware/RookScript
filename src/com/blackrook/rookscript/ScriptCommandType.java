@@ -282,8 +282,40 @@ public enum ScriptCommandType
 	},
 	
 	/**
-	 * PUSH a new blank array.
-	 * Pushes array value into stack.
+	 * PUSH scoped variable.
+	 * Operand1 is String - scope name.
+	 * Operand2 is String - variable name.
+	 * Pushes one value, or null if no scope.
+	 */
+	PUSH_SCOPE_VARIABLE
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			String scopeName = String.valueOf(operand1);
+			String variableName = String.valueOf(operand2);
+			ScriptVariableResolver scope;
+			if ((scope = scriptInstance.getScopeResolver().getScope(scopeName)) == null)
+			{
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+
+			ScriptValue value;
+			if ((value = scope.getValue(variableName)) == null)
+			{
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+			
+			scriptInstance.pushStackValue(value);
+			return true;
+		}
+		
+	},
+	
+	/**
+	 * PUSH a new blank list.
 	 * No operands.
 	 */
 	PUSH_LIST_NEW
@@ -291,14 +323,16 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			scriptInstance.pushStackValue(new Object[]{});
+			Cache cache =  getCache();
+			cache.tempValue.setEmptyList();
+			scriptInstance.pushStackValue(cache.tempValue);
 			return true;
 		}
 	},
 	
 	/**
-	 * PUSH a new blank array initialized with values.
-	 * Pops a value for array length.
+	 * PUSH a new blank list initialized with values.
+	 * Pops a value for list length.
 	 * Pops [length] values into array backwards (order pushed).
 	 * Pushes array value into stack.
 	 * No operands.
@@ -325,7 +359,7 @@ public enum ScriptCommandType
 	},
 	
 	/**
-	 * PUSH an array value.
+	 * PUSH a list value.
 	 * Pops two values - an index and the array.
 	 * Pushes one value onto stack.
 	 * No operands.
@@ -336,8 +370,6 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			ScriptValue indexValue = scriptInstance.popStackValue();
-			int index = indexValue.asInt();
-
 			ScriptValue listValue = scriptInstance.popStackValue();
 
 			if (!listValue.isList())
@@ -345,14 +377,15 @@ public enum ScriptCommandType
 				scriptInstance.pushStackValue(null);
 				return true;
 			}
-			
+
+			int index = indexValue.asInt();
 			scriptInstance.pushStackValue(listValue.listGetByIndex(index));
 			return true;
 		}
 	},
 	
 	/**
-	 * PUSH an array value.
+	 * PUSH a list value.
 	 * Pops ZERO values - only inspects two spots down in the stack!
 	 * Pushes one value onto stack.
 	 * No operands.
@@ -363,8 +396,6 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			ScriptValue indexValue = scriptInstance.getStackValue(0);
-			int index = indexValue.asInt();
-
 			ScriptValue listValue = scriptInstance.getStackValue(1);
 
 			if (!listValue.isList())
@@ -373,7 +404,102 @@ public enum ScriptCommandType
 				return true;
 			}
 			
+			int index = indexValue.asInt();
 			scriptInstance.pushStackValue(listValue.listGetByIndex(index));
+			return true;
+		}
+	},
+
+	/**
+	 * PUSH a new blank map.
+	 * No operands.
+	 */
+	PUSH_MAP_NEW
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			Cache cache =  getCache();
+			cache.tempValue.setEmptyMap();
+			scriptInstance.pushStackValue(cache.tempValue);
+			return true;
+		}
+	},
+
+	/**
+	 * PUSH a new blank map initialized with values.
+	 * Pops a value for amount of entries.
+	 * Pops [amount] values into map.
+	 * Pushes map value into stack.
+	 * No operands.
+	 */
+	PUSH_MAP_INIT
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			int amount = scriptInstance.popStackValue().asInt();
+			ScriptValue map = ScriptValue.createEmptyMap();
+			
+			while (amount-- > 0)
+			{
+				ScriptValue popped = scriptInstance.popStackValue();
+				ScriptValue keyValue = scriptInstance.popStackValue();
+				map.mapSet(keyValue.asString(), popped);
+			}
+			scriptInstance.pushStackValue(map);
+			return true;
+		}
+	},
+	
+	/**
+	 * PUSHes a map value using a key.
+	 * Pops two values - key and map.
+	 * If map value is not a map, pushes NULL.
+	 * No operands.
+	 */
+	PUSH_MAP_KEY
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue keyValue = scriptInstance.popStackValue();
+			ScriptValue mapValue = scriptInstance.popStackValue();
+			
+			if (!mapValue.isMap())
+			{
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+			
+			String key = keyValue.asString();
+			scriptInstance.pushStackValue(mapValue.mapGet(key));
+			return true;
+		}
+	}, 
+	
+	/**
+	 * PUSHes a map value using a key.
+	 * Pops ZERO values - only inspects two spots down in the stack!
+	 * Pushes one value onto stack.
+	 * No operands.
+	 */
+	PUSH_MAP_KEY_CONTENTS
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue keyValue = scriptInstance.getStackValue(0);
+			ScriptValue mapValue = scriptInstance.getStackValue(1);
+
+			if (!mapValue.isMap())
+			{
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+			
+			String key = keyValue.asString();
+			scriptInstance.pushStackValue(mapValue.mapGet(key));
 			return true;
 		}
 	},
@@ -393,7 +519,7 @@ public enum ScriptCommandType
 	},
 	
 	/**
-	 * POP into variable/scope variable.
+	 * POP into variable variable.
 	 * Operand is String - variable name.
 	 */
 	POP_VARIABLE
@@ -409,8 +535,41 @@ public enum ScriptCommandType
 	},
 	
 	/**
+	 * POP into variable variable.
+	 * Operand is String - variable name.
+	 */
+	POP_SCOPE_VARIABLE
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			String scopeName = String.valueOf(operand1);
+			String variableName = String.valueOf(operand2);
+			ScriptValue value = scriptInstance.popStackValue();
+
+			ScriptScopeResolver resolver = scriptInstance.getScopeResolver();
+			if (resolver.isReadOnly(scopeName))
+			{
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+
+			ScriptVariableResolver scope;
+			if ((scope = resolver.getScope(scopeName)) == null)
+			{
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+
+			if (!scope.isReadOnly(variableName))
+				scope.setValue(variableName, value);
+			return true;
+		}
+	},
+	
+	/**
 	 * Sets a list value.
-	 * Pops three values - the value, the index, and then the array.
+	 * Pops three values - the value, the index, and then the list.
 	 * No operands.
 	 */
 	POP_LIST
@@ -419,13 +578,37 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			ScriptValue value = scriptInstance.popStackValue();
-			int index = scriptInstance.popStackValue().asInt();
+			ScriptValue indexValue = scriptInstance.popStackValue();
 			ScriptValue listValue = scriptInstance.popStackValue();
 			
 			if (!listValue.isList())
 				return true;
 			
+			int index = indexValue.asInt();
 			listValue.listSetByIndex(index, value);
+			return true;
+		}
+	},
+	
+	/**
+	 * Sets a map value.
+	 * Pops three values - the value, the key, and then the map.
+	 * No operands.
+	 */
+	POP_MAP
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			ScriptValue keyValue = scriptInstance.popStackValue();
+			ScriptValue mapValue = scriptInstance.popStackValue();
+			
+			if (!mapValue.isMap())
+				return true;
+			
+			String key = keyValue.asString();
+			mapValue.mapSet(key, value);
 			return true;
 		}
 	},

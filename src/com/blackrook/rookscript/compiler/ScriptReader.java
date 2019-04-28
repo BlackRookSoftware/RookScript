@@ -18,6 +18,7 @@ import java.io.StringReader;
 import com.blackrook.commons.util.IOUtils;
 import com.blackrook.commons.util.OSUtils;
 import com.blackrook.rookscript.Script;
+import com.blackrook.rookscript.ScriptAssembler;
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.exception.ScriptParseException;
 
@@ -266,7 +267,7 @@ public final class ScriptReader
 		Script script = new Script();
 		script.setHostFunctionResolver(resolver);
 		(new ScriptParser(new ScriptLexer(KERNEL_INSTANCE, streamName, reader, includer))).readScript(script);
-		return script;
+		return ScriptAssembler.optimize(script);
 	}
 
 }

@@ -19,7 +19,8 @@ import com.blackrook.commons.list.List;
 import com.blackrook.commons.util.ObjectUtils;
 import com.blackrook.commons.util.ThreadUtils;
 import com.blackrook.commons.util.ValueUtils;
-import com.blackrook.rookscript.struct.ScriptVariableScope.Entry;
+import com.blackrook.rookscript.scope.ScriptVariableScope;
+import com.blackrook.rookscript.scope.ScriptVariableScope.Entry;
 import com.blackrook.rookscript.util.ScriptReflection;
 import com.blackrook.rookscript.util.ScriptReflection.Profile;
 
@@ -88,9 +89,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	public static ScriptValue createEmptyList()
 	{
 		ScriptValue out = new ScriptValue();
-		out.type = Type.LIST;
-		out.ref = new List<ScriptValue>();
-		out.rawbits = 0L;
+		out.setEmptyList();
 		return out;
 	}
 	
@@ -101,9 +100,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	public static ScriptValue createEmptyMap()
 	{
 		ScriptValue out = new ScriptValue();
-		out.type = Type.MAP;
-		out.ref = new ScriptVariableScope(4);
-		out.rawbits = 0L;
+		out.setEmptyMap();
 		return out;
 	}
 	
@@ -153,7 +150,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	/**
 	 * Creates a copy of this value.
 	 * The copy process is DEEP - lists and maps are copied as well, except for native objects
-	 * (the references are copied, but not what points to them).
+	 * (the references are copied, but not what they point to).
 	 * @return a new ScriptValue.
 	 */
 	public ScriptValue copy()
@@ -190,6 +187,43 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
+	 * Sets this value to a new empty list (new reference).
+	 */
+	public void setEmptyList()
+	{
+		this.type = Type.LIST;
+		this.ref = new List<ScriptValue>();
+		this.rawbits = 0L;
+	}
+	
+	/**
+	 * Sets this value to a new empty map (new reference).
+	 */
+	public void setEmptyMap()
+	{
+		this.type = Type.MAP;
+		this.ref = new ScriptVariableScope(4);
+		this.rawbits = 0L;
+	}
+	
+	/**
+	 * Explicitly sets this value as an object reference.
+	 * If null, this is set to the null value.
+	 * @param value the source value to use.
+	 */
+	public void setObjectRef(Object value)
+	{
+		if (value == null)
+			setNull();
+		else
+		{
+			this.type = Type.OBJECTREF;
+			this.ref = value;
+			this.rawbits = 0L;
+		}
+	}
+
+	/**
 	 * Sets this value as an error.
 	 * If null, this is set to the null value.
 	 * @param value the source error to use.
@@ -224,23 +258,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
-	 * Explicitly sets this value as an object reference.
-	 * If null, this is set to the null value.
-	 * @param value the source value to use.
-	 */
-	public void setObjectRef(Object value)
-	{
-		if (value == null)
-			setNull();
-		else
-		{
-			this.type = Type.OBJECTREF;
-			this.ref = value;
-			this.rawbits = 0L;
-		}
-	}
-	
-	/**
 	 * Sets this value using another value.
 	 * If null, this is set to the null value.
 	 * @param value the source value to use.
@@ -249,12 +266,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		if (value == null)
 			setNull();
+		else if (value instanceof ScriptValue)
+			set((ScriptValue)value);
 		else if (value instanceof ErrorType)
 			set((ErrorType)value);
 		else if (value instanceof Throwable)
 			set((Throwable)value);
-		else if (value instanceof ScriptValue)
-			set((ScriptValue)value);
 		else if (value instanceof Boolean)
 			set((boolean)value);
 		else if (value instanceof Byte)
@@ -865,9 +882,9 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
-	 * @return true if this value is an object type.
+	 * @return true if this value is an object reference type.
 	 */
-	public boolean isObject()
+	public boolean isObjectRef()
 	{
 		return type == Type.OBJECTREF;
 	}
@@ -1015,7 +1032,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 		switch (type)
 		{
 			default:
-			case LIST:
 				return String.valueOf(ref);
 			case OBJECTREF:
 				return Reflect.isArray(ref) ? Arrays.toString((Object[])ref) : String.valueOf(ref);
@@ -1066,7 +1082,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		switch (type)
 		{
 			default:
-				return targetType.cast(ref.getClass());
+				return targetType.cast(ref);
 			case BOOLEAN:
 				return targetType.cast(Boolean.valueOf(asBoolean())); 
 			case INTEGER:
@@ -1354,6 +1370,8 @@ public class ScriptValue implements Comparable<ScriptValue>
 				return String.valueOf(asDouble());
 			case STRING:
 				return String.valueOf("\""+ref+"\"");
+			case NULL:
+				return "null";
 			default:
 			case OBJECTREF:
 				if (Reflect.isArray(ref))

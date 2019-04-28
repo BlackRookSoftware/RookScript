@@ -24,7 +24,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	 * Returns void.
 	 * ARG: Value to print.
 	 */
-	STDOUT(true, 1)
+	PRINT(true, 1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
@@ -40,7 +40,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	 * Returns void.
 	 * ARG: Value to print.
 	 */
-	STDERR(true, 1)
+	PRINTERR(true, 1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)

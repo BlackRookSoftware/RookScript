@@ -620,7 +620,7 @@ public class ScriptParser extends Parser
 			return false;
 		}
 	
-		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, false));
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
 		return true;
 	}
@@ -718,10 +718,10 @@ public class ScriptParser extends Parser
 		// return clause.
 		else if (matchType(ScriptKernel.TYPE_RETURN))
 		{
-			// if no return, return false.
+			// if no return, return null.
 			if (currentType(ScriptKernel.TYPE_SEMICOLON))
 			{
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, false));
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
 				return true;
 			}
@@ -789,8 +789,10 @@ public class ScriptParser extends Parser
 		<IdentifierStatement> :=
 			"(" <ParameterList> ")" ";"   										(Must be function or host function)
 			"[" <Expression> "]" <ASSIGNMENTOPERATOR> <VariableAssignment> ";"	(Array variable assignment)
-			"." <IDENTIFIER> <ASSIGNMENTOPERATOR> <Expression> ";"				(scoped variable)
+			"." <IDENTIFIER> <ASSIGNMENTOPERATOR> <Expression> ";"				(Map variable assignment)
+			"::" <IDENTIFIER> <ASSIGNMENTOPERATOR> <Expression> ";"				(Scope variable assignment)
 			<ASSIGNMENTOPERATOR> <Expression> ";"								(variable assignment)
+			-> <PartialChain> ";"												(partial application chain)
 	 */
 	private boolean parseIdentifierStatement(Script currentScript, String identifierName)
 	{
@@ -816,27 +818,60 @@ public class ScriptParser extends Parser
 
 			return true;
 		}
-		// list index assignment.
-		else if (currentType(ScriptKernel.TYPE_LBRACK))
+		
+		// TODO: Add Scope deref "::"
+		
+		// list index assignment or map assignment.
+		else if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 		{
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, identifierName));
 			
-			while (currentType(ScriptKernel.TYPE_LBRACK))
+			boolean lastWasList = false;
+			
+			while (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 			{
-				nextToken();
-				if (!parseExpression(currentScript))
-					return false;
-
-				if (!matchType(ScriptKernel.TYPE_RBRACK))
-				{
-					addErrorMessage("Expected \"]\" after a list index expression.");
-					return false;
-				}
-
-				// another dimension incoming?
 				if (currentType(ScriptKernel.TYPE_LBRACK))
 				{
-					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_LIST_INDEX));
+					nextToken();
+					if (!parseExpression(currentScript))
+						return false;
+
+					if (!matchType(ScriptKernel.TYPE_RBRACK))
+					{
+						addErrorMessage("Expected \"]\" after a list index expression.");
+						return false;
+					}
+
+					// another dimension or deref incoming?
+					if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+						currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_LIST_INDEX));
+					
+					lastWasList = true;
+				}
+				else if (currentType(ScriptKernel.TYPE_PERIOD))
+				{
+					nextToken();
+					if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+					{
+						addErrorMessage("Expected map key identifier.");
+						return false;
+					}
+					
+					String key = currentToken().getLexeme();
+					nextToken();
+
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, key));
+
+					// another dimension or deref incoming?
+					if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+						currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_MAP_KEY));
+
+					lastWasList = false;
+				}
+				else
+				{
+					addErrorMessage("INTERNAL ERROR - EXPECTED [ or .");
+					return false;
 				}
 				
 			}
@@ -844,13 +879,15 @@ public class ScriptParser extends Parser
 			int assignmentType = currentToken().getType();
 			if (!isAssignmentOperator(assignmentType))
 			{
-				addErrorMessage("Expected assignment operator after a list reference.");
+				addErrorMessage("Expected assignment operator after a "+(lastWasList ? "list reference." : "map dereference."));
 				return false;
 			}
 			nextToken();
 			
 			if (isAccumulatingAssignmentOperator(assignmentType))
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_LIST_INDEX_CONTENTS));
+				currentScript.addCommand(ScriptCommand.create(
+						lastWasList ? ScriptCommandType.PUSH_LIST_INDEX_CONTENTS : ScriptCommandType.PUSH_MAP_KEY_CONTENTS
+				));
 			
 			if (!parseExpression(currentScript))
 				return false;
@@ -858,7 +895,7 @@ public class ScriptParser extends Parser
 			if (isAccumulatingAssignmentOperator(assignmentType))
 				emitArithmeticCommand(currentScript, assignmentType);
 
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_LIST));
+			currentScript.addCommand(ScriptCommand.create(lastWasList ? ScriptCommandType.POP_LIST : ScriptCommandType.POP_MAP));
 			return true;
 		}
 		// is assignment?
@@ -1265,6 +1302,22 @@ public class ScriptParser extends Parser
 					lastWasValue = true;
 				}
 				
+				// braces (literal map).
+				else if (matchType(ScriptKernel.TYPE_LBRACE))
+				{
+					if (!parseMapLiteral(currentScript))
+						return false;
+					
+					if (!matchType(ScriptKernel.TYPE_RBRACE))
+					{
+						addErrorMessage("Expected ending \"}\" to terminate map.");
+						return false;
+					}
+					
+					expressionValueCounter[0] += 1;
+					lastWasValue = true;
+				}
+				
 				// identifier - can be the start of a lot of things.
 				else if (currentType(ScriptKernel.TYPE_IDENTIFIER))
 				{
@@ -1277,31 +1330,31 @@ public class ScriptParser extends Parser
 						if (parseFunctionCall(currentScript, lexeme, false, false) == PARSEFUNCTION_FALSE)
 							return false;
 					}
-					// array resolution?
-					else if (currentType(ScriptKernel.TYPE_LBRACK))
+					// array resolution or map deref?
+					else if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 					{
 						currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, lexeme));
 
-						while (matchType(ScriptKernel.TYPE_LBRACK))
+						if (!parseListMapDerefChain(currentScript))
+							return false;
+					}
+					// scope deref?
+					else if (currentType(ScriptKernel.TYPE_DOUBLECOLON))
+					{
+						nextToken();
+						if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
 						{
-							if (!parseExpression(currentScript))
-								return false;
-
-							if (!matchType(ScriptKernel.TYPE_RBRACK))
-							{
-								addErrorMessage("Expected \"]\" after a list index expression.");
-								return false;
-							}
-
-							// another dimension incoming?
-							if (currentType(ScriptKernel.TYPE_LBRACK))
-							{
-								currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_LIST_INDEX));
-							}
-							
+							addErrorMessage("Expected identifier after scope dereference.");
+							return false;
 						}
+						
+						String var = currentToken().getLexeme();
+						nextToken();
+						
+						currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, lexeme, var));
 
-						currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_LIST_INDEX));
+						if (!parseListMapDerefChain(currentScript))
+							return false;
 					}
 					// must be local variable?
 					else
@@ -1337,6 +1390,50 @@ public class ScriptParser extends Parser
 			return false;
 		}
 	
+		return true;
+	}
+
+	// Parses a dereferencing expression chain of list indices and map values.
+	private boolean parseListMapDerefChain(Script currentScript)
+	{
+		while (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+		{
+			if (currentType(ScriptKernel.TYPE_LBRACK))
+			{
+				nextToken();
+				if (!parseExpression(currentScript))
+					return false;
+
+				if (!matchType(ScriptKernel.TYPE_RBRACK))
+				{
+					addErrorMessage("Expected \"]\" after a list index expression.");
+					return false;
+				}
+
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_LIST_INDEX));
+			}
+			else if (currentType(ScriptKernel.TYPE_PERIOD))
+			{
+				nextToken();
+				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+				{
+					addErrorMessage("Expected map key identifier.");
+					return false;
+				}
+				
+				String key = currentToken().getLexeme();
+				nextToken();
+
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, key));
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_MAP_KEY));
+			}
+			else
+			{
+				addErrorMessage("INTERNAL ERROR - EXPECTED [ or .");
+				return false;
+			}
+		}
+		
 		return true;
 	}
 
@@ -1389,6 +1486,61 @@ public class ScriptParser extends Parser
 		return true;
 	}
 
+	// Parses a literally defined map.
+	// 		{ .... , .... }
+	private boolean parseMapLiteral(Script currentScript)
+	{
+		// if no map fields.
+		if (currentType(ScriptKernel.TYPE_RBRACE))
+		{
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_MAP_NEW));
+			return true;
+		}
+		
+		if (!parseMapField(currentScript))
+			return false;
+		
+		int i = 1;
+		while (matchType(ScriptKernel.TYPE_COMMA))
+		{
+			if (!parseMapField(currentScript))
+				return false;
+			i++;
+		}
+		
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, i));
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_MAP_INIT));
+		return true;
+	}
+	
+	// Parses a map field.
+	// 		[IDENTIFIER] ":" <Expression>
+	private boolean parseMapField(Script currentScript)
+	{
+		// if no map fields.
+		if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+		{
+			addErrorMessage("Expected map key (identifier) or '}' to end map literal.");
+			return false;
+		}
+		
+		String key = currentToken().getLexeme();
+		nextToken();
+		
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, key));
+		
+		if (!matchType(ScriptKernel.TYPE_COLON))
+		{
+			addErrorMessage("Expected ':' after map key.");
+			return false;			
+		}
+
+		if (!parseExpression(currentScript))
+			return false;
+		
+		return true;
+	}
+	
 	// Parses a literally defined list.
 	// 		[ .... , .... ]
 	private boolean parseListLiteral(Script currentScript)

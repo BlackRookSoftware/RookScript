@@ -3,68 +3,68 @@
 entry main()
 {
 	s = "Matt Tropiano";
-	stdout(strupper(s)); 
-	stdout(strlower(s)); 
-	stdout(strtrim(" apple ")); 
-	stdout(strchar(s, 7));
-	stdout(substr(s, 5, 0));
+	print(strupper(s)); 
+	print(strlower(s)); 
+	print(strtrim(" apple ")); 
+	print(strchar(s, 7));
+	print(substr(s, 5, 0));
 	
-	stdout(strindex(s, "a"));
-	stdout(strlastindex(s, "a"));
-	stdout(strindex(s, "x"));
-	stdout(strlastindex(s, "x"));
-	stdout(strsplit(s, "\\s+"));
+	print(strindex(s, "a"));
+	print(strlastindex(s, "a"));
+	print(strindex(s, "x"));
+	print(strlastindex(s, "x"));
+	print(strsplit(s, "\\s+"));
 	
 	list = [];
 	
-	stdout(listadd(list, 5));
-	stdout(listadd(list, 6));
-	stdout(listadd(list, 7));
-	stdout(listadd(list, 5));
-	stdout(list);
+	print(listadd(list, 5));
+	print(listadd(list, 6));
+	print(listadd(list, 7));
+	print(listadd(list, 5));
+	print(list);
 
-	stdout(listaddat(list, 1, 0));
-	stdout(listaddat(list, 10, length(list)));
-	stdout(listaddat(list, 23, 3));
-	stdout(list);
+	print(listaddat(list, 1, 0));
+	print(listaddat(list, 10, length(list)));
+	print(listaddat(list, 23, 3));
+	print(list);
 
-	stdout(listremove(list, 6));
-	stdout(list);
+	print(listremove(list, 6));
+	print(list);
 
-	stdout(listremoveat(list, 3));
-	stdout(list);
+	print(listremoveat(list, 3));
+	print(list);
 
 	listsort(list);
-	stdout(list);
+	print(list);
 	
-	list2 = listnew(list);
+	list2 = list(list);
 	list3 = list;
-	stdout(list);
-	stdout(list2);
-	stdout(list == list);
-	stdout(list == list2);
-	stdout(list == list3);
+	print(list);
+	print(list2);
+	print(list == list);
+	print(list == list2);
+	print(list == list3);
 
 	set1 = set([3,4,5,5,2,1]);
 	set2 = set([4,5,6,7,8,9]);
-	stdout(set1);
-	stdout(set2);
-	stdout(setunion(set1, set2));
-	stdout(setintersect(set1, set2));
-	stdout(setxor(set1, set2));
-	stdout(setdiff(set1, set2));
+	print(set1);
+	print(set2);
+	print(setunion(set1, set2));
+	print(setintersect(set1, set2));
+	print(setxor(set1, set2));
+	print(setdiff(set1, set2));
 
-	stdout(setunion(1, 2));
-	stdout(setunion(1, [1,2]));
-	stdout(setunion([1,2], 1));
-	stdout(setintersect(1, 2));
-	stdout(setintersect(1, [1,2]));
-	stdout(setintersect([1,2], 1));
-	stdout(setxor(1, 2));
-	stdout(setxor(1, [1,2]));
-	stdout(setxor([1,2], 1));
-	stdout(setdiff(1, 2));
-	stdout(setdiff(1, [1,2]));
-	stdout(setdiff([1,2], 1));
+	print(setunion(1, 2));
+	print(setunion(1, [1,2]));
+	print(setunion([1,2], 1));
+	print(setintersect(1, 2));
+	print(setintersect(1, [1,2]));
+	print(setintersect([1,2], 1));
+	print(setxor(1, 2));
+	print(setxor(1, [1,2]));
+	print(setxor([1,2], 1));
+	print(setdiff(1, 2));
+	print(setdiff(1, [1,2]));
+	print(setdiff([1,2], 1));
 
 }
