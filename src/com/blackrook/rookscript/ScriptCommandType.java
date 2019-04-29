@@ -83,7 +83,7 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			String name = String.valueOf(operand1);
-			ScriptFunctionResolver resolver = scriptInstance.getHostFunctionResolver();
+			ScriptFunctionResolver resolver = scriptInstance.getFunctionResolver();
 			ScriptFunctionType functionType = resolver.getFunctionByName(name);
 			if (functionType == null)
 				throw new ScriptExecutionException("host function "+name+" could not be resolved");

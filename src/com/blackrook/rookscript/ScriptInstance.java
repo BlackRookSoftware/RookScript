@@ -130,6 +130,15 @@ public class ScriptInstance
 	}
 	
 	/**
+	 * Returns a new builder for creating a new script instance piece by piece.
+	 * @return a new {@link ScriptBuilder} object.
+	 */
+	public static ScriptBuilder build()
+	{
+		return new ScriptBuilder();
+	}
+	
+	/**
 	 * Resets the instance.
 	 */
 	public void reset()
@@ -192,9 +201,9 @@ public class ScriptInstance
 	 * Returns this script's host function resolver.
 	 * @return the function resolver.
 	 */
-	public ScriptFunctionResolver getHostFunctionResolver()
+	public ScriptFunctionResolver getFunctionResolver()
 	{
-		return script.getHostFunctionResolver();
+		return script.getFunctionResolver();
 	}
 	
 	/**

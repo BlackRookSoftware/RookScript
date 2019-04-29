@@ -21,6 +21,7 @@ import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
 import com.blackrook.rookscript.resolvers.function.MultiFunctionResolver;
 import com.blackrook.rookscript.resolvers.scope.DefaultScopeResolver;
+import com.blackrook.rookscript.resolvers.variable.DefaultVariableResolver;
 import com.blackrook.rookscript.resolvers.variable.ObjectVariableResolver;
 
 public class ScriptTest
@@ -38,12 +39,26 @@ public class ScriptTest
 			return;
 		}
 		
+		/*
+		ScriptInstance instance = ScriptInstance.build()
+			.withSource(new File(fileName))
+			.withFunctionResolver(CommonFunctions.getResolver())
+			.andFunctionResolver(StandardIOFunctions.getResolver())
+			.andFunctionResolver(MathFunctions.getResolver())
+			.withScriptStack(
+					ValueUtils.parseInt(ArrayUtils.arrayElement(args, 1), 16), 
+					ValueUtils.parseInt(ArrayUtils.arrayElement(args, 2), 512)
+			)
+			.withScope("script", new DefaultVariableResolver())
+			.call("main");
+		*/
+		
 		Script script = ScriptReader.read(new File(fileName), new MultiFunctionResolver(
 			CommonFunctions.getResolver(), 
 			StandardIOFunctions.getResolver(),
 			MathFunctions.getResolver()
 		));
-		ScriptAssembler.disassemble(script, new OutputStreamWriter(System.out));
+		//ScriptAssembler.disassemble(script, new OutputStreamWriter(System.out));
 
 		ScriptInstanceStack stack = new ScriptInstanceStack(
 			ValueUtils.parseInt(ArrayUtils.arrayElement(args, 1), 16), 

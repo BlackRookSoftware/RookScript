@@ -187,7 +187,7 @@ public class Script
 	 * Returns this script's host function resolver.
 	 * @return the function resolver.
 	 */
-	public ScriptFunctionResolver getHostFunctionResolver()
+	public ScriptFunctionResolver getFunctionResolver()
 	{
 		return hostFunctionResolver;
 	}

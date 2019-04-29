@@ -223,7 +223,7 @@ public class ScriptParser extends Parser
 		// test type of call: host function first, then local script function.
 		ScriptFunctionType functionType;
 		Entry functionEntry;
-		if ((functionType = currentScript.getHostFunctionResolver().getFunctionByName(lexeme)) != null)
+		if ((functionType = currentScript.getFunctionResolver().getFunctionByName(lexeme)) != null)
 		{
 			if (!statement && functionType.isVoid())
 			{
