@@ -5,10 +5,10 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.struct;
+package com.blackrook.rookscript;
 
 import com.blackrook.rookscript.exception.ScriptStackException;
-import com.blackrook.rookscript.scope.ScriptVariableScope;
+import com.blackrook.rookscript.resolvers.variable.DefaultVariableResolver;
 
 /**
  * The combined stack for a script instance.
@@ -25,7 +25,7 @@ public class ScriptInstanceStack
 	/** Activation stack top index. */
 	private int activationStackTop;
 	/** The local scope stack. */
-	private ScriptVariableScope[] scopeStack;
+	private DefaultVariableResolver[] scopeStack;
 	/** The local scope stack top. */
 	private int scopeStackTop;
 
@@ -58,11 +58,11 @@ public class ScriptInstanceStack
 	// Expands the scope stack.
 	private void expandScopeStack(int capacity)
 	{
-		ScriptVariableScope[] newStack = new ScriptVariableScope[capacity];
+		DefaultVariableResolver[] newStack = new DefaultVariableResolver[capacity];
 		if (scopeStack != null)
 			System.arraycopy(scopeStack, 0, newStack, 0, scopeStack.length);
 		for (int i = scriptValueStack != null ? scriptValueStack.length : 0; i < newStack.length; i++)
-			newStack[i] = new ScriptVariableScope();
+			newStack[i] = new DefaultVariableResolver();
 		scopeStack = newStack;
 	}
 	

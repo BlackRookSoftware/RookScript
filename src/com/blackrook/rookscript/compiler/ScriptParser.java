@@ -14,8 +14,8 @@ import com.blackrook.rookscript.Script.Entry;
 import com.blackrook.rookscript.ScriptCommand;
 import com.blackrook.rookscript.ScriptCommandType;
 import com.blackrook.rookscript.ScriptFunctionType;
+import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.exception.ScriptParseException;
-import com.blackrook.rookscript.struct.ScriptValue;
 
 /**
  * The parser that parses text for the script reader. 
@@ -818,76 +818,37 @@ public class ScriptParser extends Parser
 
 			return true;
 		}
-		
-		// TODO: Add Scope deref "::"
-		
-		// list index assignment or map assignment.
-		else if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+		// scope variable
+		else if (matchType(ScriptKernel.TYPE_DOUBLECOLON))
 		{
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, identifierName));
-			
-			boolean lastWasList = false;
-			
-			while (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+			if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
 			{
-				if (currentType(ScriptKernel.TYPE_LBRACK))
-				{
-					nextToken();
-					if (!parseExpression(currentScript))
-						return false;
-
-					if (!matchType(ScriptKernel.TYPE_RBRACK))
-					{
-						addErrorMessage("Expected \"]\" after a list index expression.");
-						return false;
-					}
-
-					// another dimension or deref incoming?
-					if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
-						currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_LIST_INDEX));
-					
-					lastWasList = true;
-				}
-				else if (currentType(ScriptKernel.TYPE_PERIOD))
-				{
-					nextToken();
-					if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
-					{
-						addErrorMessage("Expected map key identifier.");
-						return false;
-					}
-					
-					String key = currentToken().getLexeme();
-					nextToken();
-
-					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, key));
-
-					// another dimension or deref incoming?
-					if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
-						currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_MAP_KEY));
-
-					lastWasList = false;
-				}
-				else
-				{
-					addErrorMessage("INTERNAL ERROR - EXPECTED [ or .");
-					return false;
-				}
-				
+				addErrorMessage("Expected identifier after scope dereference operator.");
+				return false;
 			}
 			
+			String scopeVar = currentToken().getLexeme();
+			nextToken();
+			
+			// if deref list or map...
+			if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+			{
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, identifierName, scopeVar));
+
+				return parseListMapDerefStatementChain(currentScript);
+			}
+			
+			// else just push scope var
 			int assignmentType = currentToken().getType();
 			if (!isAssignmentOperator(assignmentType))
 			{
-				addErrorMessage("Expected assignment operator after a "+(lastWasList ? "list reference." : "map dereference."));
+				addErrorMessage("Expected assignment operator after a scope dereference.");
 				return false;
 			}
 			nextToken();
 			
 			if (isAccumulatingAssignmentOperator(assignmentType))
-				currentScript.addCommand(ScriptCommand.create(
-						lastWasList ? ScriptCommandType.PUSH_LIST_INDEX_CONTENTS : ScriptCommandType.PUSH_MAP_KEY_CONTENTS
-				));
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, identifierName, scopeVar));
 			
 			if (!parseExpression(currentScript))
 				return false;
@@ -895,8 +856,14 @@ public class ScriptParser extends Parser
 			if (isAccumulatingAssignmentOperator(assignmentType))
 				emitArithmeticCommand(currentScript, assignmentType);
 
-			currentScript.addCommand(ScriptCommand.create(lastWasList ? ScriptCommandType.POP_LIST : ScriptCommandType.POP_MAP));
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SCOPE_VARIABLE, identifierName, scopeVar));
 			return true;
+		}
+		// list index assignment or map assignment.
+		else if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+		{
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, identifierName));
+			return parseListMapDerefStatementChain(currentScript);
 		}
 		// is assignment?
 		else if (isAssignmentOperator(currentToken().getType()))
@@ -926,6 +893,80 @@ public class ScriptParser extends Parser
 			addErrorMessage("Expected a valid statement.");
 			return false;
 		}
+	}
+
+	private boolean parseListMapDerefStatementChain(Script currentScript)
+	{
+		boolean lastWasList = false;
+		while (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+		{
+			if (currentType(ScriptKernel.TYPE_LBRACK))
+			{
+				nextToken();
+				if (!parseExpression(currentScript))
+					return false;
+
+				if (!matchType(ScriptKernel.TYPE_RBRACK))
+				{
+					addErrorMessage("Expected \"]\" after a list index expression.");
+					return false;
+				}
+
+				// another dimension or deref incoming?
+				if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_LIST_INDEX));
+				
+				lastWasList = true;
+			}
+			else if (currentType(ScriptKernel.TYPE_PERIOD))
+			{
+				nextToken();
+				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+				{
+					addErrorMessage("Expected map key identifier.");
+					return false;
+				}
+				
+				String key = currentToken().getLexeme();
+				nextToken();
+
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, key));
+
+				// another dimension or deref incoming?
+				if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_MAP_KEY));
+
+				lastWasList = false;
+			}
+			else
+			{
+				addErrorMessage("INTERNAL ERROR - EXPECTED [ or .");
+				return false;
+			}
+			
+		}
+		
+		int assignmentType = currentToken().getType();
+		if (!isAssignmentOperator(assignmentType))
+		{
+			addErrorMessage("Expected assignment operator after a " + (lastWasList ? "list reference." : "map dereference."));
+			return false;
+		}
+		nextToken();
+		
+		if (isAccumulatingAssignmentOperator(assignmentType))
+			currentScript.addCommand(ScriptCommand.create(
+					lastWasList ? ScriptCommandType.PUSH_LIST_INDEX_CONTENTS : ScriptCommandType.PUSH_MAP_KEY_CONTENTS
+			));
+		
+		if (!parseExpression(currentScript))
+			return false;
+		
+		if (isAccumulatingAssignmentOperator(assignmentType))
+			emitArithmeticCommand(currentScript, assignmentType);
+
+		currentScript.addCommand(ScriptCommand.create(lastWasList ? ScriptCommandType.POP_LIST : ScriptCommandType.POP_MAP));
+		return true;
 	}
 	
 	// 	<IF> "(" <Expression> ")" <StatementBody> <ElseClause>

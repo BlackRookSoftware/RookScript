@@ -1,0 +1,54 @@
+#!/usr/bin/env rookscript -i
+
+entry main()
+{
+	pair = {
+		x: 5,
+		y: 4
+	};
+	
+	triple = {
+		x: 2,
+		y: -5,
+		z: 9.0
+	};
+		
+	print(mapmerge(z, 5));
+
+	a = 16;
+	m = {
+		x: 5, 
+		y: a + 5
+	};
+	n = m;
+	
+	print({} === {});
+	print(m === n);
+	
+	m.y += 13;
+	
+	m.stuff = {junk:34};
+	
+	m.balls = -15 + m.x;
+	print(mapkeys(m));
+	
+	k = mapkeys(m);
+	for (i = 0; i < length(k); i += 1)
+		m->mapvalue(k[i])->print();
+
+
+	print({x: 7, y:3}->mapkeys());
+	
+	print(m);
+	
+	
+	more = {
+		a: [4, "three", 2.0, 1],
+		b: [1, 1 + 1, 8 - 5, 2 * 2]
+	};
+	
+	print(more.a[3]);
+	more.b[2] = "some number";
+	
+	print(more);
+}

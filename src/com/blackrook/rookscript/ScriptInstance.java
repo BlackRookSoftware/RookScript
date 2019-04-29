@@ -10,8 +10,6 @@ package com.blackrook.rookscript;
 import com.blackrook.rookscript.Script.Entry;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.exception.ScriptStackException;
-import com.blackrook.rookscript.struct.ScriptInstanceStack;
-import com.blackrook.rookscript.struct.ScriptValue;
 
 /**
  * A single script instance.
@@ -43,12 +41,6 @@ public class ScriptInstance
 	 */
 	public static final ScriptScopeResolver NO_SCOPES = new ScriptScopeResolver()
 	{
-		@Override
-		public boolean isReadOnly(String name)
-		{
-			return false;
-		}
-		
 		@Override
 		public ScriptVariableResolver getScope(String name)
 		{
@@ -100,7 +92,7 @@ public class ScriptInstance
 	 */
 	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, Object hostInterface)
 	{
-		this(script, scriptInstanceStack, null, hostInterface);
+		this(script, scriptInstanceStack, NO_SCOPES, null, hostInterface);
 	}
 	
 	/**
@@ -111,7 +103,7 @@ public class ScriptInstance
 	 */
 	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, Object hostInterface)
 	{
-		this(script, scriptInstanceStack, NO_SCOPES, null, hostInterface);
+		this(script, scriptInstanceStack, scopeResolver, null, hostInterface);
 	}
 	
 	/**

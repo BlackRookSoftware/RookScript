@@ -8,7 +8,6 @@
 package com.blackrook.rookscript;
 
 import com.blackrook.commons.linkedlist.Queue;
-import com.blackrook.rookscript.struct.ScriptInstanceStack;
 
 /**
  * Factory class for assembling script instances.

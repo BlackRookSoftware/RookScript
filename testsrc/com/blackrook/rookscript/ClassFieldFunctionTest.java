@@ -10,13 +10,13 @@ package com.blackrook.rookscript;
 import java.io.File;
 
 import com.blackrook.rookscript.ScriptFunctionType.Usage;
-import com.blackrook.rookscript.resolver.ClassFieldFunctionResolver;
+import com.blackrook.rookscript.resolvers.function.ClassWrapperFunctionResolver;
 
 public class ClassFieldFunctionTest
 {
 	public static void main(String[] args) throws Exception
 	{
-		ClassFieldFunctionResolver resolver = new ClassFieldFunctionResolver(File.class);
+		ClassWrapperFunctionResolver resolver = new ClassWrapperFunctionResolver(File.class);
 		for (ScriptFunctionType type : resolver.getFunctions())
 		{
 			Usage usage = type.getUsage();

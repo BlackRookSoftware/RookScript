@@ -2,6 +2,7 @@ package com.blackrook.rookscript.struct;
 
 import com.blackrook.commons.math.PairGroup;
 import com.blackrook.commons.math.Triple;
+import com.blackrook.rookscript.ScriptValue;
 
 public class ScriptValueTest
 {

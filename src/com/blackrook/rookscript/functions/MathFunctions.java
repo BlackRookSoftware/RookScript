@@ -11,8 +11,8 @@ import com.blackrook.commons.math.RMath;
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptInstance;
-import com.blackrook.rookscript.resolver.EnumResolver;
-import com.blackrook.rookscript.struct.ScriptValue;
+import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.resolvers.function.EnumFunctionResolver;
 
 /**
  * Script common functions for mathematic functions.
@@ -547,7 +547,7 @@ public enum MathFunctions implements ScriptFunctionType
 	 */
 	public static final ScriptFunctionResolver getResolver()
 	{
-		return new EnumResolver(MathFunctions.values());
+		return new EnumFunctionResolver(MathFunctions.values());
 	}
 
 	@Override

@@ -15,7 +15,6 @@ import com.blackrook.commons.linkedlist.Queue;
 import com.blackrook.commons.linkedlist.Stack;
 import com.blackrook.commons.util.ObjectUtils;
 import com.blackrook.rookscript.Script.Entry;
-import com.blackrook.rookscript.struct.ScriptValue;
 
 /**
  * The assembler part of the script factories.
@@ -145,6 +144,7 @@ public final class ScriptAssembler
 				{
 					if (isUnaryOperatorCommand(command.getType()))
 					{
+						reduceStack.push(command);
 						optimizeReduce(reduceStack);
 					}
 					else if (command.getType() == ScriptCommandType.PUSH)

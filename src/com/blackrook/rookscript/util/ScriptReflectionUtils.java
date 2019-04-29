@@ -9,15 +9,15 @@ import com.blackrook.commons.TypeProfile;
 import com.blackrook.commons.TypeProfile.MethodSignature;
 import com.blackrook.commons.hash.CaseInsensitiveHashMap;
 import com.blackrook.commons.hash.HashMap;
+import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
-import com.blackrook.rookscript.struct.ScriptValue;
 
 /**
  * Script reflection utilities.
  * @author Matthew Tropiano
  */
-public final class ScriptReflection
+public final class ScriptReflectionUtils
 {
 	/** Type profiles. */
 	private static final HashMap<Class<?>, Profile<?>> REGISTERED_TYPES = new HashMap<Class<?>, Profile<?>>();

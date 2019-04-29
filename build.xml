@@ -24,11 +24,12 @@
 	<property name="project.classpath" value="${common.lib}${S}${common.lang.lib}" />
 	<property name="project.javadoc.packages" value="
 		com.blackrook.rookscript,
+		com.blackrook.rookscript.annotations,
 		com.blackrook.rookscript.compiler,
 		com.blackrook.rookscript.exception,
 		com.blackrook.rookscript.functions,
-		com.blackrook.rookscript.resolver,
-		com.blackrook.rookscript.struct
+		com.blackrook.rookscript.resolvers,
+		com.blackrook.rookscript.util
 		"
 	/>
 

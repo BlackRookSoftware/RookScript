@@ -22,12 +22,4 @@ public interface ScriptScopeResolver
      */
     public boolean containsScope(String name);
     
-    /**
-     * Checks if an existing scope is read-only.
-     * A non-existing scope returns <code>false</code>.
-	 * @param name the scope name.
-	 * @return true if so, false if not.
-     */
-    public boolean isReadOnly(String name);
-
 }

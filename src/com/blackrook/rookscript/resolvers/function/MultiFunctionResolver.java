@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.resolver;
+package com.blackrook.rookscript.resolvers.function;
 
 import com.blackrook.commons.linkedlist.Queue;
 import com.blackrook.commons.util.ArrayUtils;
@@ -17,7 +17,7 @@ import com.blackrook.rookscript.ScriptFunctionType;
  * Functions are resolved in the order that they are added to this resolver.
  * @author Matthew Tropiano
  */
-public class MultiResolver implements ScriptFunctionResolver
+public class MultiFunctionResolver implements ScriptFunctionResolver
 {
 	private Queue<ScriptFunctionResolver> resolvers;
 
@@ -25,7 +25,7 @@ public class MultiResolver implements ScriptFunctionResolver
 	 * Creates a new MultiResolver using a list of resolvers.
 	 * @param resolvers the list of resolvers.
 	 */
-	public MultiResolver(ScriptFunctionResolver ... resolvers)
+	public MultiFunctionResolver(ScriptFunctionResolver ... resolvers)
 	{
 		this.resolvers = new Queue<>();
 		for (ScriptFunctionResolver r : resolvers)
@@ -36,7 +36,7 @@ public class MultiResolver implements ScriptFunctionResolver
 	 * Creates a new MultiResolver using an iterable list of resolvers.
 	 * @param resolvers the list of resolvers.
 	 */
-	public MultiResolver(Iterable<ScriptFunctionResolver> resolvers)
+	public MultiFunctionResolver(Iterable<ScriptFunctionResolver> resolvers)
 	{
 		this.resolvers = new Queue<>();
 		for (ScriptFunctionResolver r : resolvers)

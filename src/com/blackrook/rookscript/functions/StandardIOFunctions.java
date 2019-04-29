@@ -10,8 +10,8 @@ package com.blackrook.rookscript.functions;
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptInstance;
-import com.blackrook.rookscript.resolver.EnumResolver;
-import com.blackrook.rookscript.struct.ScriptValue;
+import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.resolvers.function.EnumFunctionResolver;
 
 /**
  * Script common functions for standard input/output.
@@ -71,7 +71,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	 */
 	public static final ScriptFunctionResolver getResolver()
 	{
-		return new EnumResolver(StandardIOFunctions.values());
+		return new EnumFunctionResolver(StandardIOFunctions.values());
 	}
 
 	@Override

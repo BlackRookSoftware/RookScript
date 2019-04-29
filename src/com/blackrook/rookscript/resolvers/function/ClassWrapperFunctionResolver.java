@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.resolver;
+package com.blackrook.rookscript.resolvers.function;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -21,10 +21,10 @@ import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptFunctionType.Usage;
 import com.blackrook.rookscript.ScriptInstance;
+import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
-import com.blackrook.rookscript.struct.ScriptValue;
 
 /**
  * A function resolver that is a wrapper around a class.
@@ -40,7 +40,7 @@ import com.blackrook.rookscript.struct.ScriptValue;
  * Fields annotated with @ScriptName use the provided name, but still prefixed with the get/setname.
  * @author Matthew Tropiano
  */
-public class ClassFieldFunctionResolver implements ScriptFunctionResolver
+public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 {
 	public static final String DEFAULT_SEPARATOR = "_";
 	public static final String DEFAULT_CONSTRUCTORNAME = "create";
@@ -60,7 +60,7 @@ public class ClassFieldFunctionResolver implements ScriptFunctionResolver
 	 * {@link #DEFAULT_GETNAME} as the getter prefix, {@link #DEFAULT_SETNAME} as the setter prefix, with chained setters.
 	 * @param clazz the class to wrap.
 	 */
-	public ClassFieldFunctionResolver(Class<?> clazz)
+	public ClassWrapperFunctionResolver(Class<?> clazz)
 	{
 		this(clazz, clazz.getSimpleName(), DEFAULT_SEPARATOR, DEFAULT_CONSTRUCTORNAME, DEFAULT_GETNAME, DEFAULT_SETNAME, true);
 	}
@@ -75,7 +75,7 @@ public class ClassFieldFunctionResolver implements ScriptFunctionResolver
 	 * @param setName the name to use for setters.
 	 * @param chainSetters if true, all setters return the passed in object for chaining. if false, they are void.
 	 */
-	public ClassFieldFunctionResolver(Class<?> clazz, String baseName, String separator, String constructorName, String getName, String setName, boolean chainSetters)
+	public ClassWrapperFunctionResolver(Class<?> clazz, String baseName, String separator, String constructorName, String getName, String setName, boolean chainSetters)
 	{
 		this.validType = clazz;
 		this.chainSetters = chainSetters;

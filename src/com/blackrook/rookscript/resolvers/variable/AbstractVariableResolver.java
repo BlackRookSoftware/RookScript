@@ -5,24 +5,23 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.scope;
+package com.blackrook.rookscript.resolvers.variable;
 
 import java.util.Comparator;
 
-import com.blackrook.commons.ResettableIterator;
 import com.blackrook.commons.comparators.CaseInsensitiveComparator;
 import com.blackrook.commons.util.ArrayUtils;
+import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptVariableResolver;
-import com.blackrook.rookscript.struct.ScriptValue;
 
 /**
- * An single, scoped open variable set in which values can be set.
+ * A single, scoped open variable set in which values can be set.
  * All variable names are CASE-INSENSITIVE.
  * The internals are written so that the storage uses few memory allocations/deletions.
  * None of the variables are read-only. This implementation is thread-safe.
  * @author Matthew Tropiano
  */
-public class ScriptVariableScope implements ScriptVariableResolver, Iterable<ScriptVariableScope.Entry>
+public class AbstractVariableResolver implements ScriptVariableResolver
 {
 	/** Default capacity. */
 	public static final int DEFAULT_CAPACITY = 4;
@@ -31,24 +30,15 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 		CaseInsensitiveComparator.getInstance().compare(e1.name, e2.name);
 	
 	/** List of entries. */
-	private Entry[] entries;
+	protected Entry[] entries;
 	/** Count. */
-	private int entryCount;
+	protected int entryCount;
 
 	/**
-	 * Creates a scope with a default size.
-	 * @see #DEFAULT_CAPACITY
-	 */
-	public ScriptVariableScope()
-	{
-		this(DEFAULT_CAPACITY);
-	}
-	
-	/**
-	 * Creates a scope with a default size.
+	 * Creates a variable resolver with a default size.
 	 * @param capacity the initial capacity.
 	 */
-	public ScriptVariableScope(int capacity)
+	protected AbstractVariableResolver(int capacity)
 	{
 		if (capacity < 1) 
 			capacity = 1;
@@ -74,7 +64,7 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 	}
 	
 	// Get or return null;
-	private ScriptValue get(String name)
+	protected ScriptValue get(String name)
 	{
 		int i;
 		if ((i = getIndex(name)) < 0)
@@ -84,7 +74,7 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 	}
 
 	// Get or return -1;
-	private int getIndex(String name)
+	protected int getIndex(String name)
 	{
 		int u = entryCount, l = 0;
 		int i = (u+l)/2;
@@ -111,7 +101,7 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 		return -1;
 	}
 
-	private void removeIndex(int i)
+	protected void removeIndex(int i)
 	{
 		Entry e = entries[i];
 		e.name = null;
@@ -127,18 +117,6 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 		entries[i] = e;
 	}
 
-	/**
-	 * Clears the scope.
-	 */
-	public synchronized void clear()
-	{
-		int prevCount = this.entryCount;
-		this.entryCount = 0;
-		// nullify object refs (to reduce chance of memory leaks).
-		for (int i = 0; i < prevCount; i++)
-			entries[i].value.setNull();
-	}
-	
 	@Override
 	public synchronized boolean containsValue(String name)
 	{
@@ -168,17 +146,6 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 		entryCount++;
 	}
 
-	@Override
-	public synchronized boolean clearValue(String name)
-	{
-		int i;
-		if ((i = getIndex(name)) < 0)
-			return false;
-
-		removeIndex(i);
-		return true;
-	}
-	
 	@Override
 	public boolean isReadOnly(String name)
 	{
@@ -228,6 +195,12 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 			this.value = ScriptValue.create(null);
 		}
 		
+		protected void clear()
+		{
+			this.name = null;
+			this.value.setNull();
+		}
+		
 		public String getName()
 		{
 			return name;
@@ -245,47 +218,4 @@ public class ScriptVariableScope implements ScriptVariableResolver, Iterable<Scr
 		}
 		
 	}
-
-	@Override
-	public ResettableIterator<Entry> iterator()
-	{
-		return new EntryIterator();
-	}
-	
-	private class EntryIterator implements ResettableIterator<Entry>
-	{
-		private int cur = 0;
-		private boolean removed = false;
-		
-		@Override
-		public boolean hasNext()
-		{
-			return cur < entryCount;
-		}
-		
-		@Override
-		public Entry next()
-		{
-			removed = false;
-			return entries[cur++];
-		}
-		
-		@Override
-		public void remove()
-		{
-			if (removed)
-				return;
-			
-			removeIndex(cur);
-			removed = true;
-			cur--;
-		}
-		
-		@Override
-		public void reset()
-		{
-			cur = 0;
-		}
-	}
-	
 }

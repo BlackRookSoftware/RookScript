@@ -7,7 +7,7 @@
  ******************************************************************************/
 package com.blackrook.rookscript.struct;
 
-import com.blackrook.rookscript.struct.ScriptInstanceStack;
+import com.blackrook.rookscript.ScriptInstanceStack;
 
 public class ScriptInstanceStackTest
 {

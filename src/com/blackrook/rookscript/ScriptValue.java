@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.struct;
+package com.blackrook.rookscript;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -19,15 +19,14 @@ import com.blackrook.commons.list.List;
 import com.blackrook.commons.util.ObjectUtils;
 import com.blackrook.commons.util.ThreadUtils;
 import com.blackrook.commons.util.ValueUtils;
-import com.blackrook.rookscript.scope.ScriptVariableScope;
-import com.blackrook.rookscript.scope.ScriptVariableScope.Entry;
-import com.blackrook.rookscript.util.ScriptReflection;
-import com.blackrook.rookscript.util.ScriptReflection.Profile;
+import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver;
+import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
+import com.blackrook.rookscript.util.ScriptReflectionUtils;
+import com.blackrook.rookscript.util.ScriptReflectionUtils.Profile;
 
 /**
  * Script value encapsulation.
  * @author Matthew Tropiano
- * FIXME: Arithmetic should just output NaN if the types are not combineable.
  */
 public class ScriptValue implements Comparable<ScriptValue>
 {
@@ -166,7 +165,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		}
 		else if (isMap())
 		{
-			ScriptVariableScope scope = (ScriptVariableScope)this.ref;
+			MapType scope = (MapType)this.ref;
 			ScriptValue copy = createEmptyMap();
 			for (Entry e : scope)
 				copy.mapSet(e.getName(), create(e.getValue().copy()));
@@ -202,7 +201,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	public void setEmptyMap()
 	{
 		this.type = Type.MAP;
-		this.ref = new ScriptVariableScope(4);
+		this.ref = new MapType(4);
 		this.rawbits = 0L;
 	}
 	
@@ -306,7 +305,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			else
 			{
 				this.type = Type.MAP;
-				this.ref = new ScriptVariableScope(4);
+				this.ref = new MapType(4);
 				this.rawbits = 0L;
 				mapExtract(value);
 			}
@@ -746,7 +745,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		if (!isMap())
 			return false;
 		
-		ScriptVariableScope map = (ScriptVariableScope)ref;
+		MapType map = (MapType)ref;
 		map.setValue(key, value);
 		return true;
 	}
@@ -762,7 +761,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		if (!isMap())
 			return null;
 		
-		ScriptVariableScope map = (ScriptVariableScope)ref;
+		MapType map = (MapType)ref;
 		return map.getValue(key);
 	}
 	
@@ -777,7 +776,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		if (!isMap())
 			return false;
 		
-		ScriptVariableScope map = (ScriptVariableScope)ref;
+		MapType map = (MapType)ref;
 		return map.clearValue(key);
 	}
 	
@@ -795,7 +794,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return false;
 	
 		@SuppressWarnings("unchecked")
-		Profile<T> profile = ScriptReflection.getProfile((Class<T>)object.getClass());
+		Profile<T> profile = ScriptReflectionUtils.getProfile((Class<T>)object.getClass());
 		profile.objectToMap(object, this);
 		return true;
 	}
@@ -812,9 +811,34 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return false;
 	
 		@SuppressWarnings("unchecked")
-		Profile<T> profile = ScriptReflection.getProfile((Class<T>)object.getClass());
+		Profile<T> profile = ScriptReflectionUtils.getProfile((Class<T>)object.getClass());
 		profile.mapToObject(this, object);
 		return true;
+	}
+
+	/**
+	 * @return true if this value is a raw type (rawbits only, no object reference).
+	 */
+	private boolean isRaw()
+	{
+		return type == Type.BOOLEAN || type == Type.INTEGER || type == Type.FLOAT;
+	}
+
+	/**
+	 * @return true if this value is an addable type.
+	 */
+	private boolean isAddableType()
+	{
+		switch (type)
+		{
+			default:
+				return false;
+			case BOOLEAN:
+			case INTEGER:
+			case FLOAT:
+			case STRING:
+				return true;
+		}
 	}
 
 	/**
@@ -1328,12 +1352,13 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		if (this.type != value.type)
 			return false;
+		
+		if (this.isRaw())
+			return this.rawbits == value.rawbits;
 		else if (this.ref == null)
 			return value.ref == null;
-		else if (this.ref != null)
+		else
 			return this.ref.equals(value.ref);
-		else 
-			return this.rawbits == value.rawbits;
 	}
 	
 	@Override
@@ -1401,7 +1426,8 @@ public class ScriptValue implements Comparable<ScriptValue>
 		else switch (operand.type)
 		{
 			default:
-				out.set(!ObjectUtils.isEmpty(operand.ref));
+				out.set(Double.NaN);
+				return;
 			case BOOLEAN:
 				out.set(!operand.asBoolean());
 				return;
@@ -1425,13 +1451,15 @@ public class ScriptValue implements Comparable<ScriptValue>
 			out.setNull();
 		else switch (operand.type)
 		{
+			default:
+				out.set(Double.NaN);
+				return;
 			case BOOLEAN:
 				out.set(!operand.asBoolean());
 				return;
 			case INTEGER:
 				out.set(-operand.asLong());
 				return;
-			default:
 			case FLOAT:
 				out.set(-operand.asDouble());
 				return;
@@ -1449,13 +1477,15 @@ public class ScriptValue implements Comparable<ScriptValue>
 			out.setNull();
 		else switch (operand.type)
 		{
+			default:
+				out.set(Double.NaN);
+				return;
 			case BOOLEAN:
 				out.set(operand.asBoolean());
 				return;
 			case INTEGER:
 				out.set(Math.abs(operand.asLong()));
 				return;
-			default:
 			case FLOAT:
 				out.set(Math.abs(operand.asDouble()));
 				return;
@@ -1492,6 +1522,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void add(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
+		if (!operand.isAddableType() || !operand2.isAddableType())
+		{
+			out.set(Double.NaN);
+			return;
+		}
+		
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1525,6 +1561,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void subtract(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
+		if (!operand.isRaw() || !operand2.isRaw())
+		{
+			out.set(Double.NaN);
+			return;
+		}
+
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1556,6 +1598,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void multiply(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
+		if (!operand.isRaw() || !operand2.isRaw())
+		{
+			out.set(Double.NaN);
+			return;
+		}
+
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1586,6 +1634,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void divide(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
+		if (!operand.isRaw() || !operand2.isRaw())
+		{
+			out.set(Double.NaN);
+			return;
+		}
+
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1620,6 +1674,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void modulo(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
+		if (!operand.isRaw() || !operand2.isRaw())
+		{
+			out.set(Double.NaN);
+			return;
+		}
+
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1654,6 +1714,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void and(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
+		if (!operand.isRaw() || !operand2.isRaw())
+		{
+			out.set(Double.NaN);
+			return;
+		}
+
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1682,6 +1748,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void or(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
+		if (!operand.isRaw() || !operand2.isRaw())
+		{
+			out.set(Double.NaN);
+			return;
+		}
+
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1710,6 +1782,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static void xor(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
+		if (!operand.isRaw() || !operand2.isRaw())
+		{
+			out.set(Double.NaN);
+			return;
+		}
+
 		Cache cacheValue = getCache();
 		cacheValue.value1.set(operand);
 		cacheValue.value2.set(operand2);
@@ -1916,6 +1994,82 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 
 	/**
+	 * The class used for a map type.
+	 */
+	public static class MapType extends AbstractVariableResolver implements Iterable<AbstractVariableResolver.Entry>
+	{
+		private MapType()
+		{
+			super(DEFAULT_CAPACITY);
+		}
+
+		private MapType(int capacity)
+		{
+			super(capacity);
+		}
+		
+	    /**
+	     * Removes a value by variable name.
+	     * This should fail if the provided name corresponds to a read-only variable. 
+		 * @param name the variable name.
+		 * @return true if the value existed and was removed, false otherwise.
+		 * @throws IllegalArgumentException if the provided name refers to a value that is read-only.
+	     */
+		private synchronized boolean clearValue(String name)
+		{
+			int i;
+			if ((i = getIndex(name)) < 0)
+				return false;
+
+			removeIndex(i);
+			return true;
+		}
+		
+		@Override
+		public ResettableIterator<Entry> iterator()
+		{
+			return new EntryIterator();
+		}
+
+		private class EntryIterator implements ResettableIterator<Entry>
+		{
+			private int cur = 0;
+			private boolean removed = false;
+			
+			@Override
+			public boolean hasNext()
+			{
+				return cur < size();
+			}
+			
+			@Override
+			public Entry next()
+			{
+				removed = false;
+				return entries[cur++];
+			}
+			
+			@Override
+			public void remove()
+			{
+				if (removed)
+					return;
+				
+				removeIndex(cur);
+				removed = true;
+				cur--;
+			}
+			
+			@Override
+			public void reset()
+			{
+				cur = 0;
+			}
+		}
+		
+	}
+	
+	/**
 	 * The class used as an error type.
 	 * Errors are a completely separate type, in order to differentiate them from objects,
 	 * and check them in return from host functions (or other functions).
@@ -2000,8 +2154,8 @@ public class ScriptValue implements Comparable<ScriptValue>
 		
 		public Cache()
 		{
-			this.value1 = ScriptValue.create(false);
-			this.value2 = ScriptValue.create(false);
+			this.value1 = ScriptValue.create(null);
+			this.value2 = ScriptValue.create(null);
 		}
 		
 	}

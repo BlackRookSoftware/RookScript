@@ -10,6 +10,7 @@ package com.blackrook.rookscript;
 import java.io.File;
 import java.io.OutputStreamWriter;
 
+import com.blackrook.commons.math.Pair;
 import com.blackrook.commons.util.ArrayUtils;
 import com.blackrook.commons.util.ValueUtils;
 import com.blackrook.rookscript.Script;
@@ -18,9 +19,9 @@ import com.blackrook.rookscript.compiler.ScriptReader;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
-import com.blackrook.rookscript.resolver.MultiResolver;
-import com.blackrook.rookscript.scope.ScriptVariableScope;
-import com.blackrook.rookscript.struct.ScriptInstanceStack;
+import com.blackrook.rookscript.resolvers.function.MultiFunctionResolver;
+import com.blackrook.rookscript.resolvers.scope.DefaultScopeResolver;
+import com.blackrook.rookscript.resolvers.variable.ObjectVariableResolver;
 
 public class ScriptTest
 {
@@ -37,7 +38,7 @@ public class ScriptTest
 			return;
 		}
 		
-		Script script = ScriptReader.read(new File(fileName), new MultiResolver(
+		Script script = ScriptReader.read(new File(fileName), new MultiFunctionResolver(
 			CommonFunctions.getResolver(), 
 			StandardIOFunctions.getResolver(),
 			MathFunctions.getResolver()
@@ -49,31 +50,10 @@ public class ScriptTest
 			ValueUtils.parseInt(ArrayUtils.arrayElement(args, 2), 512)
 		);
 		
-		final ScriptVariableScope scriptScope = new ScriptVariableScope();
-		ScriptScopeResolver ssr = new ScriptScopeResolver()
-		{
-			@Override
-			public boolean isReadOnly(String name)
-			{
-				return false;
-			}
-			
-			@Override
-			public ScriptVariableResolver getScope(String name)
-			{
-				if (name.equalsIgnoreCase("script"))
-					return scriptScope;
-				return null;
-			}
-			
-			@Override
-			public boolean containsScope(String name)
-			{
-				return name.equalsIgnoreCase("script");
-			}
-		};
+		DefaultScopeResolver dsr = new DefaultScopeResolver();
+		dsr.addScope("script", new ObjectVariableResolver<Pair>(new Pair()));
 		
-		ScriptInstance instance = new ScriptInstance(script, stack, ssr, null);
+		ScriptInstance instance = new ScriptInstance(script, stack, dsr, null);
 		instance.call("main");
 		System.out.println("Script returns: "+instance.popStackValue());
 	}

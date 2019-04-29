@@ -7,17 +7,14 @@
  ******************************************************************************/
 package com.blackrook.rookscript.functions;
 
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptInstance;
-import com.blackrook.rookscript.resolver.EnumResolver;
-import com.blackrook.rookscript.scope.ScriptVariableScope;
-import com.blackrook.rookscript.scope.ScriptVariableScope.Entry;
-import com.blackrook.rookscript.struct.ScriptValue;
-import com.blackrook.rookscript.struct.ScriptValue.ErrorType;
+import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.ScriptValue.ErrorType;
+import com.blackrook.rookscript.ScriptValue.MapType;
+import com.blackrook.rookscript.resolvers.function.EnumFunctionResolver;
+import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
 
 /**
  * Script common functions that work for all scripts.
@@ -235,7 +232,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	
 	/**
 	 * Returns a single character from a string.
-	 * If ARG2 is out of bounds, this returns false.
+	 * If ARG2 is out of bounds, this returns null.
 	 * ARG1: The string value (may be converted). 
 	 * ARG2: The string index. 
 	 */
@@ -247,7 +244,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			int value = scriptInstance.popStackValue().asInt();
 			String str = scriptInstance.popStackValue().asString();
 			if (value < 0 || value >= str.length())
-				scriptInstance.pushStackValue(false);
+				scriptInstance.pushStackValue(null);
 			else
 				scriptInstance.pushStackValue(String.valueOf(str.charAt(value)));
 			return true;
@@ -256,7 +253,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	
 	/**
 	 * Returns a substring of another string.
-	 * Returns false if either index out of bounds, or end index is less than the start index.
+	 * Returns null if either index out of bounds, or end index is less than the start index.
 	 * ARG1: The string (converted). 
 	 * ARG2: The starting index (inclusive). 
 	 * ARG3: The ending index (exclusive). 
@@ -271,11 +268,11 @@ public enum CommonFunctions implements ScriptFunctionType
 			String str = scriptInstance.popStackValue().asString();
 			int length = str.length();
 			if (startIndex < 0 || startIndex >= length)
-				scriptInstance.pushStackValue(false);
+				scriptInstance.pushStackValue(null);
 			else if (endIndex < 0 && endIndex > length)
-				scriptInstance.pushStackValue(false);
+				scriptInstance.pushStackValue(null);
 			else if (endIndex < startIndex)
-				scriptInstance.pushStackValue(false);
+				scriptInstance.pushStackValue(null);
 			else
 				scriptInstance.pushStackValue(str.substring(startIndex, endIndex));
 			return true;
@@ -314,35 +311,6 @@ public enum CommonFunctions implements ScriptFunctionType
 			String targetStr = scriptInstance.popStackValue().asString();
 			String str = scriptInstance.popStackValue().asString();
 			scriptInstance.pushStackValue(str.lastIndexOf(targetStr));
-			return true;
-		}
-	},
-	
-	/**
-	 * Splits a string by a RegEx pattern.
-	 * Returns an array.
-	 * If the pattern is malformed, this returns false.
-	 * ARG1: The string (converted). 
-	 * ARG2: The RegEx pattern to split on.
-	 */
-	STRSPLIT(2)
-	{
-		@Override
-		public boolean execute(ScriptInstance scriptInstance)
-		{
-			String regex = scriptInstance.popStackValue().asString();
-			String str = scriptInstance.popStackValue().asString();
-			
-			Pattern p = null;
-			try {
-				p = Pattern.compile(regex);
-			} catch (PatternSyntaxException e) {
-				// bad pattern.
-			}
-			if (p != null)
-				scriptInstance.pushStackValue(Pattern.compile(regex).split(str));
-			else
-				scriptInstance.pushStackValue(false);
 			return true;
 		}
 	},
@@ -410,7 +378,6 @@ public enum CommonFunctions implements ScriptFunctionType
 	 * If the "list" argument is not a list or the provided item is not removed, this returns false, else true.
 	 * ARG1: The list to remove the item from. 
 	 * ARG2: The item to remove.
-	 * FIXME: May not be working!
 	 */
 	LISTREMOVE(2)
 	{
@@ -779,7 +746,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			}
 			
 			ScriptValue out = ScriptValue.createEmptyList();
-			for (Entry e : sv.asObjectType(ScriptVariableScope.class))
+			for (Entry e : sv.asObjectType(MapType.class))
 				out.setAdd(e.getName());
 			scriptInstance.pushStackValue(out);
 			return true;
@@ -833,7 +800,7 @@ public enum CommonFunctions implements ScriptFunctionType
 				return true;
 			}
 			
-			for (Entry e : map1.asObjectType(ScriptVariableScope.class))
+			for (Entry e : map1.asObjectType(MapType.class))
 				out.mapSet(e.getName(), e.getValue());
 			
 			if (!map2.isMap())
@@ -842,7 +809,7 @@ public enum CommonFunctions implements ScriptFunctionType
 				return true;
 			}
 
-			for (Entry e : map2.asObjectType(ScriptVariableScope.class))
+			for (Entry e : map2.asObjectType(MapType.class))
 				out.mapSet(e.getName(), e.getValue());
 			
 			scriptInstance.pushStackValue(out);
@@ -871,7 +838,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	public static final ScriptFunctionResolver getResolver()
 	{
-		return new EnumResolver(CommonFunctions.values());
+		return new EnumFunctionResolver(CommonFunctions.values());
 	}
 
 	@Override

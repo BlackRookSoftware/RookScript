@@ -9,7 +9,6 @@ package com.blackrook.rookscript;
 
 import com.blackrook.commons.util.ThreadUtils;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
-import com.blackrook.rookscript.struct.ScriptValue;
 
 /**
  * Directive type for scripts.
@@ -548,7 +547,7 @@ public enum ScriptCommandType
 			ScriptValue value = scriptInstance.popStackValue();
 
 			ScriptScopeResolver resolver = scriptInstance.getScopeResolver();
-			if (resolver.isReadOnly(scopeName))
+			if (resolver == null)
 			{
 				scriptInstance.pushStackValue(null);
 				return true;
@@ -562,7 +561,7 @@ public enum ScriptCommandType
 			}
 
 			if (!scope.isReadOnly(variableName))
-				scope.setValue(variableName, value);
+				scope.setValue(variableName, value.asObject());
 			return true;
 		}
 	},

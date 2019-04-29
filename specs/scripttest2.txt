@@ -13,7 +13,6 @@ entry main()
 	print(strlastindex(s, "a"));
 	print(strindex(s, "x"));
 	print(strlastindex(s, "x"));
-	print(strsplit(s, "\\s+"));
 	
 	list = [];
 	
