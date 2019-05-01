@@ -8,21 +8,14 @@
 package com.blackrook.rookscript;
 
 import java.io.File;
-import java.io.OutputStreamWriter;
 
-import com.blackrook.commons.math.Pair;
 import com.blackrook.commons.util.ArrayUtils;
-import com.blackrook.commons.util.ValueUtils;
-import com.blackrook.rookscript.Script;
+import com.blackrook.commons.util.ThreadUtils;
 import com.blackrook.rookscript.ScriptInstance;
-import com.blackrook.rookscript.compiler.ScriptReader;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
-import com.blackrook.rookscript.resolvers.function.MultiFunctionResolver;
-import com.blackrook.rookscript.resolvers.scope.DefaultScopeResolver;
 import com.blackrook.rookscript.resolvers.variable.DefaultVariableResolver;
-import com.blackrook.rookscript.resolvers.variable.ObjectVariableResolver;
 
 public class ScriptTest
 {
@@ -32,45 +25,28 @@ public class ScriptTest
 		if ((fileName = ArrayUtils.arrayElement(args, 0)) == null)
 		{
 			System.out.println("ERROR: No file name for script.");
-			System.out.println("Usage: command [filename] [activationStackDepth] [valueStackDepth]");
-			System.out.println("    activationStackDepth: (optional) Set activation stack depth (default: 16).");
-			System.out.println("         valueStackDepth: (optional) Set value stack depth (default: 512).");
+			System.out.println("Usage: command [filename]");
 			System.out.println();
 			return;
 		}
 		
-		/*
 		ScriptInstance instance = ScriptInstance.build()
 			.withSource(new File(fileName))
 			.withFunctionResolver(CommonFunctions.getResolver())
-			.andFunctionResolver(StandardIOFunctions.getResolver())
-			.andFunctionResolver(MathFunctions.getResolver())
-			.withScriptStack(
-					ValueUtils.parseInt(ArrayUtils.arrayElement(args, 1), 16), 
-					ValueUtils.parseInt(ArrayUtils.arrayElement(args, 2), 512)
-			)
+				.andFunctionResolver(StandardIOFunctions.getResolver())
+				.andFunctionResolver(MathFunctions.getResolver())
+			.withScriptStack(16, 512)
 			.withScope("script", new DefaultVariableResolver())
-			.call("main");
-		*/
+			.get();
 		
-		Script script = ScriptReader.read(new File(fileName), new MultiFunctionResolver(
-			CommonFunctions.getResolver(), 
-			StandardIOFunctions.getResolver(),
-			MathFunctions.getResolver()
-		));
-		//ScriptAssembler.disassemble(script, new OutputStreamWriter(System.out));
-
-		ScriptInstanceStack stack = new ScriptInstanceStack(
-			ValueUtils.parseInt(ArrayUtils.arrayElement(args, 1), 16), 
-			ValueUtils.parseInt(ArrayUtils.arrayElement(args, 2), 512)
-		);
+		while (true)
+		{
+			long nanos = System.nanoTime();
+			instance.call("main");
+			System.out.println("Script returns: "+instance.popStackValue()+" "+(System.nanoTime()-nanos)+" ns");
+			ThreadUtils.sleep(60);
+		}
 		
-		DefaultScopeResolver dsr = new DefaultScopeResolver();
-		dsr.addScope("script", new ObjectVariableResolver<Pair>(new Pair()));
-		
-		ScriptInstance instance = new ScriptInstance(script, stack, dsr, null);
-		instance.call("main");
-		System.out.println("Script returns: "+instance.popStackValue());
 	}
 	
 }

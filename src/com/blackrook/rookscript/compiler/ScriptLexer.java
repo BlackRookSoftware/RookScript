@@ -29,25 +29,16 @@ public class ScriptLexer extends CommonLexer
 	 * @param kernel the lexer kernel to use for defining how to parse the input text.
 	 * @param in the input stream to read from.
 	 * @param includer the script reader includer to use.
+	 * @param options the script reader options to use.
 	 */
-	public ScriptLexer(ScriptKernel kernel, Reader in, ScriptReaderIncluder includer)
+	public ScriptLexer(ScriptKernel kernel, Reader in, ScriptReaderIncluder includer, ScriptReaderOptions options)
 	{
 		super(kernel, in);
 		this.includer = includer;
+		for (String define : options.getDefines())
+			addDefineMacro(define);
 	}
 
-	/**
-	 * Constructs this script lexer from a reader.
-	 * @param kernel the lexer kernel to use for defining how to parse the input text.
-	 * @param in the reader to read from.
-	 * @param includer the script reader includer to use.
-	 */
-	public ScriptLexer(ScriptKernel kernel, String in, ScriptReaderIncluder includer)
-	{
-		super(kernel, in);
-		this.includer = includer;
-	}
-	
 	/**
 	 * Creates a new script lexer around a String, that will
 	 * be wrapped into a StringReader class chain.
@@ -55,26 +46,16 @@ public class ScriptLexer extends CommonLexer
 	 * @param name	the name of this lexer.
 	 * @param in the input stream to read from.
 	 * @param includer the script reader includer to use.
+	 * @param options the script reader options to use.
 	 */
-	public ScriptLexer(ScriptKernel kernel, String name, Reader in, ScriptReaderIncluder includer)
+	public ScriptLexer(ScriptKernel kernel, String name, Reader in, ScriptReaderIncluder includer, ScriptReaderOptions options)
 	{
 		super(kernel, name, in);
 		this.includer = includer;
+		for (String define : options.getDefines())
+			addDefineMacro(define);
 	}
 
-	/**
-	 * Creates a new script lexer from a reader.
-	 * @param kernel the lexer kernel to use for defining how to parse the input text.
-	 * @param name the name of this lexer.
-	 * @param in the reader to read from.
-	 * @param includer the script reader includer to use.
-	 */
-	public ScriptLexer(ScriptKernel kernel, String name, String in, ScriptReaderIncluder includer)
-	{
-		super(kernel, name, in);
-		this.includer = includer;
-	}
-	
 	@Override
 	protected String getNextResourceName(String currentStreamName, String includePath) throws IOException 
 	{

@@ -41,6 +41,14 @@ public class DefaultScopeResolver implements ScriptScopeResolver
 		scopeMap.put(name, resolver);
 	}
 	
+	/**
+	 * Clears this scope resolver of all added scope mappings.
+	 */
+	public synchronized void clear()
+	{
+		scopeMap.clear();
+	}
+	
 	@Override
 	public synchronized ScriptVariableResolver getScope(String name)
 	{

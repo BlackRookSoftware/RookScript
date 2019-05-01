@@ -99,6 +99,7 @@ public class ScriptInstance
 	 * Creates a new script instance, no wait handler.
 	 * @param script the script that holds the code.
 	 * @param scriptInstanceStack the instance stack. 
+	 * @param scopeResolver the scope resolver for this script.
 	 * @param hostInterface the host interface object for host calls.
 	 */
 	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, Object hostInterface)
@@ -113,9 +114,15 @@ public class ScriptInstance
 	 * @param scopeResolver the scope resolver for this script.
 	 * @param waitHandler the handler for handling a script in a waiting state (can be null).
 	 * @param hostInterface the host interface object for host calls.
+	 * @throws IllegalArgumentException if script or scriptInstanceStack
 	 */
 	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, Object hostInterface)
 	{
+		if (script == null)
+			throw new IllegalArgumentException("script is null");
+		if (scriptInstanceStack == null)
+			throw new IllegalArgumentException("scriptInstanceStack is null");
+		
 		this.script = script;
 		this.scriptInstanceStack = scriptInstanceStack;
 		this.scopeResolver = scopeResolver;
@@ -216,10 +223,10 @@ public class ScriptInstance
 	}
 
 	/**
-	 * Initializes the script with parameters and calls {@link #update()} to execute it.
+	 * Initializes the script with an entry point and parameters and calls {@link #update()} to execute it.
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.
-	 * @throws ScriptExecutionException if the provided amount parameters do not match the amount of parameters that the script requires, 
+	 * @throws ScriptExecutionException if the provided amount of parameters do not match the amount of parameters that the script requires, 
 	 * 		or the provided entry point does not exist.
 	 * @see #initialize(String, Object...)
 	 * @see #update()
@@ -231,10 +238,28 @@ public class ScriptInstance
 	}
 	
 	/**
+	 * Initializes the script with an entry point and parameters and calls {@link #update()} to execute it,
+	 * then gets the return value off the stack converted to a provided type.
+	 * @param returnType the return type to get from the script.
+	 * @param entryName the entry point name.
+	 * @param parameters the starting parameters to push onto the stack.
+	 * @throws ScriptExecutionException if the provided amount of parameters do not match the amount of parameters that the script requires, 
+	 * 		or the provided entry point does not exist.
+	 * @see #initialize(String, Object...)
+	 * @see #update()
+	 * @see #popStackValue()
+	 */
+	public <T> T callAndReturnAs(Class<T> returnType, String entryName, Object ... parameters)
+	{
+		call(entryName, parameters);
+		return popStackValue().createForType(returnType);
+	}
+	
+	/**
 	 * Initializes the script with parameters.
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.
-	 * @throws ScriptExecutionException if the provided amount parameters do not match the amount of parameters that the script requires, 
+	 * @throws ScriptExecutionException if the provided amount of parameters do not match the amount of parameters that the script requires, 
 	 * 		or the provided entry point does not exist.
 	 */
 	public void initialize(String entryName, Object ... parameters)

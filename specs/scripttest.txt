@@ -2,11 +2,13 @@
 
 entry main()
 {
+	print(typeof(null));
 	print(typeof(true));
 	print(typeof(0));
 	print(typeof(0.5));
 	print(typeof("asd"));
 	print(typeof([]));
+	print(typeof({}));
 	print(MIN(6,2));
 	print(MAX(6,2));
 	print(POW(6,2));

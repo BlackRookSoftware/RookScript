@@ -1322,7 +1322,29 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public <T> T createForType(Class<T> targetType)
 	{
-		return Reflect.createForType(asObject(), targetType);
+		switch(type)
+		{
+			case NULL:
+				return (T)null;
+			case BOOLEAN:
+				return Reflect.createForType(asBoolean(), targetType);
+			case INTEGER:
+				return Reflect.createForType(asLong(), targetType);
+			case FLOAT:
+				return Reflect.createForType(asDouble(), targetType);
+			case STRING:
+				return Reflect.createForType(asString(), targetType);
+			case LIST:
+				return Reflect.createForType(asObjectType(List.class), targetType);
+			case MAP:
+				T out = Reflect.create(targetType);
+				mapApply(out);
+				return out;
+			default:
+			case ERROR:
+			case OBJECTREF:
+				return Reflect.createForType(asObject(), targetType);
+		}
 	}
 	
 	/**
