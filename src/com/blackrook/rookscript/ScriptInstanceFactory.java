@@ -119,6 +119,16 @@ public class ScriptInstanceFactory<H extends Object>
 	}
 	
 	/**
+	 * Creates a new instance.
+	 * @param hostInterface the host interface override.
+	 * @return a new instance with all of the associated resolvers and handlers attached to it.
+	 */
+	public ScriptInstance create(H hostInterface)
+	{
+		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, hostInterface);
+	}
+	
+	/**
 	 * Destroys an instance and releases pooled objects.
 	 * @param instance the script instance.
 	 */
