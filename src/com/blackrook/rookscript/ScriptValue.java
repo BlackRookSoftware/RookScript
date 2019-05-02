@@ -17,12 +17,14 @@ import com.blackrook.commons.ResettableIterator;
 import com.blackrook.commons.Sizable;
 import com.blackrook.commons.list.List;
 import com.blackrook.commons.util.ObjectUtils;
-import com.blackrook.commons.util.ThreadUtils;
 import com.blackrook.commons.util.ValueUtils;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
 import com.blackrook.rookscript.util.ScriptReflectionUtils;
 import com.blackrook.rookscript.util.ScriptReflectionUtils.Profile;
+import com.blackrook.rookscript.util.ScriptThreadLocal.Cache;
+
+import static com.blackrook.rookscript.util.ScriptThreadLocal.getCache;
 
 /**
  * Script value encapsulation.
@@ -754,17 +756,23 @@ public class ScriptValue implements Comparable<ScriptValue>
 	
 	/**
 	 * If this is a map, gets the value that corresponds to a provided key.
+	 * Changing the returned value does not change the value, unless it is a reference type
+	 * like a map or list.
 	 * @param key the key. 
-	 * @return the corresponding value, or <code>null</code> if no corresponding value.
+	 * @param out the destination variable for the value.
+	 * @return true if a corresponding value was replaced, false if not or this is not a map. If false, out is set to the null value.
 	 * @see #isMap()
 	 */
-	public ScriptValue mapGet(String key)
+	public boolean mapGet(String key, ScriptValue out)
 	{
 		if (!isMap())
-			return null;
+		{
+			out.setNull();
+			return false;
+		}
 		
 		MapType map = (MapType)ref;
-		return map.getValue(key);
+		return map.getValue(key, out);
 	}
 	
 	/**
@@ -2155,31 +2163,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 		public String getLocalizedMessage() 
 		{
 			return localizedMessage;
-		}
-		
-	}
-	
-	private static final String CACHE_NAME = "$$"+Cache.class.getCanonicalName();
-
-	// Get the cache.
-	private static Cache getCache()
-	{
-		Cache out;
-		if ((out = (Cache)ThreadUtils.getLocal(CACHE_NAME)) == null)
-			ThreadUtils.setLocal(CACHE_NAME, out = new Cache());
-		return out;
-	}
-	
-	// Mathematics cache.
-	private static class Cache
-	{
-		private ScriptValue value1;
-		private ScriptValue value2;
-		
-		public Cache()
-		{
-			this.value1 = ScriptValue.create(null);
-			this.value2 = ScriptValue.create(null);
 		}
 		
 	}

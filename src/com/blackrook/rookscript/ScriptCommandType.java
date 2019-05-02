@@ -7,8 +7,10 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
-import com.blackrook.commons.util.ThreadUtils;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
+import com.blackrook.rookscript.util.ScriptThreadLocal.Cache;
+
+import static com.blackrook.rookscript.util.ScriptThreadLocal.getCache;
 
 /**
  * Directive type for scripts.
@@ -225,18 +227,18 @@ public enum ScriptCommandType
 		{
 			Cache cache = getCache();
 			if (operand1 instanceof Long)
-				cache.tempValue.set((Long)operand1);
+				cache.temp.set((Long)operand1);
 			else if (operand1 instanceof Double)
-				cache.tempValue.set((Double)operand1);
+				cache.temp.set((Double)operand1);
 			else if (operand1 instanceof Boolean)
-				cache.tempValue.set((Boolean)operand1);
+				cache.temp.set((Boolean)operand1);
 			else if (operand1 instanceof String)
-				cache.tempValue.set((String)operand1);
+				cache.temp.set((String)operand1);
 			else if (operand1 == null)
 				throw new ScriptExecutionException("Attempt to push null value");
 			else
-				cache.tempValue.set(operand1);
-			scriptInstance.pushStackValue(cache.tempValue);
+				cache.temp.set(operand1);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -252,8 +254,8 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			Cache cache = getCache();
-			cache.tempValue.setNull();
-			scriptInstance.pushStackValue(cache.tempValue);
+			cache.temp.setNull();
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -269,12 +271,9 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			String name = String.valueOf(operand1);
-			ScriptValue value;
-			if ((value = scriptInstance.getValue(name)) == null)
-				scriptInstance.pushStackValue(null);
-			else
-				scriptInstance.pushStackValue(value);
-			
+			ScriptValue value = getCache().temp;
+			scriptInstance.getValue(name, value);
+			scriptInstance.pushStackValue(value);
 			return true;
 		}
 		
@@ -300,8 +299,8 @@ public enum ScriptCommandType
 				return true;
 			}
 
-			ScriptValue value;
-			if ((value = scope.getValue(variableName)) == null)
+			ScriptValue value = getCache().temp;
+			if (!scope.getValue(variableName, value))
 			{
 				scriptInstance.pushStackValue(null);
 				return true;
@@ -322,9 +321,9 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			Cache cache =  getCache();
-			cache.tempValue.setEmptyList();
-			scriptInstance.pushStackValue(cache.tempValue);
+			Cache cache = getCache();
+			cache.temp.setEmptyList();
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -419,8 +418,8 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			Cache cache =  getCache();
-			cache.tempValue.setEmptyMap();
-			scriptInstance.pushStackValue(cache.tempValue);
+			cache.temp.setEmptyMap();
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -472,7 +471,9 @@ public enum ScriptCommandType
 			}
 			
 			String key = keyValue.asString();
-			scriptInstance.pushStackValue(mapValue.mapGet(key));
+			ScriptValue temp = getCache().temp;
+			mapValue.mapGet(key, temp);
+			scriptInstance.pushStackValue(temp);
 			return true;
 		}
 	}, 
@@ -498,7 +499,9 @@ public enum ScriptCommandType
 			}
 			
 			String key = keyValue.asString();
-			scriptInstance.pushStackValue(mapValue.mapGet(key));
+			ScriptValue temp = getCache().temp;
+			mapValue.mapGet(key, temp);
+			scriptInstance.pushStackValue(temp);
 			return true;
 		}
 	},
@@ -624,8 +627,8 @@ public enum ScriptCommandType
 		{
 			String name = String.valueOf(operand1);
 			Cache cache = getCache();
-			cache.tempValue.set(operand2);
-			scriptInstance.setValue(name, cache.tempValue);
+			cache.temp.set(operand2);
+			scriptInstance.setValue(name, cache.temp);
 			return true;
 		}
 	},
@@ -642,11 +645,9 @@ public enum ScriptCommandType
 		{
 			String name = String.valueOf(operand1);
 			String valname = String.valueOf(operand2);
-			ScriptValue value;
-			if ((value = scriptInstance.getValue(valname)) == null)
-				scriptInstance.setValue(name, null);
-			else
-				scriptInstance.setValue(name, value);
+			ScriptValue value = getCache().temp;
+			scriptInstance.getValue(valname, value);
+			scriptInstance.setValue(name, value);
 			return true;
 		}
 	},
@@ -662,8 +663,8 @@ public enum ScriptCommandType
 		{
 			ScriptValue value = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.logicalNot(value, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.logicalNot(value, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -680,8 +681,8 @@ public enum ScriptCommandType
 		{
 			ScriptValue value = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.negate(value, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.negate(value, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -698,8 +699,8 @@ public enum ScriptCommandType
 		{
 			ScriptValue value = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.absolute(value, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.absolute(value, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -716,8 +717,8 @@ public enum ScriptCommandType
 		{
 			ScriptValue value = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.logicalNot(value, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.logicalNot(value, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -735,8 +736,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.add(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.add(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -754,8 +755,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.subtract(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.subtract(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -773,8 +774,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.multiply(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.multiply(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -792,8 +793,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.divide(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.divide(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -811,8 +812,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.modulo(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.modulo(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -830,8 +831,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.and(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.and(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -849,8 +850,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.or(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.or(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -868,8 +869,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.xor(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.xor(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -887,8 +888,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.logicalAnd(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.logicalAnd(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -906,8 +907,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.logicalOr(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.logicalOr(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -925,8 +926,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.leftShift(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.leftShift(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -944,8 +945,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.rightShift(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.rightShift(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -963,8 +964,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.rightShiftPadded(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.rightShiftPadded(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -982,8 +983,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.less(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.less(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -1001,8 +1002,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.lessOrEqual(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.lessOrEqual(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -1020,8 +1021,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.greater(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.greater(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -1039,8 +1040,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.greaterOrEqual(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.greaterOrEqual(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -1058,8 +1059,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.equal(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.equal(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -1077,8 +1078,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.notEqual(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.notEqual(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -1096,8 +1097,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.strictEqual(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.strictEqual(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -1115,8 +1116,8 @@ public enum ScriptCommandType
 			ScriptValue value2 = scriptInstance.popStackValue();
 			ScriptValue value1 = scriptInstance.popStackValue();
 			Cache cache = getCache();
-			ScriptValue.strictNotEqual(value1, value2, cache.tempValue);
-			scriptInstance.pushStackValue(cache.tempValue);
+			ScriptValue.strictNotEqual(value1, value2, cache.temp);
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
 		}
 	},
@@ -1131,28 +1132,5 @@ public enum ScriptCommandType
 	 * @return if false, this halts script execution, else if true, continue.
 	 */
 	public abstract boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2);
-
-	private static final String CACHE_NAME = "$$"+Cache.class.getCanonicalName();
-
-	// Get the cache.
-	private static Cache getCache()
-	{
-		Cache out;
-		if ((out = (Cache)ThreadUtils.getLocal(CACHE_NAME)) == null)
-			ThreadUtils.setLocal(CACHE_NAME, out = new Cache());
-		return out;
-	}
-	
-	// Expression cache.
-	private static class Cache
-	{
-		private ScriptValue tempValue;
-		
-		public Cache()
-		{
-			this.tempValue = ScriptValue.create(null);
-		}
-		
-	}
 
 }

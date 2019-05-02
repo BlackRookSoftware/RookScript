@@ -15,11 +15,14 @@ public class ScriptInstanceStackTest
 	public static void main(String[] args)
 	{
 		ScriptInstanceStack stack = new ScriptInstanceStack(16, 128);
+		ScriptValue value = ScriptValue.create(null);
 		stack.pushFrame(0);
 		stack.setValue("x", ScriptValue.create(5));
-		System.out.println(stack.getValue("x"));
+		stack.getValue("x", value);
+		System.out.println(value);
 		stack.setValue("x", ScriptValue.create(5));
-		System.out.println(stack.getValue("x"));
+		stack.getValue("x", value);
+		System.out.println(value);
 		
 		stack.pushStackValue(10);
 		stack.pushStackValue(20.0);

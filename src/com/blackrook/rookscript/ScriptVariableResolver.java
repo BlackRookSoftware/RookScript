@@ -11,11 +11,13 @@ public interface ScriptVariableResolver extends Sizable
 {
 	/**
 	 * Gets the corresponding value for a variable name.
-	 * Changing the returned value, if any, changes the value in-place.
+	 * Changing the returned value does not change the value, unless it is a reference type
+	 * like a map or list.
 	 * @param name the variable name.
-	 * @return the corresponding value, or <code>null</code> if no corresponding value.
+	 * @param out the destination variable for the value.
+	 * @return true if a corresponding value was fetched into out, false if not. If false, out is set to the null value.
 	 */
-    public ScriptValue getValue(String name);
+    public boolean getValue(String name, ScriptValue out);
     
     /**
      * Sets a key-value pair.

@@ -15,6 +15,7 @@ import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.ScriptValue.MapType;
 import com.blackrook.rookscript.resolvers.function.EnumFunctionResolver;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
+import static com.blackrook.rookscript.util.ScriptThreadLocal.getCache;
 
 /**
  * Script common functions that work for all scripts.
@@ -771,7 +772,9 @@ public enum CommonFunctions implements ScriptFunctionType
 				return true;
 			}
 			
-			scriptInstance.pushStackValue(sv.mapGet(keyValue.asString()));
+			ScriptValue out = getCache().temp;
+			sv.mapGet(keyValue.asString(), out);
+			scriptInstance.pushStackValue(out);
 			return true;
 		}
 	},

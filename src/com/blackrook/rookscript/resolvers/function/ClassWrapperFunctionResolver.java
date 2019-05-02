@@ -39,6 +39,7 @@ import com.blackrook.rookscript.exception.ScriptExecutionException;
  * Constructors/getters/setters annotated with @ScriptName use the provided name instead of the generated one.
  * Fields annotated with @ScriptName use the provided name, but still prefixed with the get/setname.
  * @author Matthew Tropiano
+ * TODO: Obey @ScriptValueType annotation!
  */
 public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 {

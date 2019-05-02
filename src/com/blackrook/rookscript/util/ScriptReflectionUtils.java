@@ -12,6 +12,7 @@ import com.blackrook.commons.hash.HashMap;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
+import static com.blackrook.rookscript.util.ScriptThreadLocal.getCache;
 
 /**
  * Script reflection utilities.
@@ -142,9 +143,9 @@ public final class ScriptReflectionUtils
 		{
 			for (ObjectPair<String, Setter<C>> pair : setterMap)
 			{
-				ScriptValue sv = value.mapGet(pair.getKey());
-				if (sv != null)
-					pair.getValue().set(obj, sv.asObject());
+				ScriptValue sv = getCache().temp; 
+				if (value.mapGet(pair.getKey(), sv))
+					pair.getValue().set(obj, sv);
 			}
 		}
 
@@ -165,7 +166,7 @@ public final class ScriptReflectionUtils
 			this.type = fieldType;
 		}
 		
-		abstract void set(C instance, Object value);
+		abstract void set(C instance, ScriptValue value);
 	}
 	
 	private static class FieldSetter<C> extends Setter<C>
@@ -177,9 +178,9 @@ public final class ScriptReflectionUtils
 			this.field = field;
 		}
 		
-		void set(C instance, Object value)
+		void set(C instance, ScriptValue value)
 		{
-			Reflect.setField(instance, field, Reflect.createForType(value, type));
+			Reflect.setField(instance, field, value.createForType(type));
 		}
 	}
 
@@ -192,9 +193,9 @@ public final class ScriptReflectionUtils
 			this.method = method;
 		}
 		
-		void set(C instance, Object value)
+		void set(C instance, ScriptValue value)
 		{
-			Reflect.invokeBlind(method, instance, Reflect.createForType(value, type));
+			Reflect.invokeBlind(method, instance, value.createForType(type));
 		}
 	}
 

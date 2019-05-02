@@ -8,16 +8,17 @@ import com.blackrook.commons.Reflect;
 import com.blackrook.commons.TypeProfile;
 import com.blackrook.commons.TypeProfile.MethodSignature;
 import com.blackrook.commons.hash.CaseInsensitiveHashMap;
-import com.blackrook.commons.util.ThreadUtils;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptVariableResolver;
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
+import static com.blackrook.rookscript.util.ScriptThreadLocal.getCache;
 
 /**
  * A variable resolver that wraps an object instance's fields and getters/setters
  * as a scope. The "field names" of the fields/methods are used as the variable names. 
  * @author Matthew Tropiano
+ * TODO: Obey @ScriptValueType annotation!
  */
 public class ObjectVariableResolver<T> implements ScriptVariableResolver
 {
@@ -111,18 +112,20 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 	}
 	
 	@Override
-	public ScriptValue getValue(String name)
+	public boolean getValue(String name, ScriptValue out)
 	{
 		ScriptValue sv = getCache().temp;
 
-		GetterSetter out;
-		if ((out = fieldMap.get(name)) == null)
+		GetterSetter gs;
+		if ((gs = fieldMap.get(name)) == null)
 		{
-			sv.setNull();
-			return sv;
+			out.setNull();
+			return false;
 		}
-		sv.set(out.get());
-		return sv;
+		
+		sv.set(gs.get());
+		out.set(sv);
+		return true;
 	}
 
 	@Override
@@ -185,28 +188,4 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 				return null;
 		}
 	}
-	
-	private static final String CACHE_NAME = "$$"+Cache.class.getCanonicalName();
-
-	// Get the cache.
-	private static Cache getCache()
-	{
-		Cache out;
-		if ((out = (Cache)ThreadUtils.getLocal(CACHE_NAME)) == null)
-			ThreadUtils.setLocal(CACHE_NAME, out = new Cache());
-		return out;
-	}
-	
-	// Mathematics cache.
-	private static class Cache
-	{
-		private ScriptValue temp;
-		
-		public Cache()
-		{
-			this.temp = ScriptValue.create(null);
-		}
-		
-	}
-	
 }

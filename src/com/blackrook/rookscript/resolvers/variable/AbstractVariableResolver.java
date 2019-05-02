@@ -124,9 +124,19 @@ public class AbstractVariableResolver implements ScriptVariableResolver
 	}
 
 	@Override
-	public synchronized ScriptValue getValue(String name)
+	public synchronized boolean getValue(String name, ScriptValue out)
 	{
-		return get(name);
+		ScriptValue sv = get(name);
+		if (sv != null)
+		{
+			out.set(sv);
+			return true;
+		}
+		else
+		{
+			out.setNull();
+			return false;
+		}
 	}
 
 	@Override

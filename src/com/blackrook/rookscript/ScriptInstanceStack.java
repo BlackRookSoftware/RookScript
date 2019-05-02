@@ -148,12 +148,15 @@ public class ScriptInstanceStack
 	/**
 	 * Gets a corresponding script value by name.
 	 * Only looks at the topmost scope.
-	 * @param name the name of the variable.
-	 * @return the value or null if no variable.
+	 * Changing the returned value does not change the value, unless it is a reference type
+	 * like a map or list.
+	 * @param name the variable name.
+	 * @param out the destination variable for the value.
+	 * @return true if a corresponding value was fetched into out, false if not. If false, out is set to the null value.
 	 */
-	public ScriptValue getValue(String name)
+	public boolean getValue(String name, ScriptValue out)
 	{
-		return scopeStack[scopeStackTop].getValue(name);
+		return scopeStack[scopeStackTop].getValue(name, out);
 	}
 
 	/**
@@ -162,15 +165,8 @@ public class ScriptInstanceStack
 	 * @param name the name of the variable.
 	 * @param value the value to set.
 	 */
-	public <T> void setValue(String name, ScriptValue value)
+	public void setValue(String name, ScriptValue value)
 	{
-		ScriptValue sv = getValue(name);
-		if (sv != null)
-		{
-			sv.set(value);
-			return;
-		}
-		
 		scopeStack[scopeStackTop].setValue(name, value);
 	}
 
