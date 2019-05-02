@@ -25,7 +25,7 @@ public interface ScriptVariableResolver extends Sizable
 	 * @throws IllegalArgumentException if the provided name refers to a value that is read-only.
 	 * @see #isReadOnly(String)
      */
-    public void setValue(String name, Object value);
+    public void setValue(String name, ScriptValue value);
         
     /**
      * Checks if this contains a value by its variable name.

@@ -85,8 +85,8 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 		StringBuilder sb = new StringBuilder();
 		String objName = clazz.getSimpleName();
 		
+		// Wrap constructors.
 		int constructorCount = 0;
-		
 		for (Constructor<?> constructor : clazz.getConstructors())
 		{
 			if (constructor.getAnnotation(ScriptIgnore.class) != null)
@@ -122,6 +122,7 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 			constructorCount++;
 		}
 		
+		// Public field wrappers.
 		for (ObjectPair<String, Field> fieldPair : profile.getPublicFields())
 		{
 			Field field = fieldPair.getValue();
@@ -142,9 +143,9 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 			}
 			else
 			{
-				getter = (sb.append(baseName).append(separator).append(getName).append(separator).append(fieldName).toString()).toLowerCase();
+				getter = (sb.append(baseName).append(separator).append(getName).append(fieldName).toString()).toLowerCase();
 				sb.delete(0, sb.length());
-				setter = (sb.append(baseName).append(separator).append(setName).append(separator).append(fieldName).toString()).toLowerCase();
+				setter = (sb.append(baseName).append(separator).append(setName).append(fieldName).toString()).toLowerCase();
 				sb.delete(0, sb.length());
 			}
 			
@@ -152,6 +153,7 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 			mappedFunctions.put(setter, new SetterInvoker(setter, field, new InvokerUsage(fieldUsageSet, "The target object.", "The value to set (will be converted to "+fieldPair.getValue().getType().getSimpleName()+" if possible).")));
 		}
 
+		// Public getters.
 		for (ObjectPair<String, MethodSignature> methodPair : profile.getGetterMethods())
 		{
 			Method method = methodPair.getValue().getMethod();
@@ -168,7 +170,7 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 			}
 			else
 			{
-				getter = (sb.append(baseName).append(separator).append(getName).append(separator).append(fieldName).toString()).toLowerCase();
+				getter = (sb.append(baseName).append(separator).append(getName).append(fieldName).toString()).toLowerCase();
 				sb.delete(0, sb.length());
 			}
 			
@@ -179,6 +181,7 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 			mappedFunctions.put(getter, new GetterInvoker(getter, method, new InvokerUsage(fieldUsageGet, "The source object.")));
 		}
 		
+		// Public setters.
 		for (ObjectPair<String, MethodSignature> methodPair : profile.getSetterMethods())
 		{
 			Method method = methodPair.getValue().getMethod();
@@ -195,7 +198,7 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 			}
 			else
 			{
-				setter = (sb.append(baseName).append(separator).append(setName).append(separator).append(fieldName).toString()).toLowerCase();
+				setter = (sb.append(baseName).append(separator).append(setName).append(fieldName).toString()).toLowerCase();
 				sb.delete(0, sb.length());
 			}
 			
@@ -267,15 +270,14 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 		private String name;
 		private Usage usage;
 		private Constructor<?> constructor;
-		
-		private Object[] vbuf;
+		private Class<?>[] paramTypes;
 		
 		private ConstructorInvoker(String name, Constructor<?> constructor, Usage usage)
 		{
 			this.name = name;
 			this.usage = usage;
 			this.constructor = constructor;
-			this.vbuf = new Object[constructor.getParameterCount()];
+			this.paramTypes = constructor.getParameterTypes();
 		}
 
 		@Override
@@ -305,10 +307,11 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
+			Object[] vbuf = new Object[paramTypes.length];
 			for (int i = vbuf.length - 1; i >= 0; i++)
-				vbuf[i] = scriptInstance.popStackValue().asObject();
+				vbuf[i] = scriptInstance.popStackValue().createForType(paramTypes[i]);
 			
-			scriptInstance.pushStackValue(Reflect.construct(constructor, vbuf));
+			scriptInstance.pushStackValue(ScriptValue.createObjectRef(Reflect.construct(constructor, vbuf)));
 			return true;
 		}
 
@@ -355,7 +358,7 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			scriptInstance.pushStackValue(Reflect.create(validType));
+			scriptInstance.pushStackValue(ScriptValue.createObjectRef(Reflect.create(validType)));
 			return true;
 		}
 
@@ -455,7 +458,7 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 			this.method = null;
 			this.usage = usage;
 		}
-
+	
 		private GetterInvoker(String name, Method method, Usage usage)
 		{
 			this.name = name;
@@ -469,30 +472,30 @@ public class ClassWrapperFunctionResolver implements ScriptFunctionResolver
 		{
 			return false;
 		}
-
+	
 		@Override
 		public String name()
 		{
 			return name;
 		}
-
+	
 		@Override
 		public int getParameterCount()
 		{
 			return 1;
 		}
-
+	
 		@Override
 		public Usage getUsage()
 		{
 			return usage;
 		}
-
+	
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
 			ScriptValue instance = scriptInstance.popStackValue();
-
+	
 			Object object = instance.asObject();
 			
 			if (!validType.isAssignableFrom(object.getClass()))

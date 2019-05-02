@@ -10,7 +10,6 @@ package com.blackrook.rookscript;
 import java.io.File;
 
 import com.blackrook.commons.util.ArrayUtils;
-import com.blackrook.commons.util.ThreadUtils;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.CommonFunctions;
@@ -39,12 +38,12 @@ public class ScriptTest
 			.withScope("script", new DefaultVariableResolver())
 			.get();
 		
-		while (true)
+		int x = 5000;
+		while (x-- > 0)
 		{
 			long nanos = System.nanoTime();
 			instance.call("main");
 			System.out.println("Script returns: "+instance.popStackValue()+" "+(System.nanoTime()-nanos)+" ns");
-			ThreadUtils.sleep(60);
 		}
 		
 	}

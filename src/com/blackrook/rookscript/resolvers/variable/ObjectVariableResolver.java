@@ -26,8 +26,6 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 	/** Map of resolvers. */
 	private CaseInsensitiveHashMap<GetterSetter> fieldMap;
 	
-	/***/
-	
 	/**
 	 * Creates a new resolver for this object.
 	 * @param instance the object instance to wrap.
@@ -128,7 +126,7 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 	}
 
 	@Override
-	public void setValue(String name, Object value)
+	public void setValue(String name, ScriptValue value)
 	{
 		GetterSetter out;
 		if ((out = fieldMap.get(name)) == null)
@@ -140,8 +138,7 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 	@Override
 	public boolean containsValue(String name)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		return fieldMap.containsKey(name);
 	}
 
 	@Override
@@ -170,12 +167,12 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 		private Method getter;
 		private Method setter;
 		
-		void set(Object value)
+		void set(ScriptValue value)
 		{
 			if (field != null)
-				Reflect.setField(instance, field, Reflect.createForType(value, type));
+				Reflect.setField(instance, field, value.createForType(type));
 			else if (setter != null)
-				Reflect.invokeBlind(setter, instance, Reflect.createForType(value, type));
+				Reflect.invokeBlind(setter, instance, value.createForType(type));
 		}
 		
 		Object get()

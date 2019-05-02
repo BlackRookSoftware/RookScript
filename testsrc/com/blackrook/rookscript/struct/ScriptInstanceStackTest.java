@@ -8,6 +8,7 @@
 package com.blackrook.rookscript.struct;
 
 import com.blackrook.rookscript.ScriptInstanceStack;
+import com.blackrook.rookscript.ScriptValue;
 
 public class ScriptInstanceStackTest
 {
@@ -15,9 +16,9 @@ public class ScriptInstanceStackTest
 	{
 		ScriptInstanceStack stack = new ScriptInstanceStack(16, 128);
 		stack.pushFrame(0);
-		stack.setValue("x", 5);
+		stack.setValue("x", ScriptValue.create(5));
 		System.out.println(stack.getValue("x"));
-		stack.setValue("x", 10);
+		stack.setValue("x", ScriptValue.create(5));
 		System.out.println(stack.getValue("x"));
 		
 		stack.pushStackValue(10);

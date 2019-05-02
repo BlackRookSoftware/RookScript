@@ -746,7 +746,9 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return false;
 		
 		MapType map = (MapType)ref;
-		map.setValue(key, value);
+		Cache cache = getCache();
+		cache.value1.set(value);
+		map.setValue(key, cache.value1);
 		return true;
 	}
 	

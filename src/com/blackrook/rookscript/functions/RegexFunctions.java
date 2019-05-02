@@ -6,6 +6,7 @@ import java.util.regex.PatternSyntaxException;
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptInstance;
+import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.resolvers.function.EnumFunctionResolver;
 import com.blackrook.rookscript.util.PatternUtils;
 
@@ -43,7 +44,7 @@ public enum RegexFunctions implements ScriptFunctionType
 	/**
 	 * Splits a string by a RegEx pattern.
 	 * Returns an array.
-	 * If the pattern is malformed, this returns false.
+	 * If the pattern is malformed, this returns an error type.
 	 * ARG1: The string (converted). 
 	 * ARG2: The RegEx pattern to split on.
 	 */
@@ -59,7 +60,8 @@ public enum RegexFunctions implements ScriptFunctionType
 			try {
 				p = PatternUtils.get(regex);
 			} catch (PatternSyntaxException e) {
-				// bad pattern.
+				scriptInstance.pushStackValue(ErrorType.create(e));
+				return true;
 			}
 			if (p != null)
 				scriptInstance.pushStackValue(Pattern.compile(regex).split(str));

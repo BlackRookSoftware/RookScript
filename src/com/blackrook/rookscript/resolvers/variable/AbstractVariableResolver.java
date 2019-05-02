@@ -130,7 +130,7 @@ public class AbstractVariableResolver implements ScriptVariableResolver
 	}
 
 	@Override
-	public synchronized void setValue(String name, Object value)
+	public synchronized void setValue(String name, ScriptValue value)
 	{
 		ScriptValue ev = get(name); 
 		if (ev != null)

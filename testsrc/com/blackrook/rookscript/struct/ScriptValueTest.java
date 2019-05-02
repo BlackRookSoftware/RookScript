@@ -15,7 +15,7 @@ public class ScriptValueTest
 		{
 			long nanos = System.nanoTime();
 			sv.set(new Triple(34, -23, 45));
-			System.out.println((System.nanoTime() - nanos)+"ns");
+			System.out.println((System.nanoTime() - nanos));
 		}
 		sv.setObjectRef(PairGroup.box(0, 0, 5, 5));
 		System.out.println("asdfasdf");

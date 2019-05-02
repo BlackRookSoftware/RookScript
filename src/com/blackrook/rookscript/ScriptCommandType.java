@@ -561,7 +561,7 @@ public enum ScriptCommandType
 			}
 
 			if (!scope.isReadOnly(variableName))
-				scope.setValue(variableName, value.asObject());
+				scope.setValue(variableName, value);
 			return true;
 		}
 	},
@@ -623,7 +623,9 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			String name = String.valueOf(operand1);
-			scriptInstance.setValue(name, operand2);
+			Cache cache = getCache();
+			cache.tempValue.set(operand2);
+			scriptInstance.setValue(name, cache.tempValue);
 			return true;
 		}
 	},

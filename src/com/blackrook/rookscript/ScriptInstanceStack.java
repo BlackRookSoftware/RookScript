@@ -162,7 +162,7 @@ public class ScriptInstanceStack
 	 * @param name the name of the variable.
 	 * @param value the value to set.
 	 */
-	public <T> void setValue(String name, T value)
+	public <T> void setValue(String name, ScriptValue value)
 	{
 		ScriptValue sv = getValue(name);
 		if (sv != null)
