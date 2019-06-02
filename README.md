@@ -11,11 +11,7 @@ may change many times in different ways over the course of its development!
 
 ### Required Libraries
 
-Black Rook Commons 2.32.0+  
-[https://github.com/BlackRookSoftware/Common](https://github.com/BlackRookSoftware/Common)
-
-Black Rook Common Lang 2.11.0+  
-[https://github.com/BlackRookSoftware/CommonLang](https://github.com/BlackRookSoftware/CommonLang)
+NONE
 
 ### Required Java Modules
 
@@ -32,22 +28,34 @@ The javadocs contain basic outlines of each package's contents.
 
 ### Compiling with Ant
 
-To download the dependencies for this project (if you didn't set that up yourself already), type:
-
-	ant dependencies
-
-A *build.properties* file will be created/appended to with the *dev.base* property set.
-	
 To compile this library with Apache Ant, type:
 
 	ant compile
 
-To make a JAR of this library, type:
+To make Maven-compatible JARs of this library (placed in the *build/jar* directory), type:
 
 	ant jar
 
-And it will be placed in the *build/jar* directory.
+To make Javadocs (placed in the *build/docs* directory):
 
+	ant javadoc
+
+To compile main and test code and run tests (if any):
+
+	ant test
+
+To make Zip archives of everything (main src/resources, bin, javadocs, placed in the *build/zip* directory):
+
+	ant zip
+
+To compile, JAR, test, and Zip up everything:
+
+	ant release
+
+To clean up everything:
+
+	ant clean
+	
 ### Other
 
 This program and the accompanying materials
@@ -58,3 +66,5 @@ http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
 A copy of the LGPL should have been included in this release (LICENSE.txt).
 If it was not, please contact us for a copy, or to notify us of a distribution
 that has not included it. 
+
+This contains code copied from Black Rook Base, under the terms of the MIT License (docs/LICENSE-BlackRookBase.txt).
