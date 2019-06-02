@@ -1,5 +1,6 @@
 package com.blackrook.rookscript.annotations;
 
+import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -15,7 +16,7 @@ import com.blackrook.rookscript.ScriptValue;
  * @author Matthew Tropiano
  */
 @Retention(RUNTIME)
-@Target({FIELD, METHOD})
+@Target({FIELD, METHOD, CONSTRUCTOR})
 public @interface ScriptValueType
 {
 	/** The value to convert to on read. */

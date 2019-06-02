@@ -138,10 +138,12 @@ public class TypeProfileFactory
 	private static boolean isSetter(Method method, Class<?> sourceType)
 	{
 		Class<?> rettype = method.getReturnType();
+		int modifiers = method.getModifiers();
 		return isSetterName(method.getName()) 
 			&& method.getParameterTypes().length == 1
-			&& (rettype == Void.TYPE || rettype == Void.class || rettype == sourceType) 
-			&& (method.getModifiers() & Modifier.PUBLIC) != 0;
+			&& (rettype == Void.TYPE || rettype == sourceType || rettype == Void.class) 
+			&& (modifiers & Modifier.PUBLIC) != 0
+			&& (modifiers & Modifier.STATIC) == 0;
 	}
 
 	/**
@@ -152,10 +154,27 @@ public class TypeProfileFactory
 	 */
 	private static boolean isGetter(Method method)
 	{
+		Class<?> rettype = method.getReturnType();
+		int modifiers = method.getModifiers();
 		return isGetterName(method.getName()) 
 			&& method.getParameterTypes().length == 0
-			&& !(method.getReturnType() == Void.TYPE || method.getReturnType() == Void.class) 
-			&& (method.getModifiers() & Modifier.PUBLIC) != 0;
+			&& !(rettype == Void.TYPE || rettype == Void.class) 
+			&& (modifiers & Modifier.PUBLIC) != 0
+			&& (modifiers & Modifier.STATIC) == 0;
+	}
+
+	/**
+	 * Checks if a method is a visible method.
+	 * This checks if it is <b>public</b> but not <b>static</b>, and not a part of Object.
+	 * @param method the method to inspect.
+	 * @return true if so, false if not.
+	 */
+	private static boolean isVisibleMethod(Method method)
+	{
+		int modifiers = method.getModifiers();
+		return method.getDeclaringClass() != Object.class
+			&& (modifiers & Modifier.PUBLIC) != 0
+			&& (modifiers & Modifier.STATIC) == 0;
 	}
 
 	// truncator method
@@ -224,6 +243,12 @@ public class TypeProfileFactory
 		private HashMap<String, MethodInfo> getterMethodsByAlias;
 		/** Map of setters by alias. */
 		private HashMap<String, MethodInfo> setterMethodsByAlias;
+
+		/** Map of methods by alias. */
+		private HashMap<String, MethodInfo> methodsByAlias;
+		/** Map of methods by name. */
+		private HashMap<String, MethodInfo> methodsByName;
+
 		
 		// Creates a profile from a class. 
 		private Profile(Class<? extends T> inputClass, MemberPolicy policy)
@@ -234,6 +259,8 @@ public class TypeProfileFactory
 			publicFieldsByAlias = new HashMap<String, FieldInfo>(4);
 			getterMethodsByAlias = new HashMap<String, MethodInfo>(4);
 			setterMethodsByAlias = new HashMap<String, MethodInfo>(4);
+			methodsByAlias = new HashMap<String, MethodInfo>(4);
+			methodsByName = new HashMap<String, MethodInfo>(4);
 
 			for (Field f : inputClass.getFields())
 			{
@@ -254,7 +281,10 @@ public class TypeProfileFactory
 			
 			for (Method m : inputClass.getMethods())
 			{
-				if (!policy.isIgnored(m) && isGetter(m) && !m.getName().equals("getClass"))
+				if (policy.isIgnored(m))
+					continue;
+				
+				if (isGetter(m) && !m.getName().equals("getClass"))
 				{
 					String alias = policy.getAlias(m);
 					if (alias != null)
@@ -264,7 +294,7 @@ public class TypeProfileFactory
 					if (alias != null)
 						getterMethodsByAlias.put(alias, mi);
 				}
-				else if (!policy.isIgnored(m) && isSetter(m, inputClass))
+				else if (isSetter(m, inputClass))
 				{
 					String alias = policy.getAlias(m);
 					if (alias != null)
@@ -273,6 +303,16 @@ public class TypeProfileFactory
 					setterMethodsByName.put(getFieldName(m.getName()).toLowerCase(), mi);
 					if (alias != null)
 						setterMethodsByAlias.put(alias, mi);
+				}
+				else if (isVisibleMethod(m))
+				{
+					String alias = policy.getAlias(m);
+					if (alias != null)
+						alias = alias.toLowerCase();
+					MethodInfo mi = new MethodInfo(m.getReturnType(), m, alias);
+					methodsByName.put(m.getName().toLowerCase(), mi);
+					if (alias != null)
+						methodsByAlias.put(alias, mi);
 				}
 			}
 		}
@@ -306,11 +346,21 @@ public class TypeProfileFactory
 		{
 			return setterMethodsByName;
 		}
+		
+		/** 
+		 * Returns a reference to the map that contains this profile's other public, non-static methods.
+		 * Maps "method name" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself. 
+		 * @return the map of name to method.  
+		 */
+		public HashMap<String, MethodInfo> getMethodsByName()
+		{
+			return methodsByName;
+		}
 
 		/** 
 		 * Returns a reference to the map that contains this profile's public fields.
-		 * Maps "field name" to {@link FieldInfo} object.
-		 * @return the map of field name to field.  
+		 * Maps "field alias" to {@link FieldInfo} object.
+		 * @return the map of field alias to field.  
 		 */
 		public HashMap<String, FieldInfo> getPublicFieldsByAlias()
 		{
@@ -319,8 +369,8 @@ public class TypeProfileFactory
 
 		/** 
 		 * Returns a reference to the map that contains this profile's getter methods.
-		 * Maps "field name" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself.
-		 * @return the map of getter name to method.  
+		 * Maps "field alias" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself.
+		 * @return the map of getter alias to method.  
 		 */
 		public HashMap<String, MethodInfo> getGetterMethodsByAlias()
 		{
@@ -329,14 +379,24 @@ public class TypeProfileFactory
 
 		/** 
 		 * Returns a reference to the map that contains this profile's setter methods.
-		 * Maps "field name" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself. 
-		 * @return the map of setter name to method.  
+		 * Maps "field alias" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself. 
+		 * @return the map of setter alias to method.  
 		 */
 		public HashMap<String, MethodInfo> getSetterMethodsByAlias()
 		{
 			return setterMethodsByAlias;
 		}
 
+		/** 
+		 * Returns a reference to the map that contains this profile's other public, non-static methods.
+		 * Maps "method alias" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself. 
+		 * @return the map of alias to method.
+		 */
+		public HashMap<String, MethodInfo> getMethodsByAlias()
+		{
+			return methodsByAlias;
+		}
+		
 		/**
 		 * Field information.
 		 * Contains the relevant type and getter/setter method.
@@ -429,8 +489,6 @@ public class TypeProfileFactory
 			
 		}
 		
-		
-		
 	}
-
+	
 }

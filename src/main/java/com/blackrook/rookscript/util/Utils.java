@@ -49,6 +49,7 @@ public final class Utils
 			ScriptName anno = method.getAnnotation(ScriptName.class);
 			return anno != null ? anno.value() : null;
 		}
+
 	});
 	
 	private static final TypeConverter DEFAULT_CONVERTER = new TypeConverter(DEFAULT_PROFILEFACTORY);

@@ -69,6 +69,19 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
+	 * Creates a script value.
+	 * @param type the target script value type.
+	 * @param value the source value.
+	 * @return a new script value.
+	 */
+	public static ScriptValue create(Type type, Object value)
+	{
+		ScriptValue out = new ScriptValue();
+		out.set(type, value);
+		return out;
+	}
+	
+	/**
 	 * Creates a script value that is an empty list.
 	 * @return a new script value.
 	 */
@@ -248,19 +261,117 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 
 	/**
-	 * Sets this value using another value, converting an object into a map type.
-	 * If null, this is set to the null value.
+	 * Sets this value using another object, 
+	 * and converts it if possible to the target underlying type.
+	 * @param type the target script value type.
 	 * @param value the source value to use.
 	 */
-	public void setAsMap(Object value)
+	public void set(Type type, Object value)
 	{
-		if (value == null)
-			setNull();
-		else
+		if (type == null)
 		{
-			setEmptyMap();
-			mapExtract(value);
-		}		
+			set(value);
+			return;
+		}
+		
+		switch (type)
+		{
+			default:
+			case NULL:
+			{
+				setNull();
+			}
+			break;
+				
+			case BOOLEAN:
+			{
+				if (value instanceof Boolean)
+					set((boolean)value);
+				else if (value instanceof Number)
+				{
+					double d = ((Number)value).doubleValue();
+					set(!Double.isNaN(d) && d != 0.0);
+				}
+				else if (value instanceof Map)
+					set(!((Collection<?>)value).isEmpty());
+				else if (value instanceof Collection)
+					set(!((Collection<?>)value).isEmpty());
+				else
+					set(value != null);
+			}
+			break;
+				
+			case INTEGER:
+			{
+				if (value instanceof Boolean)
+					set(((boolean)value) ? 1 : 0);
+				else if (value instanceof Number)
+					set(((Number)value).longValue());
+				else if (value instanceof CharSequence)
+					set(Utils.parseLong((String)value, 0L));
+				else
+					set(value != null ? 1 : 0);
+			}
+			break;
+				
+			case FLOAT:
+			{
+				if (value instanceof Boolean)
+					set(((boolean)value) ? 1.0 : 0.0);
+				else if (value instanceof Number)
+					set(((Number)value).doubleValue());
+				else if (value instanceof CharSequence)
+					set(Utils.parseDouble((String)value, Double.NaN));
+				else
+					set(value != null ? 1.0 : 0.0);
+			}
+			break;
+				
+			case STRING:
+			{
+				set(String.valueOf(value));
+			}
+			break;
+				
+			case LIST:
+			{
+				setEmptyList();
+				listAdd(value);
+			}
+			break;
+				
+			case MAP:
+			{
+				setEmptyMap();
+				if (value != null)
+					mapExtract(value);
+			}
+			break;
+				
+			case ERROR:
+			{
+				if (value == null)
+					set(ErrorType.create("null", null, null));
+				else if (value instanceof Throwable)
+					set(ErrorType.create((Throwable)value));
+				else
+					set(ErrorType.create(value.getClass().getSimpleName(), null, null));
+			}
+			break;
+
+			case OBJECTREF:
+			{
+				if (value == null)
+					setNull();
+				else
+				{
+					this.type = Type.OBJECTREF;
+					this.ref = value;
+					this.rawbits = 0L;
+				}
+			}
+			break;	
+		}
 	}
 	
 	/**
@@ -294,7 +405,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			set((float)value);
 		else if (value instanceof Double)
 			set((double)value);
-		else if (value instanceof String)
+		else if (value instanceof CharSequence)
 			set((String)value);
 		else if (value instanceof Map)
 		{
@@ -441,7 +552,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * Sets this value using another value.
 	 * @param value the source value to use.
 	 */
-	public void set(String value)
+	public void set(CharSequence value)
 	{
 		if (value == null)
 		{
@@ -1485,7 +1596,9 @@ public class ScriptValue implements Comparable<ScriptValue>
 		else if (o.type == Type.NULL)
 			return 1;
 		else if (type == Type.OBJECTREF || o.type == Type.OBJECTREF)
+		{
 			return ref.equals(o.ref) ? 0 : -1;
+		}
 		else if (type == Type.MAP || o.type == Type.MAP)
 			return ref == o.ref ? 0 : -1;
 		else if (type == Type.LIST || o.type == Type.LIST)

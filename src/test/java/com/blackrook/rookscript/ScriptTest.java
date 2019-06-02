@@ -7,8 +7,6 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
-import java.io.File;
-
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.CommonFunctions;
@@ -30,7 +28,7 @@ public class ScriptTest
 		}
 		
 		ScriptInstance instance = ScriptInstance.build()
-			.withSource(new File(fileName))
+			.withSource(fileName, Utils.openResource(fileName))
 			.withFunctionResolver(CommonFunctions.getResolver())
 				.andFunctionResolver(StandardIOFunctions.getResolver())
 				.andFunctionResolver(MathFunctions.getResolver())

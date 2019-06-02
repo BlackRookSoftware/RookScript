@@ -2,6 +2,7 @@ package com.blackrook.rookscript.annotations;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.CONSTRUCTOR;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.Retention;
@@ -13,7 +14,7 @@ import java.lang.annotation.Target;
  * @author Matthew Tropiano
  */
 @Retention(RUNTIME)
-@Target({FIELD, METHOD})
+@Target({FIELD, METHOD, CONSTRUCTOR})
 public @interface ScriptIgnore
 {
 	// empty

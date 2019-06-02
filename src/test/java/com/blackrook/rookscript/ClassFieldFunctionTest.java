@@ -19,15 +19,15 @@ public class ClassFieldFunctionTest
 {
 	public static void main(String[] args) throws Exception
 	{
-		ClassMemberFunctionResolver<File> fileResolver = new ClassMemberFunctionResolver<>(File.class);
-		fileResolver.addConstructor("file", File.class.getConstructor(String.class), null);
-		fileResolver.addGetterMethod("fpath", File.class.getMethod("getPath"), null);
-		fileResolver.addGetterMethod("fparent", File.class.getMethod("getParent"), null);
-		fileResolver.addGetterMethod("fabsolute", File.class.getMethod("isAbsolute"), null);
-		fileResolver.addGetterMethod("fisdir", File.class.getMethod("isDirectory"), null);
-		fileResolver.addGetterMethod("fhidden", File.class.getMethod("isHidden"), null);
-		fileResolver.addMethod("fexists", File.class.getMethod("exists"), false, false, null);
-		fileResolver.addMethod("flist", File.class.getMethod("listFiles"), false, false, null);
+		ClassMemberFunctionResolver<File> fileResolver = (new ClassMemberFunctionResolver<>(File.class))
+			.addConstructor("file", File.class.getConstructor(String.class), null, null)
+			.addGetterMethod("fpath", File.class.getMethod("getPath"), null, null)
+			.addGetterMethod("fparent", File.class.getMethod("getParent"), null, null)
+			.addGetterMethod("fabsolute", File.class.getMethod("isAbsolute"), null, null)
+			.addGetterMethod("fisdir", File.class.getMethod("isDirectory"), null, null)
+			.addGetterMethod("fhidden", File.class.getMethod("isHidden"), null, null)
+			.addMethod("fexists", File.class.getMethod("exists"), null, false, false, null)
+			.addMethod("flist", File.class.getMethod("listFiles"), null, false, false, null);
 		
 		String fileName;
 		if ((fileName = Utils.arrayElement(args, 0)) == null)
@@ -39,7 +39,7 @@ public class ClassFieldFunctionTest
 		}
 		
 		ScriptInstance instance = ScriptInstance.build()
-			.withSource(new File(fileName))
+			.withSource(fileName, Utils.openResource(fileName))
 			.withFunctionResolver(CommonFunctions.getResolver())
 				.andFunctionResolver(StandardIOFunctions.getResolver())
 				.andFunctionResolver(MathFunctions.getResolver())
@@ -47,7 +47,7 @@ public class ClassFieldFunctionTest
 			.withScriptStack(16, 512)
 			.get();
 		
-		int x = 1;
+		int x = 100;
 		while (x-- > 0)
 		{
 			long nanos = System.nanoTime();

@@ -1,6 +1,7 @@
 package com.blackrook.rookscript.struct;
 
 import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
 
@@ -14,7 +15,7 @@ public class ScriptValueTest
 		for (int i = 0; i < 5000; i++)
 		{
 			long nanos = System.nanoTime();
-			sv.setAsMap(new Triple(34, -23, 45));
+			sv.set(Type.MAP, new Triple(34, -23, 45));
 			System.out.println((System.nanoTime() - nanos));
 		}
 		//sv.setObjectRef(PairGroup.box(0, 0, 5, 5));
