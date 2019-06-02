@@ -7,15 +7,9 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
-import java.io.File;
-
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
-import com.blackrook.rookscript.functions.CommonFunctions;
-import com.blackrook.rookscript.functions.MathFunctions;
-import com.blackrook.rookscript.functions.StandardIOFunctions;
 import com.blackrook.rookscript.resolvers.function.ClassMemberFunctionResolver;
-import com.blackrook.rookscript.util.Utils;
 
 public class ClassFieldFunctionTest2
 {
