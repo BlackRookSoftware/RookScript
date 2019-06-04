@@ -1138,6 +1138,9 @@ public class ScriptValue implements Comparable<ScriptValue>
 			case FLOAT:
 				return !isNaN() && Double.longBitsToDouble(rawbits) != 0.0; 
 			case STRING:
+				return ((String)ref).length() == 0;
+			case LIST:
+			case MAP:
 			case OBJECTREF:
 				return !Utils.isEmpty(ref); 
 		}
