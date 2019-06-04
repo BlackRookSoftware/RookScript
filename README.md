@@ -21,6 +21,13 @@ NONE
 
 This library assists in compiling/running RookScript, a non-host-specific scripting language.
 
+### Why?
+
+Lots of scripting languages that interface with Java want to "script Java," which opens your runtime
+into a world of abuse-able security problems. RookScript is a flexible runtime language with
+flexible host interfacing, allowing each script to be as limited or wide in scope as the implementor
+wishes. 
+
 ### Library
 
 Contained in this release is a series of classes that should be used for RookScript functions. 

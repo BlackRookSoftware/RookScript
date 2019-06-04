@@ -1,0 +1,29 @@
+function vec2(x, y)
+{
+	return {x: x, y: y};
+}
+
+// Adds components to a vector.
+function vec2Add(v2, x, y)
+{
+	v2.x += x;
+	v2.y += y;
+	return v2;
+}
+
+// Negates a vector.
+function vec2Negate(v2)
+{
+	v2.x = -v2.x;
+	v2.y = -v2.y;
+	return v2;
+}
+
+// print is a void function that prints a message to STDOUT.
+
+entry main()
+{
+	v = vec2(0, 0);
+	v->vec2Add(3, 4)->vec2Negate();
+	print(v);		// prints "{x: -3, y: -4}"
+}
