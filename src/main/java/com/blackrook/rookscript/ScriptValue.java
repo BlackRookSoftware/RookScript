@@ -2464,7 +2464,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 				if (removed)
 					return;
 				
-				removeIndex(cur);
+				removeIndex(cur - 1);
 				removed = true;
 				cur--;
 			}
@@ -2533,7 +2533,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 				if (removed)
 					return;
 				
-				removeIndex(cur);
+				removeIndex(cur - 1);
 				removed = true;
 				cur--;
 			}
