@@ -150,16 +150,18 @@ public class PreprocessorLexer extends Lexer
 		 * 		procure a relative path.
 		 * @param path the stream path from the include directive.
 		 * @return the path to a possible resource, or null if no possible path is available.
+		 * @throws IOException if an error occurs procuring a potential stream.
 		 */
-		public String getIncludeResourcePath(String streamName, String path) throws IOException;
+		String getIncludeResourcePath(String streamName, String path) throws IOException;
 	
 		/**
 		 * Returns an open {@link InputStream} for a path when the parser needs a resource.
 		 * By default, this attempts to open a file at the provided path.
 		 * @param path the resolved stream path from the include directive.
 		 * @return an open {@link InputStream} for the requested resource, or null if not found.
+		 * @throws IOException if an error occurs opening a stream.
 		 */
-		public InputStream getIncludeResource(String path) throws IOException;
+		InputStream getIncludeResource(String path) throws IOException;
 	
 	}
 
@@ -233,15 +235,6 @@ public class PreprocessorLexer extends Lexer
 		if (includer == null)
 			throw new IllegalArgumentException("includer can not be null"); 
 		this.includer = includer;
-	}
-	
-	/**
-	 * Adds a blank define macro to this lexer.
-	 * @param macro the macro identifier.
-	 */
-	public void addDefine(String macro)
-	{
-		macroMap.put(macro.toLowerCase(), ()->"");
 	}
 	
 	/**
@@ -386,7 +379,10 @@ public class PreprocessorLexer extends Lexer
 					else if (c == END_OF_STREAM)
 						breakloop = true;
 					else if (c == '\n')
+					{
+						lineBeginning = true;
 						breakloop = true;
+					}
 					else if (c == '\\')
 						state = STATE_ESCAPE;
 					else
@@ -428,6 +424,7 @@ public class PreprocessorLexer extends Lexer
 	
 	/**
 	 * Called when a full directive is read and needs to be processed.
+	 * @param streamName the stream name.
 	 * @param lineNumber the line number.
 	 * @param directiveLine the directive line to process.
 	 */
@@ -554,10 +551,10 @@ public class PreprocessorLexer extends Lexer
 			state = STATE_START;
 		}
 		
-		char getChar(String line)
+		int getChar(String line)
 		{
 			if (index >= line.length())
-				return (char)65535;
+				return -1;
 			return line.charAt(index++);
 		}
 		
@@ -570,9 +567,10 @@ public class PreprocessorLexer extends Lexer
 		{
 			reset();
 			boolean breakloop = false;
-			while (!breakloop)
+			int x;
+			while (!breakloop && (x = getChar(line)) > -1)
 			{
-				char c = getChar(line);
+				char c = (char)x;
 				switch (state)
 				{
 					case DirectiveParser.STATE_START:
@@ -647,7 +645,11 @@ public class PreprocessorLexer extends Lexer
 								StringBuilder sb = new StringBuilder();
 								for (int i = 0; i < 4; i++)
 								{
-									c = getChar(line);
+									x = getChar(line);
+									if (x < 0)
+										break;
+									
+									c = (char)x;
 									if (!isHexDigit(c))
 									{
 										tokenBuilder.append("\\u").append(sb);
@@ -669,8 +671,12 @@ public class PreprocessorLexer extends Lexer
 								StringBuilder sb = new StringBuilder();
 								for (int i = 0; i < 2; i++)
 								{
-									c = getChar(line);
-									if (!isHexDigit(c))
+									x = getChar(line);
+									if (x < 0)
+										break;
+									
+									c = (char)x;
+									if (!isHexDigit((char)c))
 									{
 										tokenBuilder.append("\\x").append(sb);
 										tokenBuilder.delete(0, tokenBuilder.length());

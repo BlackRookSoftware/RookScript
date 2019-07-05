@@ -296,7 +296,12 @@ public class ScriptParser extends Lexer.Parser
 		}
 	}
 
-	/** Marks a label on the current command. */
+	/** 
+	 * Marks a label on the current command. 
+	 * @param currentScript the current script.
+	 * @param label the label to set for the current command index.
+	 * @return the command index marked.
+	 */
 	protected int mark(Script currentScript, String label)
 	{
 		int out;
@@ -311,6 +316,7 @@ public class ScriptParser extends Lexer.Parser
 	 * 		[IDENTIFIER] [FunctionCall] 
 	 * 		"{" [StatementList] "}"
 	 * </pre>
+	 * @param script the script.
 	 * @return true if parse is good, false if not.
 	 */
 	protected boolean parseScriptlet(Script script)

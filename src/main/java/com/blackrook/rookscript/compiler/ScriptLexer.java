@@ -31,7 +31,7 @@ public class ScriptLexer extends PreprocessorLexer
 		super(kernel, in);
 		setIncluder(includer);
 		for (String define : options.getDefines())
-			addDefine(define);
+			addDefine(define, "");
 	}
 
 	/**
@@ -48,7 +48,7 @@ public class ScriptLexer extends PreprocessorLexer
 		super(kernel, name, in);
 		setIncluder(includer);
 		for (String define : options.getDefines())
-			addDefine(define);
+			addDefine(define, "");
 	}
 
 }
