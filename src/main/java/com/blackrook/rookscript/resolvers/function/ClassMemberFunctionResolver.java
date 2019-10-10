@@ -34,6 +34,7 @@ import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
  * A function resolver that wraps individual constructors, fields, or functions.
  * Constructors create objects, methods/fields require an object instance (no static modifiers).
  * @author Matthew Tropiano 
+ * @param <C> the class type that this uses.
  */
 public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 {
@@ -47,6 +48,11 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * Pays attention to annotations for naming/ignoring/converting.
 	 * @param <C> the class type.
 	 * @param classType the type to build a resolver for.
+	 * @param getterPrefix the prefix to add for each getter.
+	 * @param setterPrefix the prefix to add for each setter.
+	 * @param methodPrefix the prefix to add for each method.
+	 * @param chained if true, every setter function returns the object that it changed.
+	 * @param errorHandling if true, exceptions that may occur on call are returned as Error type objects.
 	 * @return a resolver for this class.
 	 * @see ScriptIgnore
 	 * @see ScriptName
@@ -167,6 +173,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param constructor the constructor method to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
 	 * @param usage function usage docs.
+	 * @return this function resolver.
 	 * @see ScriptFunctionType#isVoid()
 	 */
 	public ClassMemberFunctionResolver<C> addConstructor(String functionName, Constructor<C> constructor, Type type, Usage usage)
@@ -185,6 +192,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param field the field to wrap.
 	 * @param chained if true, this will return the object affected (for command chaining).
 	 * @param usage function usage docs.
+	 * @return this function resolver.
 	 * @see ScriptFunctionType#isVoid()
 	 */
 	public ClassMemberFunctionResolver<C> addSetterField(String functionName, Field field, boolean chained, Usage usage)
@@ -203,6 +211,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param field the field to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
 	 * @param usage function usage docs.
+	 * @return this function resolver.
 	 */
 	public ClassMemberFunctionResolver<C> addGetterField(String functionName, Field field, Type type, Usage usage)
 	{
@@ -220,6 +229,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param method the method to wrap.
 	 * @param chained if true, this will return the object affected (for command chaining).
 	 * @param usage function usage docs.
+	 * @return this function resolver.
 	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
 	 * @see ScriptFunctionType#isVoid()
 	 */
@@ -240,6 +250,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param method the method to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
 	 * @param usage function usage docs.
+	 * @return this function resolver.
 	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
 	 */
 	public ClassMemberFunctionResolver<C> addGetterMethod(String functionName, Method method, Type type, Usage usage)
@@ -262,6 +273,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param chained if true, this will return the object affected (for command chaining), overriding any return type.
 	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @param usage function usage docs.
+	 * @return this function resolver.
 	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
 	 * @see ScriptFunctionType#isVoid()
 	 */

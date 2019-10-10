@@ -26,6 +26,7 @@ import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
  * as a scope. The "field names" of the fields/methods are used as the variable names. 
  * @author Matthew Tropiano
  * TODO: Obey @ScriptValueType annotation!
+ * @param <T> the object type.
  */
 public class ObjectVariableResolver<T> implements ScriptVariableResolver
 {

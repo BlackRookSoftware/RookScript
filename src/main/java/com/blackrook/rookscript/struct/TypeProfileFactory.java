@@ -227,8 +227,9 @@ public class TypeProfileFactory
 	 * Type profile for an unknown object that has an ambiguous signature for 
 	 * applying values to POJOs and beans.
 	 * This only cares about setter methods with one argument and public fields.
+	 * @param <T> the class
 	 */
-	public static class Profile<T extends Object>
+	public static class Profile<T>
 	{
 		/** Map of Public fields by name. */
 		private HashMap<String, FieldInfo> publicFieldsByName;

@@ -240,9 +240,11 @@ public class ScriptInstance
 	/**
 	 * Initializes the script with an entry point and parameters and calls {@link #update()} to execute it,
 	 * then gets the return value off the stack converted to a provided type.
+	 * @param <T> the return type.
 	 * @param returnType the return type to get from the script.
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.
+	 * @return the returned value at the end of the script, converted to a specific class type.
 	 * @throws ScriptExecutionException if the provided amount of parameters do not match the amount of parameters that the script requires, 
 	 * 		or the provided entry point does not exist.
 	 * @see #initialize(String, Object...)

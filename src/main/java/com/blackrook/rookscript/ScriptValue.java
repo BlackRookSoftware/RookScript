@@ -2363,6 +2363,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		/**
 		 * Finds an object and removes it from the list.
 		 * @param value the value to remove.
+		 * @return true if removed, false if not.
 		 */
 		public boolean remove(ScriptValue value)
 		{
