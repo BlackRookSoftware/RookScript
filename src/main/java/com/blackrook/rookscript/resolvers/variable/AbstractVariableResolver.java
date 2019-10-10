@@ -11,7 +11,7 @@ import java.util.Comparator;
 
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptVariableResolver;
-import com.blackrook.rookscript.util.Utils;
+import com.blackrook.rookscript.struct.Utils;
 
 /**
  * A single, scoped open variable set in which values can be set.

@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Queue;
 
 import com.blackrook.rookscript.Script.Entry;
-import com.blackrook.rookscript.util.Utils;
+import com.blackrook.rookscript.struct.Utils;
 
 /**
  * The assembler part of the script factories.

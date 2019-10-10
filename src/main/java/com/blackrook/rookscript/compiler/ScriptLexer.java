@@ -9,7 +9,7 @@ package com.blackrook.rookscript.compiler;
 
 import java.io.Reader;
 
-import com.blackrook.rookscript.util.PreprocessorLexer;
+import com.blackrook.rookscript.struct.PreprocessorLexer;
 
 /**
  * The lexer for a script reader context.

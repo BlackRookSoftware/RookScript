@@ -23,12 +23,12 @@ import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
 import com.blackrook.rookscript.annotations.ScriptValueType;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
-import com.blackrook.rookscript.util.ScriptThreadLocal;
-import com.blackrook.rookscript.util.ScriptThreadLocal.Cache;
-import com.blackrook.rookscript.util.TypeProfileFactory.Profile;
-import com.blackrook.rookscript.util.TypeProfileFactory.Profile.FieldInfo;
-import com.blackrook.rookscript.util.TypeProfileFactory.Profile.MethodInfo;
-import com.blackrook.rookscript.util.Utils;
+import com.blackrook.rookscript.struct.ScriptThreadLocal;
+import com.blackrook.rookscript.struct.Utils;
+import com.blackrook.rookscript.struct.ScriptThreadLocal.Cache;
+import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
+import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.FieldInfo;
+import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
 
 /**
  * A function resolver that wraps individual constructors, fields, or functions.

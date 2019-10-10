@@ -7,6 +7,8 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
+import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
+
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,13 +18,11 @@ import java.util.Map;
 
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
-import com.blackrook.rookscript.util.ScriptThreadLocal.Cache;
-import com.blackrook.rookscript.util.TypeProfileFactory.Profile;
-import com.blackrook.rookscript.util.TypeProfileFactory.Profile.FieldInfo;
-import com.blackrook.rookscript.util.TypeProfileFactory.Profile.MethodInfo;
-import com.blackrook.rookscript.util.Utils;
-
-import static com.blackrook.rookscript.util.ScriptThreadLocal.getCache;
+import com.blackrook.rookscript.struct.Utils;
+import com.blackrook.rookscript.struct.ScriptThreadLocal.Cache;
+import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
+import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.FieldInfo;
+import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
 
 /**
  * Script value encapsulation.

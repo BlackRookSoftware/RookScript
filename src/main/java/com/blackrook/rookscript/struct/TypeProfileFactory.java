@@ -4,7 +4,7 @@
  * This program and the accompanying materials are made available under 
  * the terms of the MIT License, which accompanies this distribution.
  ******************************************************************************/
-package com.blackrook.rookscript.util;
+package com.blackrook.rookscript.struct;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

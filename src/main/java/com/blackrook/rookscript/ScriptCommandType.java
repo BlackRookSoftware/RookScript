@@ -7,10 +7,10 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
-import com.blackrook.rookscript.exception.ScriptExecutionException;
-import com.blackrook.rookscript.util.ScriptThreadLocal.Cache;
+import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
 
-import static com.blackrook.rookscript.util.ScriptThreadLocal.getCache;
+import com.blackrook.rookscript.exception.ScriptExecutionException;
+import com.blackrook.rookscript.struct.ScriptThreadLocal.Cache;
 
 /**
  * Directive type for scripts.

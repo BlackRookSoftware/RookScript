@@ -7,7 +7,7 @@
  ******************************************************************************/
 package com.blackrook.rookscript.compiler;
 
-import com.blackrook.rookscript.util.Lexer;
+import com.blackrook.rookscript.struct.Lexer;
 
 /**
  * The script language lexer kernel.

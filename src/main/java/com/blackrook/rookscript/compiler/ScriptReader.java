@@ -19,7 +19,7 @@ import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.ScriptAssembler;
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.exception.ScriptParseException;
-import com.blackrook.rookscript.util.Utils;
+import com.blackrook.rookscript.struct.Utils;
 
 /**
  * The main factory for reading and parsing a script file.

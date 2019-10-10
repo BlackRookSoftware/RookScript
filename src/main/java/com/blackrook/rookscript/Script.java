@@ -12,8 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.blackrook.rookscript.util.CountMap;
-import com.blackrook.rookscript.util.HashDequeMap;
+import com.blackrook.rookscript.struct.CountMap;
+import com.blackrook.rookscript.struct.HashDequeMap;
 
 /**
  * A compiled script.

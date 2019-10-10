@@ -7,7 +7,7 @@
  ******************************************************************************/
 package com.blackrook.rookscript.compiler;
 
-import com.blackrook.rookscript.util.PreprocessorLexer;
+import com.blackrook.rookscript.struct.PreprocessorLexer;
 
 /**
  * An interface that allows the user to resolve a resource by path when the

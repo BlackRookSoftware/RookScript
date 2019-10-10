@@ -7,6 +7,8 @@
  ******************************************************************************/
 package com.blackrook.rookscript.resolvers.variable;
 
+import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -14,12 +16,10 @@ import java.util.Map;
 
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptVariableResolver;
-import com.blackrook.rookscript.util.TypeProfileFactory.Profile;
-import com.blackrook.rookscript.util.TypeProfileFactory.Profile.FieldInfo;
-import com.blackrook.rookscript.util.TypeProfileFactory.Profile.MethodInfo;
-import com.blackrook.rookscript.util.Utils;
-
-import static com.blackrook.rookscript.util.ScriptThreadLocal.getCache;
+import com.blackrook.rookscript.struct.Utils;
+import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
+import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.FieldInfo;
+import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
 
 /**
  * A variable resolver that wraps an object instance's fields and getters/setters

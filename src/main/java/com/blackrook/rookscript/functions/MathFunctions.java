@@ -12,7 +12,7 @@ import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.resolvers.function.EnumFunctionResolver;
-import com.blackrook.rookscript.util.Utils;
+import com.blackrook.rookscript.struct.Utils;
 
 /**
  * Script common functions for mathematic functions.

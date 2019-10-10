@@ -13,7 +13,7 @@ import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
 import com.blackrook.rookscript.resolvers.function.ClassMemberFunctionResolver;
-import com.blackrook.rookscript.util.Utils;
+import com.blackrook.rookscript.struct.Utils;
 
 public class ClassFieldFunctionTest
 {

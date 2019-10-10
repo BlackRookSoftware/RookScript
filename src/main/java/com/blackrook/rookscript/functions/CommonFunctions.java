@@ -7,6 +7,8 @@
  ******************************************************************************/
 package com.blackrook.rookscript.functions;
 
+import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
+
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptInstance;
@@ -15,7 +17,6 @@ import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.ScriptValue.MapType;
 import com.blackrook.rookscript.resolvers.function.EnumFunctionResolver;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
-import static com.blackrook.rookscript.util.ScriptThreadLocal.getCache;
 
 /**
  * Script common functions that work for all scripts.

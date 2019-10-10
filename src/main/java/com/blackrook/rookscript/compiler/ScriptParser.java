@@ -17,7 +17,7 @@ import com.blackrook.rookscript.ScriptCommandType;
 import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.exception.ScriptParseException;
-import com.blackrook.rookscript.util.Lexer;
+import com.blackrook.rookscript.struct.Lexer;
 
 /**
  * The parser that parses text for the script reader. 

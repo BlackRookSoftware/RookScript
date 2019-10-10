@@ -15,7 +15,7 @@ import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.resolvers.function.EnumFunctionResolver;
-import com.blackrook.rookscript.util.PatternUtils;
+import com.blackrook.rookscript.struct.PatternUtils;
 
 /**
  * A set of RegEx functions.

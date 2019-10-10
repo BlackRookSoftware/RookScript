@@ -4,7 +4,7 @@
  * This program and the accompanying materials are made available under 
  * the terms of the MIT License, which accompanies this distribution.
  ******************************************************************************/
-package com.blackrook.rookscript.util;
+package com.blackrook.rookscript.struct;
 
 import java.io.InputStream;
 import java.lang.reflect.Array;
@@ -19,7 +19,7 @@ import com.blackrook.rookscript.ScriptValue.ListType;
 import com.blackrook.rookscript.ScriptValue.MapType;
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
-import com.blackrook.rookscript.util.TypeProfileFactory.Profile;
+import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
 
 /**
  * Utility functions.

@@ -12,7 +12,7 @@ import java.util.Queue;
 
 import com.blackrook.rookscript.ScriptFunctionResolver;
 import com.blackrook.rookscript.ScriptFunctionType;
-import com.blackrook.rookscript.util.Utils;
+import com.blackrook.rookscript.struct.Utils;
 
 /**
  * A host function resolver that is a combination of multiple resolvers.
