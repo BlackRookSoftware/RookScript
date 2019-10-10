@@ -3,67 +3,67 @@
 entry main()
 {
 	s = "Matt Tropiano";
-	print(strupper(s)); 
-	print(strlower(s)); 
-	print(strtrim(" apple ")); 
-	print(strchar(s, 7));
-	print(substr(s, 5, 0));
+	println(strupper(s)); 
+	println(strlower(s)); 
+	println(strtrim(" apple ")); 
+	println(strchar(s, 7));
+	println(substr(s, 5, 0));
 	
-	print(strindex(s, "a"));
-	print(strlastindex(s, "a"));
-	print(strindex(s, "x"));
-	print(strlastindex(s, "x"));
+	println(strindex(s, "a"));
+	println(strlastindex(s, "a"));
+	println(strindex(s, "x"));
+	println(strlastindex(s, "x"));
 	
 	list = [];
 	
-	print(listadd(list, 5));
-	print(listadd(list, 6));
-	print(listadd(list, 7));
-	print(listadd(list, 5));
-	print(list);
+	println(listadd(list, 5));
+	println(listadd(list, 6));
+	println(listadd(list, 7));
+	println(listadd(list, 5));
+	println(list);
 
-	print(listaddat(list, 1, 0));
-	print(listaddat(list, 10, length(list)));
-	print(listaddat(list, 23, 3));
-	print(list);
+	println(listaddat(list, 1, 0));
+	println(listaddat(list, 10, length(list)));
+	println(listaddat(list, 23, 3));
+	println(list);
 
-	print(listremove(list, 6));
-	print(list);
+	println(listremove(list, 6));
+	println(list);
 
-	print(listremoveat(list, 3));
-	print(list);
+	println(listremoveat(list, 3));
+	println(list);
 
 	listsort(list);
-	print(list);
+	println(list);
 	
 	list2 = list(list);
 	list3 = list;
-	print(list);
-	print(list2);
-	print(list == list);
-	print(list == list2);
-	print(list == list3);
+	println(list);
+	println(list2);
+	println(list == list);
+	println(list == list2);
+	println(list == list3);
 
 	set1 = set([3,4,5,5,2,1]);
 	set2 = set([4,5,6,7,8,9]);
-	print(set1);
-	print(set2);
-	print(setunion(set1, set2));
-	print(setintersect(set1, set2));
-	print(setxor(set1, set2));
-	print(setdiff(set1, set2));
+	println(set1);
+	println(set2);
+	println(setunion(set1, set2));
+	println(setintersect(set1, set2));
+	println(setxor(set1, set2));
+	println(setdiff(set1, set2));
 
-	print(setunion(1, 2));
-	print(setunion(1, [1,2]));
-	print(setunion([1,2], 1));
-	print(setintersect(1, 2));
-	print(setintersect(1, [1,2]));
-	print(setintersect([1,2], 1));
-	print(setxor(1, 2));
-	print(setxor(1, [1,2]));
-	print(setxor([1,2], 1));
-	print(setdiff(1, 2));
-	print(setdiff(1, [1,2]));
-	print(setdiff([1,2], 1));
+	println(setunion(1, 2));
+	println(setunion(1, [1,2]));
+	println(setunion([1,2], 1));
+	println(setintersect(1, 2));
+	println(setintersect(1, [1,2]));
+	println(setintersect([1,2], 1));
+	println(setxor(1, 2));
+	println(setxor(1, [1,2]));
+	println(setxor([1,2], 1));
+	println(setdiff(1, 2));
+	println(setdiff(1, [1,2]));
+	println(setdiff([1,2], 1));
 
 }

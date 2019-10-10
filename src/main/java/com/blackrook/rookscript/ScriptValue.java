@@ -2286,6 +2286,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 					ScriptValue[] newList = new ScriptValue[capacity];
 					System.arraycopy(data, 0, newList, 0, data.length);
 					this.data = newList;
+					this.size = data.length;
 				}
 				// else no change
 			}
@@ -2401,7 +2402,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		 */
 		public int search(ScriptValue value)
 		{
-			return Arrays.binarySearch(data, value, Comparator.naturalOrder());
+			return Arrays.binarySearch(data, 0, size, value, Comparator.naturalOrder());
 		}
 		
 		/**

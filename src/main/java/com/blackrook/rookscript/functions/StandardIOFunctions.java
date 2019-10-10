@@ -30,7 +30,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		public boolean execute(ScriptInstance scriptInstance)
 		{
 			ScriptValue arg = scriptInstance.popStackValue();
-			System.out.println(arg.asString());
+			System.out.print(arg.asString());
 			return true;
 		}
 	},
@@ -41,6 +41,38 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	 * ARG: Value to print.
 	 */
 	PRINTERR(true, 1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue arg = scriptInstance.popStackValue();
+			System.err.print(arg.asString());
+			return true;
+		}
+	},
+
+	/**
+	 * Prints something to STDOUT, appending a newline.
+	 * Returns void.
+	 * ARG: Value to print.
+	 */
+	PRINTLN(true, 1)
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance)
+		{
+			ScriptValue arg = scriptInstance.popStackValue();
+			System.out.println(arg.asString());
+			return true;
+		}
+	},
+
+	/**
+	 * Prints something to STDERR, appending a newline.
+	 * Returns void.
+	 * ARG: Value to print.
+	 */
+	PRINTLNERR(true, 1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)

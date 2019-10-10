@@ -656,6 +656,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	 * Returns a new set.
 	 * ARG1: The first set (list).
 	 * ARG2: The second set (list).
+	 * FIXME: Causes an AIOOB Exception for some reason.
 	 */
 	SETXOR(2)
 	{

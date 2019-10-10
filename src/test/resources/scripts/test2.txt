@@ -13,7 +13,7 @@ entry main()
 		z: 9.0
 	};
 		
-	print(mapmerge(z, 5));
+	println(mapmerge(z, 5));
 
 	a = 16;
 	m = {
@@ -22,24 +22,24 @@ entry main()
 	};
 	n = m;
 	
-	print({} === {});
-	print(m === n);
+	println({} === {});
+	println(m === n);
 	
 	m.y += 13;
 	
 	m.stuff = {junk:34};
 	
 	m.balls = -15 + m.x;
-	print(mapkeys(m));
+	println(mapkeys(m));
 	
 	k = mapkeys(m);
 	for (i = 0; i < length(k); i += 1)
-		m->mapvalue(k[i])->print();
+		m->mapvalue(k[i])->println();
 
 
-	print({x: 7, y:3}->mapkeys());
+	println({x: 7, y:3}->mapkeys());
 	
-	print(m);
+	println(m);
 	
 	
 	more = {
@@ -47,8 +47,8 @@ entry main()
 		b: [1, 1 + 1, 8 - 5, 2 * 2]
 	};
 	
-	print(more.a[3]);
+	println(more.a[3]);
 	more.b[2] = "some number";
 	
-	print(more);
+	println(more);
 }

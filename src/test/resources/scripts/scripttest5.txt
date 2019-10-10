@@ -2,9 +2,9 @@
 
 entry main()
 {
-	print(x);
+	println(x);
 	y = [1,2,3];
 	
-	print(y[4] ?: y[3] ?: y[2]);
+	println(y[4] ?: y[3] ?: y[2]);
 }
 

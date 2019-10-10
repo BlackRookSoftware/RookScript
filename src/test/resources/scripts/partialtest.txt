@@ -25,5 +25,5 @@ entry main()
 {
 	v = vec2(0, 0);
 	v->vec2Add(3, 4)->vec2Negate();
-	print(v);		// prints "{x: -3, y: -4}"
+	println(v);		// prints "{x: -3, y: -4}"
 }
