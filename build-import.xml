@@ -35,8 +35,10 @@
 	<!-- Filesets -->
 	
 	<patternset id="pattern.documents">
-		<include name="README.*" />
+		<include name="CONTRIBUTING.md" />
 		<include name="LICENSE.txt" />
+		<include name="README.md" />
+		<include name="VERSIONING.md" />
 		<include name="docs/*.*" />
 	</patternset>
 	
@@ -118,6 +120,9 @@
 	<target name="compile.src" if="src.dir.available">
 		<javac 
 			source="1.8"
+			target="1.8"
+			compiler="javac1.8"
+			bootclasspath="${project.compiler.bootclasspath}"
 			srcdir="${src.dir}" 
 			destdir="${bin.dir}"
             includeAntRuntime="false"
@@ -140,6 +145,9 @@
 	<target name="compile.test.src" depends="compile" if="test.src.dir.available">
 		<javac 
 			source="1.8"
+			target="1.8"
+			compiler="javac1.8"
+			bootclasspath="${project.compiler.bootclasspath}"
 			srcdir="${test.src.dir}" 
 			destdir="${bin.dir}"
             includeAntRuntime="false"
@@ -155,17 +163,6 @@
 	</target>
 
 	<target name="compile.test" depends="compile, compile.test.src, compile.test.resources" description="Compiles the project." if="test.src.dir.available">
-		<javac 
-			source="1.8"
-			srcdir="${test.src.dir}" 
-			destdir="${bin.dir}"
-            includeAntRuntime="false"
-			classpath="${project.classpath}"
-			debug="off" 
-			/>
-		<copy todir="${bin.dir}" failonerror="false">
-			<fileset dir="${test.resource.dir}" />
-		</copy>
 	</target>
 
 	<!-- JAR -->
@@ -247,7 +244,7 @@
 
 	<!-- Test -->
 
-	<target name="test" depends="compile.test" if="test.src.dir.available">
+	<target name="test" depends="compile.test" if="test.src.dir.available, project.testclass.main">
 		<java classpath="${project.classpath}${path.separator}${bin.dir}" classname="${project.testclass.main}" fork="true" failonerror="true">
 			<arg value="${project.testclass}"/>
 		</java>
