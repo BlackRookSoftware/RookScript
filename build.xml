@@ -4,7 +4,7 @@
      Black Rook RookScript Build File    
      Matt Tropiano                                                                
      ====================================================================== -->
-<project name="build" default="compile">
+<project name="build" default="jar">
 
 	<description>Black Rook RookScript</description>
 
