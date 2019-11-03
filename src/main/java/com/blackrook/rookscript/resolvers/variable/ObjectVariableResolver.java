@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.blackrook.rookscript.ScriptValue;
-import com.blackrook.rookscript.ScriptVariableResolver;
+import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 import com.blackrook.rookscript.struct.Utils;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.FieldInfo;

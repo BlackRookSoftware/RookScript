@@ -5,7 +5,9 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript;
+package com.blackrook.rookscript.resolvers;
+
+import com.blackrook.rookscript.ScriptValue;
 
 /**
  * An interface for structures that map string keys to

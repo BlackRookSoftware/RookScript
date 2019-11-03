@@ -19,6 +19,8 @@ import com.blackrook.rookscript.compiler.ScriptReaderIncluder;
 import com.blackrook.rookscript.compiler.ScriptReaderOptions;
 import com.blackrook.rookscript.exception.ScriptBuilderException;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
+import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 import com.blackrook.rookscript.resolvers.function.MultiFunctionResolver;
 import com.blackrook.rookscript.resolvers.scope.DefaultScopeResolver;
 

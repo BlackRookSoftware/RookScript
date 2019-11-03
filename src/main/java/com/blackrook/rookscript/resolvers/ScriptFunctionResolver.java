@@ -5,7 +5,9 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript;
+package com.blackrook.rookscript.resolvers;
+
+import com.blackrook.rookscript.lang.ScriptFunctionType;
 
 /**
  * Resolver encapsulation for finding a relevant host function by name.

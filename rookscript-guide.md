@@ -109,7 +109,7 @@ Some parts of Rookscript evaluate values logically. For those cases, the followi
     NaN
     ""      // empty string
     []      // empty list
-	{}		// empty map
+    {}		// empty map
 ```
 
 Everything else is considered `true`.
@@ -118,7 +118,7 @@ Everything else is considered `true`.
 ### Variables
 
 All variables/identifiers must not start with a number (since numbers do), and must be comprised
-of alphanumeric characters plus the underscore (_).
+of alphanumeric characters plus the underscore (`_`).
 
 ```
 	x

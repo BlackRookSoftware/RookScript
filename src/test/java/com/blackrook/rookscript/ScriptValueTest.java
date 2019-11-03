@@ -25,7 +25,6 @@ public class ScriptValueTest
 			sv.set(Type.MAP, new Triple(34, -23, 45));
 			System.out.println((System.nanoTime() - nanos));
 		}
-		//sv.setObjectRef(PairGroup.box(0, 0, 5, 5));
 		System.out.println(sv);
 	}
 	

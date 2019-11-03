@@ -1,0 +1,16 @@
+#!/usr/bin/env rookscript -i
+
+entry main()
+{
+	// script is a mutable variable scope
+
+	script::x = 6;
+	println(script::x);
+	
+	script::x = [1,2,3,4];
+	println(script::x[0]);
+	
+	script::x = {x: 1, y: 2};
+	println(script::x.x);
+}
+

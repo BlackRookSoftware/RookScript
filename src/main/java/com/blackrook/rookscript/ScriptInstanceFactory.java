@@ -10,6 +10,8 @@ package com.blackrook.rookscript;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
+
 /**
  * Factory class for assembling script instances.
  * This factory pools {@link ScriptInstanceStack}s, since creating and destroying them would be costly on the GC.

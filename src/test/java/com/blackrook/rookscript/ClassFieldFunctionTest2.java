@@ -9,6 +9,7 @@ package com.blackrook.rookscript;
 
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
+import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.resolvers.function.ClassMemberFunctionResolver;
 
 public class ClassFieldFunctionTest2

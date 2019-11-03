@@ -9,12 +9,12 @@ package com.blackrook.rookscript.functions;
 
 import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
 
-import com.blackrook.rookscript.ScriptFunctionResolver;
-import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.ScriptValue.MapType;
+import com.blackrook.rookscript.lang.ScriptFunctionType;
+import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.function.EnumFunctionResolver;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
 
@@ -656,7 +656,6 @@ public enum CommonFunctions implements ScriptFunctionType
 	 * Returns a new set.
 	 * ARG1: The first set (list).
 	 * ARG2: The second set (list).
-	 * FIXME: Causes an AIOOB Exception for some reason.
 	 */
 	SETXOR(2)
 	{

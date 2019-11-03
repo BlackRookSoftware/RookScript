@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Queue;
 
 import com.blackrook.rookscript.Script.Entry;
+import com.blackrook.rookscript.lang.ScriptCommand;
+import com.blackrook.rookscript.lang.ScriptCommandType;
 import com.blackrook.rookscript.struct.Utils;
 
 /**

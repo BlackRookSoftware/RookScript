@@ -11,10 +11,10 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.blackrook.rookscript.ScriptFunctionResolver;
-import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
+import com.blackrook.rookscript.lang.ScriptFunctionType;
+import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 
 /**
  * A special kind of host function resolver that wraps an {@link Enum} of {@link ScriptFunctionType}.

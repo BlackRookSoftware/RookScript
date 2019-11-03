@@ -12,11 +12,11 @@ import java.util.LinkedList;
 
 import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.Script.Entry;
-import com.blackrook.rookscript.ScriptCommand;
-import com.blackrook.rookscript.ScriptCommandType;
-import com.blackrook.rookscript.ScriptFunctionType;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.exception.ScriptParseException;
+import com.blackrook.rookscript.lang.ScriptCommand;
+import com.blackrook.rookscript.lang.ScriptCommandType;
+import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.struct.Lexer;
 
 /**

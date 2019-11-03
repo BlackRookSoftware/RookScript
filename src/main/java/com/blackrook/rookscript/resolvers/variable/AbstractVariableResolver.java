@@ -10,7 +10,7 @@ package com.blackrook.rookscript.resolvers.variable;
 import java.util.Comparator;
 
 import com.blackrook.rookscript.ScriptValue;
-import com.blackrook.rookscript.ScriptVariableResolver;
+import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 import com.blackrook.rookscript.struct.Utils;
 
 /**

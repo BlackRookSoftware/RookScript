@@ -5,11 +5,16 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript;
+package com.blackrook.rookscript.lang;
 
 import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
 
+import com.blackrook.rookscript.ScriptInstance;
+import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
+import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
+import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 import com.blackrook.rookscript.struct.ScriptThreadLocal.Cache;
 
 /**

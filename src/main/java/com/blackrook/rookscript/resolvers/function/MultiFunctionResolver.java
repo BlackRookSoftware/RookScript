@@ -10,8 +10,8 @@ package com.blackrook.rookscript.resolvers.function;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import com.blackrook.rookscript.ScriptFunctionResolver;
-import com.blackrook.rookscript.ScriptFunctionType;
+import com.blackrook.rookscript.lang.ScriptFunctionType;
+import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.struct.Utils;
 
 /**

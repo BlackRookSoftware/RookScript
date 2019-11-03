@@ -5,8 +5,9 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript;
+package com.blackrook.rookscript.lang;
 
+import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 
 /**

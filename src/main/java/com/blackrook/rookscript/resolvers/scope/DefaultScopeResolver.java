@@ -10,8 +10,8 @@ package com.blackrook.rookscript.resolvers.scope;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.blackrook.rookscript.ScriptScopeResolver;
-import com.blackrook.rookscript.ScriptVariableResolver;
+import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
+import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 
 /**
  * An single, scoped open variable set in which values can be set.

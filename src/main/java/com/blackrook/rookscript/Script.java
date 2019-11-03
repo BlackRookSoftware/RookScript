@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.blackrook.rookscript.lang.ScriptCommand;
+import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.struct.CountMap;
 import com.blackrook.rookscript.struct.HashDequeMap;
 
