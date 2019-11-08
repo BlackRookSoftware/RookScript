@@ -64,10 +64,10 @@ public class ScriptInstance
 
 	/** Script reference. */
 	private Script script;
+	/** Script environment. */
+	private ScriptEnvironment environment;
 	/** Scope mapping. */
 	private ScriptScopeResolver scopeResolver;
-	/** Host interface reference. */
-	private Object hostInterface;
 	/** Script instance stack. */
 	private ScriptInstanceStack scriptInstanceStack;
 	/** The script's wait handler. */
@@ -92,11 +92,11 @@ public class ScriptInstance
 	 * Creates a new script instance, no wait handler.
 	 * @param script the script that holds the code.
 	 * @param scriptInstanceStack the instance stack. 
-	 * @param hostInterface the host interface object for host calls.
+	 * @param environment the script environment to use.
 	 */
-	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, Object hostInterface)
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptEnvironment environment)
 	{
-		this(script, scriptInstanceStack, NO_SCOPES, null, hostInterface);
+		this(script, scriptInstanceStack, NO_SCOPES, null, environment);
 	}
 	
 	/**
@@ -104,11 +104,11 @@ public class ScriptInstance
 	 * @param script the script that holds the code.
 	 * @param scriptInstanceStack the instance stack. 
 	 * @param scopeResolver the scope resolver for this script.
-	 * @param hostInterface the host interface object for host calls.
+	 * @param environment the script environment to use.
 	 */
-	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, Object hostInterface)
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptEnvironment environment)
 	{
-		this(script, scriptInstanceStack, scopeResolver, null, hostInterface);
+		this(script, scriptInstanceStack, scopeResolver, null, environment);
 	}
 	
 	/**
@@ -117,10 +117,10 @@ public class ScriptInstance
 	 * @param scriptInstanceStack the instance stack. 
 	 * @param scopeResolver the scope resolver for this script.
 	 * @param waitHandler the handler for handling a script in a waiting state (can be null).
-	 * @param hostInterface the host interface object for host calls.
+	 * @param environment the script environment to use.
 	 * @throws IllegalArgumentException if script or scriptInstanceStack
 	 */
-	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, Object hostInterface)
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, ScriptEnvironment environment)
 	{
 		if (script == null)
 			throw new IllegalArgumentException("script is null");
@@ -128,9 +128,9 @@ public class ScriptInstance
 			throw new IllegalArgumentException("scriptInstanceStack is null");
 		
 		this.script = script;
+		this.environment = environment;
 		this.scriptInstanceStack = scriptInstanceStack;
 		this.scopeResolver = scopeResolver;
-		this.hostInterface = hostInterface;
 		this.waitHandler = waitHandler;
 		
 		this.state = State.CREATED;
@@ -190,15 +190,14 @@ public class ScriptInstance
 	}
 	
 	/**
-	 * Gets the host interface that this instance uses
-	 * for host calls.
-	 * @return the instance to use.
+	 * Returns this script's script environment.
+	 * @return the scope resolver.
 	 */
-	public Object getHostInterface()
+	public ScriptEnvironment getEnvironment()
 	{
-		return hostInterface;
+		return environment;
 	}
-	
+
 	/**
 	 * Returns this script's scope resolver.
 	 * @return the scope resolver.

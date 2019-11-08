@@ -63,8 +63,8 @@ public final class ScriptBuilder
 	/** Wait handler to use with each instance. */
 	private ScriptWaitHandler waitHandler;
 	
-	/** The host interface to use for each instance. */
-	private Object hostInterface;
+	/** The the environment to use for each instance. */
+	private ScriptEnvironment environment;
 
 	// Can't instantiate via new.
 	ScriptBuilder()
@@ -76,7 +76,7 @@ public final class ScriptBuilder
 		this.functionResolvers = new LinkedList<>();
 		this.scopeResolver = new DefaultScopeResolver();
 		this.waitHandler = null;
-		this.hostInterface = null;
+		this.environment = null;
 	}
 	
 	/**
@@ -277,13 +277,13 @@ public final class ScriptBuilder
 	}
 	
 	/**
-	 * Sets the host interface for this script.
-	 * @param host the host to use.
+	 * Sets the script environment for this script.
+	 * @param environment the environment to use.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withHost(Object host)
+	public ScriptBuilder withEnvironment(ScriptEnvironment environment)
 	{
-		this.hostInterface = host;
+		this.environment = environment;
 		return this;
 	}
 	
@@ -314,7 +314,7 @@ public final class ScriptBuilder
 		}
 
 		ScriptInstanceStack stack = stackProvider.getStack();
-		return new ScriptInstance(script, stack, scopeResolver, waitHandler, hostInterface);
+		return new ScriptInstance(script, stack, scopeResolver, waitHandler, environment != null ? environment : ScriptEnvironment.create());
 	}
 	
 	/**

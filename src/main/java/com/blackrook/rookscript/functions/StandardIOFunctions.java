@@ -30,7 +30,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		public boolean execute(ScriptInstance scriptInstance)
 		{
 			ScriptValue arg = scriptInstance.popStackValue();
-			System.out.print(arg.asString());
+			scriptInstance.getEnvironment().print(arg.asString());
 			return true;
 		}
 	},
@@ -46,7 +46,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		public boolean execute(ScriptInstance scriptInstance)
 		{
 			ScriptValue arg = scriptInstance.popStackValue();
-			System.err.print(arg.asString());
+			scriptInstance.getEnvironment().printErr(arg.asString());
 			return true;
 		}
 	},
@@ -62,7 +62,8 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		public boolean execute(ScriptInstance scriptInstance)
 		{
 			ScriptValue arg = scriptInstance.popStackValue();
-			System.out.println(arg.asString());
+			scriptInstance.getEnvironment().print(arg.asString());
+			scriptInstance.getEnvironment().print('\n');
 			return true;
 		}
 	},
@@ -78,7 +79,8 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		public boolean execute(ScriptInstance scriptInstance)
 		{
 			ScriptValue arg = scriptInstance.popStackValue();
-			System.err.println(arg.asString());
+			scriptInstance.getEnvironment().printErr(arg.asString());
+			scriptInstance.getEnvironment().printErr('\n');
 			return true;
 		}
 	},

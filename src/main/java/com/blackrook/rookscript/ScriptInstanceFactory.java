@@ -33,8 +33,8 @@ public class ScriptInstanceFactory<H extends Object>
 	private ScriptScopeResolver scopeResolver;
 	/** Wait handler to use with each instance. */
 	private ScriptWaitHandler waitHandler;
-	/** The host interface to use for each instance. */
-	private H hostInterface;
+	/** The script environment to use for each instance. */
+	private ScriptEnvironment environment;
 
 	/** Queue of available stacks. */
 	private final Queue<ScriptInstanceStack> availableStacks;
@@ -42,13 +42,13 @@ public class ScriptInstanceFactory<H extends Object>
 	/**
 	 * Creates a new instance factory, default depths.
 	 * @param script the script to use for each instance.
-	 * @param hostInterface the host to use for each instance.
+	 * @param environment the script environment to use for each instance.
 	 * @see #DEFAULT_ACTIVATION_DEPTH
 	 * @see #DEFAULT_STACK_DEPTH
 	 */
-	public ScriptInstanceFactory(Script script, H hostInterface)
+	public ScriptInstanceFactory(Script script, ScriptEnvironment environment)
 	{
-		this(script, DEFAULT_ACTIVATION_DEPTH, DEFAULT_STACK_DEPTH, ScriptInstance.NO_SCOPES, null, hostInterface);
+		this(script, DEFAULT_ACTIVATION_DEPTH, DEFAULT_STACK_DEPTH, ScriptInstance.NO_SCOPES, null, environment);
 	}
 
 	/**
@@ -56,11 +56,11 @@ public class ScriptInstanceFactory<H extends Object>
 	 * @param script the script to use for each instance.
 	 * @param activationDepth the activation stack depth for new instances.
 	 * @param stackDepth the value stack depth for new instances.
-	 * @param hostInterface the host to use for each instance.
+	 * @param environment the script environment to use for each instance.
 	 */
-	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, H hostInterface)
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptEnvironment environment)
 	{
-		this(script, activationDepth, stackDepth, ScriptInstance.NO_SCOPES, null, hostInterface);
+		this(script, activationDepth, stackDepth, ScriptInstance.NO_SCOPES, null, environment);
 	}
 	
 	/**
@@ -69,11 +69,11 @@ public class ScriptInstanceFactory<H extends Object>
 	 * @param activationDepth the activation stack depth for new instances.
 	 * @param stackDepth the value stack depth for new instances.
 	 * @param scopeResolver the scope resolver to use for each instance.
-	 * @param hostInterface the host to use for each instance.
+	 * @param environment the script environment to use for each instance.
 	 */
-	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, H hostInterface)
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptEnvironment environment)
 	{
-		this(script, activationDepth, stackDepth, scopeResolver, null, hostInterface);
+		this(script, activationDepth, stackDepth, scopeResolver, null, environment);
 	}
 	
 	/**
@@ -83,16 +83,16 @@ public class ScriptInstanceFactory<H extends Object>
 	 * @param stackDepth the value stack depth for new instances.
 	 * @param scopeResolver the scope resolver to use for each instance.
 	 * @param waitHandler the wait handler to use for each instance.
-	 * @param hostInterface the host to use for each instance.
+	 * @param environment the script environment to use for each instance.
 	 */
-	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, H hostInterface)
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, ScriptEnvironment environment)
 	{
 		this.script = script;
 		this.activationDepth = activationDepth;
 		this.stackDepth = stackDepth;
 		this.scopeResolver = scopeResolver;
 		this.waitHandler = waitHandler;
-		this.hostInterface = hostInterface;
+		this.environment = environment;
 		
 		this.availableStacks = new LinkedList<>();
 	}
@@ -118,17 +118,17 @@ public class ScriptInstanceFactory<H extends Object>
 	 */
 	public ScriptInstance create()
 	{
-		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, hostInterface);
+		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, environment);
 	}
 	
 	/**
 	 * Creates a new instance.
-	 * @param hostInterface the host interface override.
+	 * @param environment the script environment override.
 	 * @return a new instance with all of the associated resolvers and handlers attached to it.
 	 */
-	public ScriptInstance create(H hostInterface)
+	public ScriptInstance create(ScriptEnvironment environment)
 	{
-		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, hostInterface);
+		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, environment);
 	}
 	
 	/**
