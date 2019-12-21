@@ -34,7 +34,9 @@ import com.blackrook.rookscript.struct.Utils;
 
 /**
  * A function resolver that wraps individual constructors, fields, or functions.
- * Constructors create objects, methods/fields require an object instance (no static modifiers).
+ * Constructors create objects, methods/fields require an object instance, unless the method that was wrapped is static.
+ * <p>The functions created this way have a little more overhead than proper {@link ScriptFunctionType}s, since they employ
+ * reflection to invoke the underlying methods.
  * @author Matthew Tropiano 
  * @param <C> the class type that this uses.
  */
