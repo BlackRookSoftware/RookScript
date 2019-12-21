@@ -650,9 +650,12 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			ScriptValue instance = scriptInstance.popStackValue();
-			
-			Object object = instance.asObject();
+			Object object = null;			
+			if (!isStatic)
+			{
+				ScriptValue instance = scriptInstance.popStackValue();
+				object = instance.asObject();
+			}
 			
 			if (!validType.isAssignableFrom(object.getClass()))
 			{

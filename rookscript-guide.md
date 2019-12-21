@@ -428,7 +428,7 @@ This is a function that doubles a value and returns it:
 This is a function that calls other functions (and returns `null`):
 
 ```
-	// print is a void function that prints a message to STDOUT.
+	// print is a function that prints a message to STDOUT.
 
     function printUppercase(message)
     {
@@ -452,7 +452,7 @@ Functions in Rookscript support *recursion*, or functions that call themselves.
 If a function is called with less parameters than required, the remaining parameters are filled with `null`.
 
 ```
-	// print is a void function that prints a message to STDOUT.
+	// print is a function that prints a message to STDOUT.
 
     function printStuff(p1, p2, p3)
     {
@@ -477,8 +477,6 @@ If a function is called with less parameters than required, the remaining parame
 #### Host Functions
 
 *Host Functions* are functions that are provided by the host implementation. They are not declared in the script. They are called like local functions, and are null-filled like local functions.
-
-A host function, however, can be **void**, which indicates it may not return anything at all (or rather, it doesn't push anything back onto the stack). As a result, functions that are **void** cannot be used in expressions.
 
 ```
 	// print is a void function that prints a message to STDOUT.
@@ -528,24 +526,6 @@ You may use literals as the start of the chain, provided that they are enclosed 
 	{
 		print((2)->double()); 			// prints "4"
 		print((2)->double()->double()); // prints "8"
-	}
-```
-
-You may call a **void** host function in chains, however the chain *must stop at the void function*.
-
-```
-	function double(i)
-	{
-		return 2 * i;
-	}
-
-	// print is a void function that prints a message to STDOUT.
-
-	entry main()
-	{
-		x = 2;
-		x->double()->print(); 			// prints "4"
-		x->double()->print()->double(); // ERROR: Will not compile! print(...) is a void function!
 	}
 ```
 
