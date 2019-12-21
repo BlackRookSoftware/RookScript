@@ -24,12 +24,6 @@ public interface ScriptFunctionType
 	public String name();
 	
 	/**
-	 * Checks if this function returns nothing.
-	 * @return true if so, false if not.
-	 */
-	public boolean isVoid();
-	
-	/**
 	 * @return the total amount of parameters this takes.
 	 */
 	public int getParameterCount();

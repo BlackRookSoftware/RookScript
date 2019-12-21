@@ -25,6 +25,8 @@ import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
  */
 class TypeConverter
 {
+	private static final ThreadLocal<Object[]> SINGLE_PARAM_ARRAY = ThreadLocal.withInitial(()->new Object[1]);
+
 	/** The profile factory to use for caching factory. */
 	private TypeProfileFactory profileFactory;
 	
@@ -131,13 +133,19 @@ class TypeConverter
 		if ((field = isNull(profile.getPublicFieldsByAlias().get(name), profile.getPublicFieldsByName().get(name))) != null)
 		{
 			Class<?> type = field.getType();
-			setFieldValue(targetObject, field.getField(), createForType(name, value, type));
+			Object[] vbuf = SINGLE_PARAM_ARRAY.get();
+			vbuf[0] = createForType(name, value, type);
+			setFieldValue(targetObject, field.getField(), vbuf);
+			vbuf[0] = null;
 		}
 		else if ((setter = isNull(profile.getSetterMethodsByAlias().get(name), profile.getSetterMethodsByName().get(name))) != null)
 		{
 			Class<?> type = setter.getType();
 			Method method = setter.getMethod();
-			invokeBlind(method, targetObject, createForType(name, value, type));
+			Object[] vbuf = SINGLE_PARAM_ARRAY.get();
+			vbuf[0] = createForType(name, value, type);
+			invokeBlind(method, targetObject, vbuf);
+			vbuf[0] = null;
 		}			
 	}
 

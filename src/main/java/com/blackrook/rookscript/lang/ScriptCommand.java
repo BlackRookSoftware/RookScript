@@ -13,7 +13,7 @@ import com.blackrook.rookscript.ScriptInstance;
  * Single script directive.
  * @author Matthew Tropiano
  */
-public class ScriptCommand
+public final class ScriptCommand
 {
 	/** Directive type. */
 	private ScriptCommandType type;

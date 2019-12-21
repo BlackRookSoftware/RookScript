@@ -80,8 +80,6 @@ public class ScriptParser extends Lexer.Parser
 	public static final int PARSEFUNCTION_FALSE = 0;
 	/** Return true. */
 	public static final int PARSEFUNCTION_TRUE = 1;
-	/** Return true - void return. */
-	public static final int PARSEFUNCTION_TRUE_VOID = 2;
 
 	/** Return false. */
 	public static final int PARSEFUNCTIONCALL_FALSE = -1;
@@ -235,20 +233,13 @@ public class ScriptParser extends Lexer.Parser
 	/*
 	 *  <Function> := "(" <Expression> ... ")"
 	 */
-	// Returns a trinary.
-	protected int parseFunctionCall(Script currentScript, String lexeme, boolean statement, boolean partial)
+	protected int parseFunctionCall(Script currentScript, String lexeme, boolean partial)
 	{
 		// test type of call: host function first, then local script function.
 		ScriptFunctionType functionType;
 		Entry functionEntry;
 		if ((functionType = currentScript.getFunctionResolver().getFunctionByName(lexeme)) != null)
 		{
-			if (!statement && functionType.isVoid())
-			{
-				addErrorMessage("Host function returns void - cannot be used in expressions.");
-				return PARSEFUNCTION_FALSE;
-			}
-			
 			int parsedCount;
 			if ((parsedCount = parseHostFunctionCall(currentScript, functionType, partial)) == PARSEFUNCTIONCALL_FALSE)
 				return PARSEFUNCTION_FALSE;
@@ -264,7 +255,7 @@ public class ScriptParser extends Lexer.Parser
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 			
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST, lexeme));
-			return functionType.isVoid() ? PARSEFUNCTION_TRUE_VOID : PARSEFUNCTION_TRUE;
+			return PARSEFUNCTION_TRUE;
 		}
 		else if ((functionEntry = currentScript.getFunctionEntry(lexeme)) != null)
 		{
@@ -354,7 +345,7 @@ public class ScriptParser extends Lexer.Parser
 			}
 
 			int ret;
-			if ((ret = parseFunctionCall(script, name, true, false)) == PARSEFUNCTION_FALSE)
+			if ((ret = parseFunctionCall(script, name, false)) == PARSEFUNCTION_FALSE)
 				return false;
 			
 			if (ret == PARSEFUNCTION_TRUE)
@@ -799,7 +790,11 @@ public class ScriptParser extends Lexer.Parser
 				return false;
 			}
 			
-			return parsePartialChain(currentScript, true);
+			if (!parsePartialChain(currentScript))
+				return false;
+
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP));
+			return true;
 		}
 		else
 		{
@@ -824,20 +819,19 @@ public class ScriptParser extends Lexer.Parser
 		if (matchType(ScriptKernel.TYPE_LPAREN))
 		{
 			int funcret;
-			if ((funcret = parseFunctionCall(currentScript, identifierName, true, false)) == PARSEFUNCTION_FALSE)
+			if ((funcret = parseFunctionCall(currentScript, identifierName, false)) == PARSEFUNCTION_FALSE)
 				return false;
 
 			if (funcret == PARSEFUNCTION_TRUE)
 			{
 				if (matchType(ScriptKernel.TYPE_RIGHTARROW))
 				{
-					return parsePartialChain(currentScript, true);
+					if (!parsePartialChain(currentScript))
+						return false;
 				}
-				else
-				{
-					// local functions always return things. Must pop.
-					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP));
-				}
+
+				// statements should not have a stack value linger.
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP));
 			}
 
 			return true;
@@ -910,7 +904,13 @@ public class ScriptParser extends Lexer.Parser
 		else if (matchType(ScriptKernel.TYPE_RIGHTARROW))
 		{
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, identifierName));
-			return parsePartialChain(currentScript, true);
+			
+			if (!parsePartialChain(currentScript))
+				return false;
+				
+			// statements should not have a stack value linger.
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP));
+			return true;
 		}
 		else
 		{
@@ -1200,7 +1200,7 @@ public class ScriptParser extends Lexer.Parser
 				// partial application operator
 				else if (matchType(ScriptKernel.TYPE_RIGHTARROW))
 				{
-					if (!parsePartialChain(currentScript, false))
+					if (!parsePartialChain(currentScript))
 						return false;
 					
 					lastWasValue = true;
@@ -1392,7 +1392,7 @@ public class ScriptParser extends Lexer.Parser
 					// function call?
 					if (matchType(ScriptKernel.TYPE_LPAREN))
 					{
-						if (parseFunctionCall(currentScript, lexeme, false, false) == PARSEFUNCTION_FALSE)
+						if (parseFunctionCall(currentScript, lexeme, false) == PARSEFUNCTION_FALSE)
 							return false;
 					}
 					// array resolution or map deref?
@@ -1503,9 +1503,8 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// parses a partial application chain.
-	private boolean parsePartialChain(Script currentScript, boolean allowVoidFunction)
+	private boolean parsePartialChain(Script currentScript)
 	{
-		boolean sawVoid = false;
 		if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
 		{
 			addErrorMessage("Expected function call after partial operator.");
@@ -1521,31 +1520,16 @@ public class ScriptParser extends Lexer.Parser
 			return false;
 		}
 		
-		int funcret = parseFunctionCall(currentScript, functionName, allowVoidFunction, true);
+		int funcret = parseFunctionCall(currentScript, functionName, true);
 		if (funcret == PARSEFUNCTION_FALSE)
 			return false;
 		
-		if (funcret == PARSEFUNCTION_TRUE_VOID)
-			sawVoid = true;
-
 		if (currentType(ScriptKernel.TYPE_RIGHTARROW))
 		{
-			if (sawVoid)
-			{
-				addErrorMessage("A statement that uses a partial applcation operator must terminate after a call that returns void.");
+			nextToken();
+			if (!parsePartialChain(currentScript))
 				return false;
-			}
-			else
-			{
-				nextToken();
-				return parsePartialChain(currentScript, allowVoidFunction);
-			}
-		}
-		
-		if (allowVoidFunction && !sawVoid)
-		{
-			// local functions always return things. Must pop.
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP));
+			return true;
 		}
 		
 		return true;

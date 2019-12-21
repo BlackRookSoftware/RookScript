@@ -20,10 +20,12 @@ public class ScriptInstanceStack
 	private ScriptValue[] scriptValueStack;
 	/** Script value stack top. */
 	private int scriptValueStackTop;
+	
 	/** Activation stack. */
 	private int[] activationStack;
 	/** Activation stack top index. */
 	private int activationStackTop;
+	
 	/** The local scope stack. */
 	private DefaultVariableResolver[] scopeStack;
 	/** The local scope stack top. */
@@ -253,16 +255,16 @@ public class ScriptInstanceStack
 
 	/**
 	 * Gets a value on the stack (reference).
-	 * @param depth the depth from the top (0 is top, 1 ... N is N places down).
+	 * @param depthFromTop the depth from the top (0 is top, 1 ... N is N places down).
 	 * @return the value at the top of the stack, or null if none left.
 	 * @throws ScriptStackException if the top minus the depth escapes the active stack bounds. 
 	 */
-	public ScriptValue getStackValue(int depth)
+	public ScriptValue getStackValue(int depthFromTop)
 	{
-		int d = scriptValueStackTop - depth;
+		int d = scriptValueStackTop - depthFromTop;
 		if (d < 0 || d > scriptValueStackTop)
 			throw new ScriptStackException("nonexistant stack position");
-		return scriptValueStack[scriptValueStackTop - depth];
+		return scriptValueStack[scriptValueStackTop - depthFromTop];
 	}
 	
 	/**
@@ -274,6 +276,17 @@ public class ScriptInstanceStack
 		return scriptValueStackTop;
 	}
 
+	/**
+	 * Nullifies values from an arbitrary index in the stack down to the current
+	 * top of the stack (but not the current top).  
+	 * @param index the starting index. If past the capacity, it is the capacity - 1. If less than
+	 */
+	public void clearStackValuesFromDepth(int index)
+	{
+		for (int i = Math.min(index, scriptValueStack.length - 1); i > scriptValueStackTop; i--)
+			scriptValueStack[i].setNull();
+	}
+	
 	/**
 	 * Clears the value stack.
 	 */

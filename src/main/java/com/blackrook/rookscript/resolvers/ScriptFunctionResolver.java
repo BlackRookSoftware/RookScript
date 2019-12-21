@@ -38,6 +38,7 @@ public interface ScriptFunctionResolver
 	
 	/**
 	 * Gets the full list of all script functions.
+	 * Depending on the implementation, this may be an expensive lookup.
 	 * @return a list of all functions.
 	 */
 	public ScriptFunctionType[] getFunctions();

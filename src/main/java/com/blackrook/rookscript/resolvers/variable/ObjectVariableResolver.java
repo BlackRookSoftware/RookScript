@@ -16,6 +16,7 @@ import java.util.Map;
 
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
+import com.blackrook.rookscript.struct.ScriptThreadLocal;
 import com.blackrook.rookscript.struct.Utils;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.FieldInfo;
@@ -170,10 +171,21 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 		
 		void set(ScriptValue value)
 		{
+			
 			if (field != null)
-				Utils.setFieldValue(instance, field, value.createForType(type));
+			{
+				Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(1);
+				vbuf[0] = value.createForType(type);
+				Utils.setFieldValue(instance, field, vbuf);
+				vbuf[0] = null; // arrays are shared - purge refs after use.
+			}
 			else if (setter != null)
-				Utils.invokeBlind(setter, instance, value.createForType(type));
+			{
+				Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(1);
+				vbuf[0] = value.createForType(type);
+				Utils.invokeBlind(setter, instance, vbuf);
+				vbuf[0] = null; // arrays are shared - purge refs after use.
+			}
 		}
 		
 		Object get()

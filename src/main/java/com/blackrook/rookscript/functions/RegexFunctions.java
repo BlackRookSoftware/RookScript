@@ -80,16 +80,9 @@ public enum RegexFunctions implements ScriptFunctionType
 	
 	;
 	
-	private final boolean isVoid;
 	private final int parameterCount;
 	private RegexFunctions(int parameterCount)
 	{
-		this(false, parameterCount);
-	}
-	
-	private RegexFunctions(boolean isVoid, int parameterCount)
-	{
-		this.isVoid = isVoid;
 		this.parameterCount = parameterCount;
 	}
 	
@@ -99,12 +92,6 @@ public enum RegexFunctions implements ScriptFunctionType
 	public static final ScriptFunctionResolver getResolver()
 	{
 		return new EnumFunctionResolver(MathFunctions.values());
-	}
-
-	@Override
-	public boolean isVoid()
-	{
-		return isVoid;
 	}
 
 	@Override

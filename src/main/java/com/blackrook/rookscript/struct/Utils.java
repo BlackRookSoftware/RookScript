@@ -62,6 +62,8 @@ public final class Utils
 	
 	private static final TypeConverter DEFAULT_CONVERTER = new TypeConverter(DEFAULT_PROFILEFACTORY);
 
+	private static final ThreadLocal<Object[]> BLANK_PARAM_ARRAY = ThreadLocal.withInitial(()->new Object[]{});
+
 	static
 	{
 		String osName = System.getProperty("os.name");
@@ -242,6 +244,23 @@ public final class Utils
 	}
 
 	/**
+	 * Blindly invokes a method, with no parameters, only throwing a {@link RuntimeException} if
+	 * something goes wrong. Here for the convenience of not making a billion
+	 * try/catch clauses for a method invocation.
+	 * This method exists to avoid unnecessary memory allocations.
+	 * @param method the method to invoke.
+	 * @param instance the object instance that is the method target.
+	 * @return the return value from the method invocation. If void, this is null.
+	 * @throws ClassCastException if one of the parameters could not be cast to the proper type.
+	 * @throws RuntimeException if anything goes wrong (bad target, bad argument, or can't access the method).
+	 * @see Method#invoke(Object, Object...)
+	 */
+	public static Object invokeBlind(Method method, Object instance)
+	{
+		return invokeBlind(method, instance, BLANK_PARAM_ARRAY.get());
+	}
+
+	/**
 	 * Blindly invokes a method, only throwing a {@link RuntimeException} if
 	 * something goes wrong. Here for the convenience of not making a billion
 	 * try/catch clauses for a method invocation.
@@ -268,25 +287,6 @@ public final class Utils
 			throw new RuntimeException(ex);
 		}
 		return out;
-	}
-
-	private static final ThreadLocal<Object[]> BLANK_PARAM_ARRAY = ThreadLocal.withInitial(()->new Object[]{});
-	
-	/**
-	 * Blindly invokes a method, with no parameters, only throwing a {@link RuntimeException} if
-	 * something goes wrong. Here for the convenience of not making a billion
-	 * try/catch clauses for a method invocation.
-	 * This method exists to avoid a unnecessary memory allocations.
-	 * @param method the method to invoke.
-	 * @param instance the object instance that is the method target.
-	 * @return the return value from the method invocation. If void, this is null.
-	 * @throws ClassCastException if one of the parameters could not be cast to the proper type.
-	 * @throws RuntimeException if anything goes wrong (bad target, bad argument, or can't access the method).
-	 * @see Method#invoke(Object, Object...)
-	 */
-	public static Object invokeBlind(Method method, Object instance)
-	{
-		return invokeBlind(method, instance, BLANK_PARAM_ARRAY.get());
 	}
 
 	/**

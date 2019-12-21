@@ -10,6 +10,8 @@ package com.blackrook.rookscript.resolvers.function;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,11 +26,11 @@ import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionType.Usage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.struct.ScriptThreadLocal;
-import com.blackrook.rookscript.struct.Utils;
 import com.blackrook.rookscript.struct.ScriptThreadLocal.Cache;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.FieldInfo;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
+import com.blackrook.rookscript.struct.Utils;
 
 /**
  * A function resolver that wraps individual constructors, fields, or functions.
@@ -118,7 +120,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			if ((typeAnno = info.getMethod().getAnnotation(ScriptValueType.class)) != null)
 				valueType = typeAnno.value();
 
-			resolver.addGetterMethod(getterPrefix + name, info.getMethod(), valueType, null);
+			resolver.addMethod(getterPrefix + name, info.getMethod(), valueType, false, false, null);
 		}
 
 		for (Map.Entry<String, MethodInfo> entry : profile.getSetterMethodsByName().entrySet())
@@ -130,7 +132,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			else
 				name = entry.getKey();
 			
-			resolver.addSetterMethod(setterPrefix + name, info.getMethod(), chained, null);
+			resolver.addMethod(setterPrefix + name, info.getMethod(), null, chained, false, null);
 		}
 		
 		for (Map.Entry<String, MethodInfo> entry : profile.getMethodsByName().entrySet())
@@ -168,13 +170,38 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * Adds a constructor to this resolver, using a specific function name for mapping.
 	 * This will overwrite a previous mapping.
 	 * <p>NOTE: This ignores annotations that may affect naming or ignoring this constructor.
-	 * The {@link ScriptFunctionType} that this will provide is never void.
+	 * @param functionName the script function name.
+	 * @param constructor the constructor method to wrap.
+	 * @return this function resolver.
+	 */
+	public ClassMemberFunctionResolver<C> addConstructor(String functionName, Constructor<C> constructor)
+	{
+		return addConstructor(functionName, constructor, null, null);
+	}
+	
+	/**
+	 * Adds a constructor to this resolver, using a specific function name for mapping.
+	 * This will overwrite a previous mapping.
+	 * <p>NOTE: This ignores annotations that may affect naming or ignoring this constructor.
+	 * @param functionName the script function name.
+	 * @param constructor the constructor method to wrap.
+	 * @param type the target script value type on conversion. Can be null for automatic.
+	 * @return this function resolver.
+	 */
+	public ClassMemberFunctionResolver<C> addConstructor(String functionName, Constructor<C> constructor, Type type)
+	{
+		return addConstructor(functionName, constructor, type, null);
+	}
+	
+	/**
+	 * Adds a constructor to this resolver, using a specific function name for mapping.
+	 * This will overwrite a previous mapping.
+	 * <p>NOTE: This ignores annotations that may affect naming or ignoring this constructor.
 	 * @param functionName the script function name.
 	 * @param constructor the constructor method to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
 	 * @param usage function usage docs.
 	 * @return this function resolver.
-	 * @see ScriptFunctionType#isVoid()
 	 */
 	public ClassMemberFunctionResolver<C> addConstructor(String functionName, Constructor<C> constructor, Type type, Usage usage)
 	{
@@ -187,18 +214,55 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * Adds a field setter to this resolver, using specific a function name for mapping.
 	 * This will overwrite previous mappings.
 	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
-	 * The {@link ScriptFunctionType} that this will provide is void unless <code>chained</code> is true.
 	 * @param functionName the script function name.
-	 * @param field the field to wrap.
-	 * @param chained if true, this will return the object affected (for command chaining).
+	 * @param fieldName the name of the class's field to wrap.
+	 * @param chained if true, this will return the object affected (for command chaining), else null.
+	 * @return this function resolver.
+	 * @throws IllegalArgumentException if the field could not be found.
+	 */
+	public ClassMemberFunctionResolver<C> addSetterField(String functionName, String fieldName, boolean chained)
+	{
+		try {
+			return addSetterField(functionName, validType.getField(fieldName), chained, null);
+		} catch (NoSuchFieldException | SecurityException e) {
+			throw new IllegalArgumentException("Could not find field: " + fieldName, e);
+		}
+	}
+	
+	/**
+	 * Adds a field setter to this resolver, using specific a function name for mapping.
+	 * This will overwrite previous mappings.
+	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
+	 * @param functionName the script function name.
+	 * @param fieldName the name of the class's field to wrap.
+	 * @param chained if true, this will return the object affected (for command chaining), else null.
 	 * @param usage function usage docs.
 	 * @return this function resolver.
-	 * @see ScriptFunctionType#isVoid()
+	 * @throws IllegalArgumentException if the field could not be found.
+	 */
+	public ClassMemberFunctionResolver<C> addSetterField(String functionName, String fieldName, boolean chained, Usage usage)
+	{
+		try {
+			return addSetterField(functionName, validType.getField(fieldName), chained, usage);
+		} catch (NoSuchFieldException | SecurityException e) {
+			throw new IllegalArgumentException("Could not find field: " + fieldName, e);
+		}
+	}
+	
+	/**
+	 * Adds a field setter to this resolver, using specific a function name for mapping.
+	 * This will overwrite previous mappings.
+	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
+	 * @param functionName the script function name.
+	 * @param field the field to wrap.
+	 * @param chained if true, this will return the object affected (for command chaining), else null.
+	 * @param usage function usage docs.
+	 * @return this function resolver.
 	 */
 	public ClassMemberFunctionResolver<C> addSetterField(String functionName, Field field, boolean chained, Usage usage)
 	{
 		String name = functionName.toLowerCase();
-		map.put(name, new SetterInvoker(name, field, usage, chained));
+		map.put(name, new SetterFieldInvoker(name, field, usage, chained));
 		return this;
 	}
 	
@@ -206,7 +270,45 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * Adds a field getter to this resolver, using specific a function name for mapping.
 	 * This will overwrite previous mappings.
 	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
-	 * The {@link ScriptFunctionType} that this will provide is never void.
+	 * @param functionName the script function name.
+	 * @param fieldName the name of the class's field to wrap.
+	 * @param type the target script value type on conversion. Can be null for automatic.
+	 * @return this function resolver.
+	 * @throws IllegalArgumentException if the field could not be found.
+	 */
+	public ClassMemberFunctionResolver<C> addGetterField(String functionName, String fieldName, Type type)
+	{
+		try {
+			return addGetterField(functionName, validType.getField(fieldName), type, null);
+		} catch (NoSuchFieldException | SecurityException e) {
+			throw new IllegalArgumentException("Could not find field: " + fieldName, e);
+		}
+	}
+	
+	/**
+	 * Adds a field getter to this resolver, using specific a function name for mapping.
+	 * This will overwrite previous mappings.
+	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
+	 * @param functionName the script function name.
+	 * @param fieldName the name of the class's field to wrap.
+	 * @param type the target script value type on conversion. Can be null for automatic.
+	 * @param usage function usage docs.
+	 * @return this function resolver.
+	 * @throws IllegalArgumentException if the field could not be found.
+	 */
+	public ClassMemberFunctionResolver<C> addGetterField(String functionName, String fieldName, Type type, Usage usage)
+	{
+		try {
+			return addGetterField(functionName, validType.getField(fieldName), type, usage);
+		} catch (NoSuchFieldException | SecurityException e) {
+			throw new IllegalArgumentException("Could not find field: " + fieldName, e);
+		}
+	}
+	
+	/**
+	 * Adds a field getter to this resolver, using specific a function name for mapping.
+	 * This will overwrite previous mappings.
+	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
 	 * @param functionName the script function name.
 	 * @param field the field to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
@@ -216,47 +318,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	public ClassMemberFunctionResolver<C> addGetterField(String functionName, Field field, Type type, Usage usage)
 	{
 		String name = functionName.toLowerCase();
-		map.put(name, new GetterInvoker(name, field, type, usage));
-		return this;
-	}
-	
-	/**
-	 * Adds a setter method to this resolver, using specific a function name for mapping.
-	 * This will overwrite previous mappings.
-	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
-	 * The {@link ScriptFunctionType} that this will provide is void unless <code>chained</code> is true.
-	 * @param functionName the script function name.
-	 * @param method the method to wrap.
-	 * @param chained if true, this will return the object affected (for command chaining).
-	 * @param usage function usage docs.
-	 * @return this function resolver.
-	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
-	 * @see ScriptFunctionType#isVoid()
-	 */
-	public ClassMemberFunctionResolver<C> addSetterMethod(String functionName, Method method, boolean chained, Usage usage)
-	{
-		String name = functionName.toLowerCase();
-		map.put(name, new SetterInvoker(name, method, usage, chained));
-		return this;
-	}
-	
-	/**
-	 * Adds a getter method to this resolver, using specific a function name for mapping.
-	 * This will overwrite previous mappings.
-	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
-	 * The {@link ScriptFunctionType} that this will provide is never void.
-	 * <p>If the wrapped method throws an exception, this will halt script execution.
-	 * @param functionName the script function name.
-	 * @param method the method to wrap.
-	 * @param type the target script value type on conversion. Can be null for automatic.
-	 * @param usage function usage docs.
-	 * @return this function resolver.
-	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
-	 */
-	public ClassMemberFunctionResolver<C> addGetterMethod(String functionName, Method method, Type type, Usage usage)
-	{
-		String name = functionName.toLowerCase();
-		map.put(name, new GetterInvoker(name, method, type, usage));
+		map.put(name, new GetterFieldInvoker(name, field, type, usage));
 		return this;
 	}
 	
@@ -264,18 +326,72 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * Adds a class method to this resolver, using specific a function name for mapping.
 	 * This will overwrite previous mappings.
 	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
-	 * The {@link ScriptFunctionType} that this will provide is void if not chained, nor error-handling, 
-	 * nor if the wrapped method has a return type (void).
-	 * 
 	 * @param functionName the script function name.
-	 * @param method the field to wrap.
+	 * @param methodName the name of the class's method to wrap.
+	 * @param chained if true, this will return the object affected (for command chaining), overriding any return type.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
+	 * @return this function resolver.
+	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
+	 * @throws IllegalArgumentException if the method could not be found.
+	 */
+	public ClassMemberFunctionResolver<C> addMethod(String functionName, String methodName, boolean chained, boolean errorHandling)
+	{
+		return addMethod(functionName, methodName, null, chained, errorHandling, null);
+	}
+	
+	/**
+	 * Adds a class method to this resolver, using specific a function name for mapping.
+	 * This will overwrite previous mappings.
+	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
+	 * @param functionName the script function name.
+	 * @param methodName the name of the class's method to wrap.
+	 * @param chained if true, this will return the object affected (for command chaining), overriding any return type.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
+	 * @param usage function usage docs.
+	 * @return this function resolver.
+	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
+	 * @throws IllegalArgumentException if the method could not be found.
+	 */
+	public ClassMemberFunctionResolver<C> addMethod(String functionName, String methodName, boolean chained, boolean errorHandling, Usage usage)
+	{
+		return addMethod(functionName, methodName, null, chained, errorHandling, usage);
+	}
+	
+	/**
+	 * Adds a class method to this resolver, using specific a function name for mapping.
+	 * This will overwrite previous mappings.
+	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
+	 * @param functionName the script function name.
+	 * @param methodName the name of the class's method to wrap.
+	 * @param type the target script value type on conversion. Can be null for automatic.
+	 * @param chained if true, this will return the object affected (for command chaining), overriding any return type.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
+	 * @param usage function usage docs.
+	 * @return this function resolver.
+	 * @throws ScriptExecutionException (errorHandling is not true) if the invoked method throws an exception, or the object passed in is not the correct type.
+	 * @throws IllegalArgumentException if the method could not be found.
+	 */
+	public ClassMemberFunctionResolver<C> addMethod(String functionName, String methodName, Type type, boolean chained, boolean errorHandling, Usage usage)
+	{
+		try {
+			return addMethod(functionName, validType.getMethod(methodName), type, chained, errorHandling, usage);
+		} catch (NoSuchMethodException | SecurityException e) {
+			throw new IllegalArgumentException("Could not find method: " + methodName, e);
+		}
+	}
+	
+	/**
+	 * Adds a class method to this resolver, using specific a function name for mapping.
+	 * This will overwrite previous mappings.
+	 * <p>NOTE: This ignores any annotations that may affect naming or ignoring this field.
+	 * @param functionName the script function name.
+	 * @param method the method to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
 	 * @param chained if true, this will return the object affected (for command chaining), overriding any return type.
 	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @param usage function usage docs.
 	 * @return this function resolver.
 	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
-	 * @see ScriptFunctionType#isVoid()
 	 */
 	public ClassMemberFunctionResolver<C> addMethod(String functionName, Method method, Type type, boolean chained, boolean errorHandling, Usage usage)
 	{
@@ -327,12 +443,6 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		}
 	
 		@Override
-		public boolean isVoid()
-		{
-			return false;
-		}
-	
-		@Override
 		public String name()
 		{
 			return name;
@@ -341,7 +451,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		@Override
 		public int getParameterCount()
 		{
-			return constructor.getParameterCount();
+			return paramTypes.length;
 		}
 	
 		@Override
@@ -353,52 +463,41 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			Object[] vbuf = new Object[paramTypes.length];
+			Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(paramTypes.length);
 			for (int i = vbuf.length - 1; i >= 0; i--)
 				vbuf[i] = scriptInstance.popStackValue().createForType(paramTypes[i]);
 			
 			scriptInstance.pushStackValue(ScriptValue.create(type, Utils.construct(constructor, vbuf)));
+			Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
 			return true;
 		}
 	
+		@Override
+		public String toString()
+		{
+			return "Constructor " + validType.getSimpleName() + ": " + name + "(" + getParameterCount() + ")";
+		}
+		
 	}
 
 	/**
 	 * Invoker type for setter.
 	 */
-	private class SetterInvoker implements ScriptFunctionType
+	private class SetterFieldInvoker implements ScriptFunctionType
 	{
 		private String name;
 		private Usage usage;
 		private Field field;
-		private Method method;
 		private Class<?> type;
 		private boolean chained;
 	
-		private SetterInvoker(String name, Field field, Usage usage, boolean chained)
+		private SetterFieldInvoker(String name, Field field, Usage usage, boolean chained)
 		{
 			this.name = name;
 			this.field = field;
-			this.method = null;
 			this.usage = usage;
 			this.type = field.getType();
 			this.chained = chained;
-		}
-	
-		private SetterInvoker(String name, Method method, Usage usage, boolean chained)
-		{
-			this.name = name;
-			this.field = null;
-			this.method = method;
-			this.usage = usage;
-			this.type = method.getParameterTypes()[0];
-			this.chained = chained;
-		}
-		
-		@Override
-		public boolean isVoid()
-		{
-			return !chained;
 		}
 	
 		@Override
@@ -430,15 +529,15 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			if (!validType.isAssignableFrom(object.getClass()))
 				throw new ScriptExecutionException("First parameter is not the correct type.");
 			
-			if (field != null)
-				Utils.setFieldValue(object, field, value.createForType(type));
-			else
-				Utils.invokeBlind(method, object, value.createForType(type));
-	
-			if (chained)
-				scriptInstance.pushStackValue(object);
-			
+			Utils.setFieldValue(object, field, value.createForType(type));
+			scriptInstance.pushStackValue(chained ? object : null);
 			return true;
+		}
+		
+		@Override
+		public String toString()
+		{
+			return "Field Setter " + validType.getSimpleName() + "." + field.getName() + ": " + name + "(" + getParameterCount() + ")";
 		}
 		
 	}
@@ -446,36 +545,19 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	/**
 	 * Invoker type for getter.
 	 */
-	private class GetterInvoker implements ScriptFunctionType
+	private class GetterFieldInvoker implements ScriptFunctionType
 	{
 		private String name;
 		private Field field;
-		private Method method;
 		private Type type;
 		private Usage usage;
 		
-		private GetterInvoker(String name, Field field, Type type, Usage usage)
+		private GetterFieldInvoker(String name, Field field, Type type, Usage usage)
 		{
 			this.name = name;
 			this.field = field;
-			this.method = null;
 			this.type = type;
 			this.usage = usage;
-		}
-	
-		private GetterInvoker(String name, Method method, Type type, Usage usage)
-		{
-			this.name = name;
-			this.field = null;
-			this.method = method;
-			this.type = type;
-			this.usage = usage;
-		}
-		
-		@Override
-		public boolean isVoid()
-		{
-			return false;
 		}
 	
 		@Override
@@ -506,20 +588,16 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			if (!validType.isAssignableFrom(object.getClass()))
 				throw new ScriptExecutionException("First parameter is not the correct type.");
 			
-			if (field != null)
-			{
-				Cache cache = ScriptThreadLocal.getCache();
-				cache.temp.set(type, Utils.getFieldValue(object, field));
-				scriptInstance.pushStackValue(cache.temp);
-			}
-			else
-			{
-				Cache cache = ScriptThreadLocal.getCache();
-				cache.temp.set(type, Utils.invokeBlind(method, object));
-				scriptInstance.pushStackValue(cache.temp);
-			}
-			
+			Cache cache = ScriptThreadLocal.getCache();
+			cache.temp.set(type, Utils.getFieldValue(object, field));
+			scriptInstance.pushStackValue(cache.temp);
 			return true;
+		}
+		
+		@Override
+		public String toString()
+		{
+			return "Field Getter " + validType.getSimpleName() + "." + field.getName() + ": " + name + "(" + getParameterCount() + ")";
 		}
 		
 	}
@@ -536,8 +614,8 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		private boolean chained;
 		private boolean errorHandling;
 		
+		private boolean isStatic;
 		private Class<?>[] paramTypes;
-		private Class<?> returnType;
 
 		private MethodInvoker(String name, Method method, Type type, Usage usage, boolean chained, boolean errorHandling)
 		{
@@ -547,7 +625,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			this.usage = usage;
 			this.chained = chained;
 			this.errorHandling = errorHandling;
-			this.returnType = method.getReturnType();
+			this.isStatic = (method.getModifiers() & Modifier.STATIC) != 0;
 			this.paramTypes = method.getParameterTypes();
 		}
 		
@@ -558,15 +636,9 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		}
 		
 		@Override
-		public boolean isVoid()
-		{
-			return chained || errorHandling || returnType == Void.TYPE || returnType == Void.class;
-		}
-		
-		@Override
 		public int getParameterCount()
 		{
-			return paramTypes.length + 1;
+			return paramTypes.length + (isStatic ? 0 : 1);
 		}
 		
 		@Override
@@ -591,33 +663,45 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 					throw see; 
 			}
 			
-			Object[] vbuf = new Object[paramTypes.length];
+			Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(paramTypes.length);
 			for (int i = vbuf.length - 1; i >= 0; i++)
 				vbuf[i] = scriptInstance.popStackValue().createForType(paramTypes[i]);
 
 			Object retval = null;
-			try {
+			try 
+			{
 				retval = Utils.invokeBlind(method, object, vbuf);
+				Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
+
 				if (chained)
+				{
 					retval = object;
+				}
 				else
 				{
 					Cache cache = ScriptThreadLocal.getCache();
 					cache.temp.set(type, retval);
 					retval = cache.temp;
 				}
-			} catch (Throwable t) {
+			} 
+			catch (Throwable t) 
+			{
 				if (errorHandling)
 					retval = t;
 				else
 					throw t;
 			}
 
-			if (!isVoid())
-				scriptInstance.pushStackValue(retval);
-			
+			scriptInstance.pushStackValue(retval);
 			return true;
 		}
+
+		@Override
+		public String toString()
+		{
+			return "Method " + validType.getSimpleName() + "." + method.getName() + ": " + name + "(" + getParameterCount() + ")";
+		}
+		
 	}
 
 }

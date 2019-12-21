@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
+import com.blackrook.rookscript.struct.ScriptThreadLocal;
 import com.blackrook.rookscript.struct.Utils;
 import com.blackrook.rookscript.struct.ScriptThreadLocal.Cache;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
@@ -1039,13 +1040,25 @@ public class ScriptValue implements Comparable<ScriptValue>
 		{
 			String name = entry.getName().toLowerCase();
 			ScriptValue value = entry.getValue();
-			
+
+
 			FieldInfo fi;
 			MethodInfo mi;
 			if ((fi = Utils.isNull(profile.getPublicFieldsByAlias().get(name), profile.getPublicFieldsByName().get(name))) != null)
-				Utils.setFieldValue(object, fi.getField(), value.createForType(fi.getType()));
+			{
+				Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(1);
+				vbuf[0] = value.createForType(fi.getType());
+				Utils.setFieldValue(object, fi.getField(), vbuf);
+				Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
+			}
 			else if ((mi = Utils.isNull(profile.getSetterMethodsByAlias().get(name), profile.getSetterMethodsByName().get(name))) != null)
-				Utils.invokeBlind(mi.getMethod(), object, value.createForType(mi.getType()));
+			{
+				Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(1);
+				vbuf[0] = value.createForType(mi.getType());
+				Utils.invokeBlind(mi.getMethod(), object, vbuf);
+				Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
+			}
+
 		}
 		
 		return true;

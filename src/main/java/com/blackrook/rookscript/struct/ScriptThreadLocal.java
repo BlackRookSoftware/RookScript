@@ -7,6 +7,8 @@
  ******************************************************************************/
 package com.blackrook.rookscript.struct;
 
+import java.util.HashMap;
+
 import com.blackrook.rookscript.ScriptValue;
 
 /**
@@ -17,11 +19,18 @@ import com.blackrook.rookscript.ScriptValue;
 public final class ScriptThreadLocal
 {
 	private static final ThreadLocal<Cache> CACHE = ThreadLocal.withInitial(()->new Cache());
-
+	private static final ThreadLocal<InvokerCache> INVOKERCACHE = ThreadLocal.withInitial(()->new InvokerCache());
+	
 	// Get the cache.
 	public static Cache getCache()
 	{
 		return CACHE.get();
+	}
+	
+	// Get the cache.
+	public static InvokerCache getInvokerCache()
+	{
+		return INVOKERCACHE.get();
 	}
 	
 	// value cache.
@@ -40,4 +49,24 @@ public final class ScriptThreadLocal
 		
 	}
 
+	// Parameter array cache.
+	public static class InvokerCache
+	{
+		private HashMap<Integer, Object[]> map;
+		
+		private InvokerCache()
+		{
+			map = new HashMap<>();
+		}
+		
+		public Object[] getParamArray(int size)
+		{
+			Object[] out;
+			if ((out = map.get(size)) == null)
+				map.put(size, out = new Object[size]);
+			return out;
+		}
+
+	}
+	
 }

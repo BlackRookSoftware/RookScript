@@ -12,6 +12,7 @@ import java.io.File;
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
+import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.resolvers.function.ClassMemberFunctionResolver;
 import com.blackrook.rookscript.struct.Utils;
 
@@ -20,14 +21,17 @@ public class ClassFieldFunctionTest
 	public static void main(String[] args) throws Exception
 	{
 		ClassMemberFunctionResolver<File> fileResolver = (new ClassMemberFunctionResolver<>(File.class))
-			.addConstructor("file", File.class.getConstructor(String.class), null, null)
-			.addGetterMethod("fpath", File.class.getMethod("getPath"), null, null)
-			.addGetterMethod("fparent", File.class.getMethod("getParent"), null, null)
-			.addGetterMethod("fabsolute", File.class.getMethod("isAbsolute"), null, null)
-			.addGetterMethod("fisdir", File.class.getMethod("isDirectory"), null, null)
-			.addGetterMethod("fhidden", File.class.getMethod("isHidden"), null, null)
-			.addMethod("fexists", File.class.getMethod("exists"), null, false, false, null)
-			.addMethod("flist", File.class.getMethod("listFiles"), null, false, false, null);
+			.addConstructor("file", File.class.getConstructor(String.class))
+			.addMethod("fpath", "getPath", false, false)
+			.addMethod("fparent", "getParent", false, false)
+			.addMethod("fabsolute", "isAbsolute", false, false)
+			.addMethod("fisdir", "isDirectory", false, false)
+			.addMethod("fhidden", "isHidden", false, false)
+			.addMethod("fexists", "exists", false, false)
+			.addMethod("flist", "listFiles", false, false);
+		
+		for (ScriptFunctionType t : fileResolver.getFunctions())
+			System.out.println(t);
 		
 		String fileName;
 		if ((fileName = Utils.arrayElement(args, 0)) == null)

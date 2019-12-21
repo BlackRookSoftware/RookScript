@@ -24,13 +24,14 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	 * Returns void.
 	 * ARG: Value to print.
 	 */
-	PRINT(true, 1)
+	PRINT(1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
 			ScriptValue arg = scriptInstance.popStackValue();
 			scriptInstance.getEnvironment().print(arg.asString());
+			scriptInstance.pushStackValue(null);
 			return true;
 		}
 	},
@@ -40,13 +41,14 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	 * Returns void.
 	 * ARG: Value to print.
 	 */
-	PRINTERR(true, 1)
+	PRINTERR(1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
 			ScriptValue arg = scriptInstance.popStackValue();
 			scriptInstance.getEnvironment().printErr(arg.asString());
+			scriptInstance.pushStackValue(null);
 			return true;
 		}
 	},
@@ -56,7 +58,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	 * Returns void.
 	 * ARG: Value to print.
 	 */
-	PRINTLN(true, 1)
+	PRINTLN(1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
@@ -64,6 +66,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 			ScriptValue arg = scriptInstance.popStackValue();
 			scriptInstance.getEnvironment().print(arg.asString());
 			scriptInstance.getEnvironment().print('\n');
+			scriptInstance.pushStackValue(null);
 			return true;
 		}
 	},
@@ -73,7 +76,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	 * Returns void.
 	 * ARG: Value to print.
 	 */
-	PRINTLNERR(true, 1)
+	PRINTLNERR(1)
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
@@ -81,22 +84,16 @@ public enum StandardIOFunctions implements ScriptFunctionType
 			ScriptValue arg = scriptInstance.popStackValue();
 			scriptInstance.getEnvironment().printErr(arg.asString());
 			scriptInstance.getEnvironment().printErr('\n');
+			scriptInstance.pushStackValue(null);
 			return true;
 		}
 	},
 
 	;
 	
-	private final boolean isVoid;
 	private final int parameterCount;
 	private StandardIOFunctions(int parameterCount)
 	{
-		this(false, parameterCount);
-	}
-	
-	private StandardIOFunctions(boolean isVoid, int parameterCount)
-	{
-		this.isVoid = isVoid;
 		this.parameterCount = parameterCount;
 	}
 	
@@ -106,12 +103,6 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	public static final ScriptFunctionResolver getResolver()
 	{
 		return new EnumFunctionResolver(StandardIOFunctions.values());
-	}
-
-	@Override
-	public boolean isVoid()
-	{
-		return isVoid;
 	}
 
 	@Override
