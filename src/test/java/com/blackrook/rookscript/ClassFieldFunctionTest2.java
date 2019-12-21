@@ -16,7 +16,7 @@ public class ClassFieldFunctionTest2
 {
 	public static void main(String[] args) throws Exception
 	{
-		for (ScriptFunctionType t : ClassMemberFunctionResolver.create(Triple.class, "tget_", "tset_", "t", false, false).getFunctions())
+		for (ScriptFunctionType t : ClassMemberFunctionResolver.create(Triple.class, "tget", "tset", "t", false, false).getFunctions())
 		{
 			System.out.println(t);
 		}
@@ -31,6 +31,7 @@ public class ClassFieldFunctionTest2
 		public int y;
 		private int z;
 		
+		@ScriptName("triple")
 		public Triple(int x, int y, int z)
 		{
 			this.x = x;
@@ -38,17 +39,16 @@ public class ClassFieldFunctionTest2
 			this.z = z;
 		}
 		
-		@ScriptName("butt")
 		public int getZ()
 		{
 			return z;
 		}
 		
-		@ScriptName("butt")
 		public void setZ(int z)
 		{
 			this.z = z;
 		}
+		
 	}
 
 }
