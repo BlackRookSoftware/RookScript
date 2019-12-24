@@ -10,6 +10,8 @@ package com.blackrook.rookscript;
 import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
 
 import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -39,6 +41,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		FLOAT,
 		STRING,
 		OBJECTREF,
+		BUFFER,
 		LIST,
 		MAP,
 		ERROR;
@@ -79,6 +82,18 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		ScriptValue out = new ScriptValue();
 		out.set(type, value);
+		return out;
+	}
+	
+	/**
+	 * Creates a script value that is an empty buffer.
+	 * @param size the size of the buffer in bytes.
+	 * @return a new script value.
+	 */
+	public static ScriptValue createEmptyBuffer(int size)
+	{
+		ScriptValue out = new ScriptValue();
+		out.setEmptyBuffer(size);
 		return out;
 	}
 	
@@ -182,6 +197,29 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		this.type = Type.NULL;
 		this.ref = null;
+		this.rawbits = 0L;
+	}
+	
+	/**
+	 * Sets this value to a new buffer (new reference), native byte order.
+	 * @param size the size of the new buffer in bytes.
+	 */
+	public void setEmptyBuffer(int size)
+	{
+		this.type = Type.BUFFER;
+		this.ref = new BufferType(size, ByteOrder.nativeOrder());
+		this.rawbits = 0L;
+	}
+	
+	/**
+	 * Sets this value to a new buffer (new reference).
+	 * @param size the size of the new buffer in bytes.
+	 * @param order the byte ordering.
+	 */
+	public void setEmptyBuffer(int size, ByteOrder order)
+	{
+		this.type = Type.BUFFER;
+		this.ref = new BufferType(size, order);
 		this.rawbits = 0L;
 	}
 	
@@ -576,6 +614,8 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		switch (type)
 		{
+			case BUFFER:
+				return ((BufferType)ref).size();
 			case LIST:
 				return ((ListType)ref).size();
 			case MAP:
@@ -2241,6 +2281,78 @@ public class ScriptValue implements Comparable<ScriptValue>
 		out.set(!operand.equals(operand2));
 	}
 
+	/**
+	 * The class used for a buffer of bytes.
+	 */
+	public static class BufferType
+	{
+		private ByteBuffer data;
+		
+		private BufferType(int size, ByteOrder order)
+		{
+			this.data = ByteBuffer.allocateDirect(size)
+				.order(order)
+				.position(0);
+		}
+
+		/**
+		 * Sets the byte order of this buffer.
+		 * @param order the new byte order (true = big endian, false = little endian).
+		 */
+		public void setByteOrder(boolean order)
+		{
+			data.order(order ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
+		}
+		
+		/**
+		 * Gets the byte order of this buffer.
+		 * @return order the current byte order (true = big endian, false = little endian).
+		 */
+		public boolean getByteOrder()
+		{
+			return data.order() == ByteOrder.BIG_ENDIAN;
+		}
+		
+		/**
+		 * Gets the buffer's current position.
+		 * @return the current buffer position.
+		 */
+		public int getPosition()
+		{
+			return data.position();
+		}
+		
+		/**
+		 * Sets the buffer's current position.
+		 * @param pos the new buffer position.
+		 */
+		public void setPosition(int pos)
+		{
+			data.position(pos);
+		}
+		
+		/**
+		 * Reads a byte value into the buffer.
+		 * If the end of the buffer is reached, an error is set.
+		 * @param destination the value to set.
+		 */
+		public void readByte(ScriptValue destination)
+		{
+			
+		}
+		
+		// TODO: Finish this.
+		
+		/**
+		 * @return the size of this buffer in bytes. 
+		 */
+		public int size()
+		{
+			return data.capacity();
+		}
+		
+	}
+	
 	/**
 	 * The class used for a list/set.
 	 */
