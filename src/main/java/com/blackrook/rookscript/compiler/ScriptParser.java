@@ -238,7 +238,7 @@ public class ScriptParser extends Lexer.Parser
 		// test type of call: host function first, then local script function.
 		ScriptFunctionType functionType;
 		Entry functionEntry;
-		if ((functionType = currentScript.getFunctionResolver().getFunctionByName(lexeme)) != null)
+		if ((functionType = currentScript.getHostFunctionResolver().getNamespacedFunction(null, lexeme)) != null)
 		{
 			int parsedCount;
 			if ((parsedCount = parseHostFunctionCall(currentScript, functionType, partial)) == PARSEFUNCTIONCALL_FALSE)

@@ -20,8 +20,9 @@ import com.blackrook.rookscript.compiler.ScriptReaderOptions;
 import com.blackrook.rookscript.exception.ScriptBuilderException;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
-import com.blackrook.rookscript.resolvers.function.MultiFunctionResolver;
+import com.blackrook.rookscript.resolvers.hostfunction.MultiFunctionResolver;
 import com.blackrook.rookscript.resolvers.scope.DefaultScopeResolver;
 
 /**
@@ -33,7 +34,7 @@ public final class ScriptBuilder
 	@FunctionalInterface
 	private interface ScriptProvider
 	{
-		Script getScript(ScriptFunctionResolver functionResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException;
+		Script getScript(ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException;
 	}
 
 	@FunctionalInterface

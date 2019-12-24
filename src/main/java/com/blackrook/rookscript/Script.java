@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.blackrook.rookscript.lang.ScriptCommand;
-import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.struct.CountMap;
 import com.blackrook.rookscript.struct.HashDequeMap;
 
@@ -29,7 +29,7 @@ public class Script
 	public static final String LABEL_ENTRY_PREFIX = "entry_";
 
 	/** Script host function resolver. */
-	private ScriptFunctionResolver hostFunctionResolver;
+	private ScriptHostFunctionResolver hostFunctionResolver;
 	/** List of script commands. */
 	private List<ScriptCommand> commands;
 
@@ -68,7 +68,7 @@ public class Script
 	 * Sets this script's host function resolver.  
 	 * @param hostFunctionResolver the function resolver.
 	 */
-	public void setHostFunctionResolver(ScriptFunctionResolver hostFunctionResolver)
+	public void setHostFunctionResolver(ScriptHostFunctionResolver hostFunctionResolver)
 	{
 		this.hostFunctionResolver = hostFunctionResolver;
 	}
@@ -191,7 +191,7 @@ public class Script
 	 * Returns this script's host function resolver.
 	 * @return the function resolver.
 	 */
-	public ScriptFunctionResolver getFunctionResolver()
+	public ScriptHostFunctionResolver getHostFunctionResolver()
 	{
 		return hostFunctionResolver;
 	}

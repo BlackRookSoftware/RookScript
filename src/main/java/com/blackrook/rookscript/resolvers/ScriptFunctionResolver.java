@@ -19,22 +19,22 @@ public interface ScriptFunctionResolver
 	/**
 	 * Attempts to find if this resolver has a function by its calling name.
 	 * <p>Names must be resolved case-insensitively!
-	 * <p>If this returns <code>true</code> for a function name, {@link #getFunctionByName(String)} must NOT return null if called with that name!
+	 * <p>If this returns <code>true</code> for a function name, {@link #getFunction(String)} must NOT return null if called with that name!
 	 * @param name the name to find.
 	 * @return a corresponding function or null for no such function.
 	 */
-	public boolean containsFunctionByName(String name);
+	public boolean containsFunction(String name);
 
 	/**
 	 * Attempts to resolve a pertinent function by its calling name.
 	 * <p>Names must be resolved case-insensitively!
-	 * <p>If this returns a non-null for a function name, {@link #containsFunctionByName(String)} must NOT return <code>false</code> if called with that name!
+	 * <p>If this returns a non-null for a function name, {@link #containsFunction(String)} must NOT return <code>false</code> if called with that name!
 	 * <p>The same function must be returned if this is called again with the same name!
 	 * @param name the name to resolve.
 	 * @return a corresponding function or null for no such function.
-	 * @see #containsFunctionByName(String)
+	 * @see #containsFunction(String)
 	 */
-	public ScriptFunctionType getFunctionByName(String name);
+	public ScriptFunctionType getFunction(String name);
 	
 	/**
 	 * Gets the full list of all script functions.

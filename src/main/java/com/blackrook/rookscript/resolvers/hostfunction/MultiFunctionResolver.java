@@ -5,13 +5,14 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.resolvers.function;
+package com.blackrook.rookscript.resolvers.hostfunction;
 
 import java.util.LinkedList;
 import java.util.Queue;
 
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.struct.Utils;
 
 /**
@@ -19,7 +20,7 @@ import com.blackrook.rookscript.struct.Utils;
  * Functions are resolved in the order that they are added to this resolver.
  * @author Matthew Tropiano
  */
-public class MultiFunctionResolver implements ScriptFunctionResolver
+public class MultiFunctionResolver implements ScriptHostFunctionResolver
 {
 	private Queue<ScriptFunctionResolver> resolvers;
 
@@ -46,20 +47,20 @@ public class MultiFunctionResolver implements ScriptFunctionResolver
 	}
 	
 	@Override
-	public boolean containsFunctionByName(String name)
+	public boolean containsNamespacedFunction(String namespace, String name)
 	{
 		for (ScriptFunctionResolver r : resolvers)
-			if (r.containsFunctionByName(name))
+			if (r.containsFunction(name))
 				return true;
 		return false;
 	}
 
 	@Override
-	public ScriptFunctionType getFunctionByName(String name)
+	public ScriptFunctionType getNamespacedFunction(String namespace, String name)
 	{
 		for (ScriptFunctionResolver r : resolvers)
-			if (r.containsFunctionByName(name))
-				return r.getFunctionByName(name);
+			if (r.containsFunction(name))
+				return r.getFunction(name);
 		return null;
 	}
 	

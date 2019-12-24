@@ -11,7 +11,7 @@ import com.blackrook.rookscript.Script.Entry;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.exception.ScriptStackException;
 import com.blackrook.rookscript.lang.ScriptCommand;
-import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 
@@ -211,9 +211,9 @@ public class ScriptInstance
 	 * Returns this script's host function resolver.
 	 * @return the function resolver.
 	 */
-	public ScriptFunctionResolver getFunctionResolver()
+	public ScriptHostFunctionResolver getHostFunctionResolver()
 	{
-		return script.getFunctionResolver();
+		return script.getHostFunctionResolver();
 	}
 	
 	/**

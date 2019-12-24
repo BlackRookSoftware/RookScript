@@ -219,7 +219,7 @@ public final class ScriptAssembler
 		ScriptCommand[] optimizedCommands = new ScriptCommand[outCommands.size()];
 		outCommands.toArray(optimizedCommands);
 		optimizedScript.setCommands(optimizedCommands);
-		optimizedScript.setHostFunctionResolver(script.getFunctionResolver());
+		optimizedScript.setHostFunctionResolver(script.getHostFunctionResolver());
 		optimizedScript.setCommandRunawayLimit(script.getCommandRunawayLimit());
 		if (script.getLabelGeneratorCounter() != null) for (Map.Entry<String, Integer> count : script.getLabelGeneratorCounter().entrySet())
 			optimizedScript.setNextGeneratedLabelNumber(count.getKey(), count.getValue());
