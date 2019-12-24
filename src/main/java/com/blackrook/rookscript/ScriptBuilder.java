@@ -11,7 +11,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
 
 import com.blackrook.rookscript.compiler.ScriptReader;
@@ -22,7 +24,7 @@ import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
-import com.blackrook.rookscript.resolvers.hostfunction.MultiFunctionResolver;
+import com.blackrook.rookscript.resolvers.hostfunction.MultiHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.scope.DefaultScopeResolver;
 
 /**
@@ -55,8 +57,11 @@ public final class ScriptBuilder
 	/** The script stack to use. */
 	private ScriptInstanceStackProvider stackProvider;
 	
-	/** Function resolver to use with each instance. */
-	private Queue<ScriptFunctionResolver> functionResolvers;
+	/** Resolvers in the global namespace. */
+	private Queue<ScriptFunctionResolver> globalResolvers;
+	
+	/** Resolvers in the named namespaces. */
+	private Map<String, ScriptFunctionResolver> namedResolvers;
 
 	/** Scope resolver to use with each instance. */
 	private DefaultScopeResolver scopeResolver;
@@ -74,7 +79,8 @@ public final class ScriptBuilder
 		this.readerIncluder = null;
 		this.readerOptions = null;
 		this.stackProvider = null;
-		this.functionResolvers = new LinkedList<>();
+		this.globalResolvers = new LinkedList<>();
+		this.namedResolvers = new HashMap<>();
 		this.scopeResolver = new DefaultScopeResolver();
 		this.waitHandler = null;
 		this.environment = null;
@@ -130,7 +136,7 @@ public final class ScriptBuilder
 	 * @param sourceStream the source stream.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withSource(String streamPath, InputStream sourceStream)
+	public ScriptBuilder withSource(final String streamPath, final InputStream sourceStream)
 	{
 		scriptProvider = (functionResolver, includer, options)->{
 			return ScriptReader.read(streamPath, sourceStream, functionResolver, includer, options);
@@ -145,7 +151,7 @@ public final class ScriptBuilder
 	 * @param sourceReader the source reader.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withSource(String streamPath, Reader sourceReader)
+	public ScriptBuilder withSource(final String streamPath, final Reader sourceReader)
 	{
 		scriptProvider = (functionResolver, includer, options)->{
 			return ScriptReader.read(streamPath, sourceReader, functionResolver, includer, options);
@@ -210,22 +216,35 @@ public final class ScriptBuilder
 	 */
 	public ScriptBuilder withScriptStack(final ScriptInstanceStack stack)
 	{
-		this.stackProvider = ()->{
-			return stack;
-		};
+		this.stackProvider = ()->stack;
 		return this;
 	}
 	
 	/**
-	 * Adds a function resolver to this builder to be used in the script, clearing the list of resolvers first.
+	 * Adds a function resolver to this builder to be used in the script, clearing all resolvers first.
 	 * @param resolver the resolver to add.
 	 * @return the builder, for chained calls.
 	 * @see #andFunctionResolver(ScriptFunctionResolver)
 	 */
-	public ScriptBuilder withFunctionResolver(final ScriptFunctionResolver resolver)
+	public ScriptBuilder withFunctionResolver(ScriptFunctionResolver resolver)
 	{
-		functionResolvers.clear();
+		globalResolvers.clear();
+		namedResolvers.clear();
 		return andFunctionResolver(resolver);
+	}
+	
+	/**
+	 * Adds a function resolver to this builder to be used in the script, clearing all resolvers first.
+	 * @param namespace the namespace to use for the resolver.
+	 * @param resolver the resolver to add.
+	 * @return the builder, for chained calls.
+	 * @see #andFunctionResolver(ScriptFunctionResolver)
+	 */
+	public ScriptBuilder withFunctionResolver(String namespace, ScriptFunctionResolver resolver)
+	{
+		globalResolvers.clear();
+		namedResolvers.clear();
+		return andFunctionResolver(namespace, resolver);
 	}
 	
 	/**
@@ -234,9 +253,22 @@ public final class ScriptBuilder
 	 * @return the builder, for chained calls.
 	 * @see #withFunctionResolver(ScriptFunctionResolver)
 	 */
-	public ScriptBuilder andFunctionResolver(final ScriptFunctionResolver resolver)
+	public ScriptBuilder andFunctionResolver(ScriptFunctionResolver resolver)
 	{
-		functionResolvers.add(resolver);
+		globalResolvers.add(resolver);
+		return this;
+	}
+	
+	/**
+	 * Adds a function resolver to this builder to be used in the script.
+	 * @param namespace the namespace to use for the resolver.
+	 * @param resolver the resolver to add.
+	 * @return the builder, for chained calls.
+	 * @see #withFunctionResolver(ScriptFunctionResolver)
+	 */
+	public ScriptBuilder andFunctionResolver(String namespace, ScriptFunctionResolver resolver)
+	{
+		namedResolvers.put(namespace, resolver);
 		return this;
 	}
 	
@@ -247,7 +279,7 @@ public final class ScriptBuilder
 	 * @return the builder, for chained calls.
 	 * @see #andScope(String, ScriptVariableResolver)
 	 */
-	public ScriptBuilder withScope(final String name, final ScriptVariableResolver resolver)
+	public ScriptBuilder withScope(String name, ScriptVariableResolver resolver)
 	{
 		scopeResolver.clear();
 		return andScope(name, resolver);
@@ -260,7 +292,7 @@ public final class ScriptBuilder
 	 * @return the builder, for chained calls.
 	 * @see #withScope(String, ScriptVariableResolver)
 	 */
-	public ScriptBuilder andScope(final String name, final ScriptVariableResolver resolver)
+	public ScriptBuilder andScope(String name, ScriptVariableResolver resolver)
 	{
 		scopeResolver.addScope(name, resolver);
 		return this;
@@ -302,7 +334,12 @@ public final class ScriptBuilder
 		if (stackProvider == null)
 			throw new ScriptBuilderException("An instance stack was not set.");
 
-		MultiFunctionResolver resolver = new MultiFunctionResolver(functionResolvers);
+		MultiHostFunctionResolver resolver = new MultiHostFunctionResolver();
+		for (ScriptFunctionResolver r : globalResolvers)
+			resolver.addResolver(r);
+		for (Map.Entry<String, ScriptFunctionResolver> r : namedResolvers.entrySet())
+			resolver.addNamedResolver(r.getKey(), r.getValue());
+		
 		Script script;
 		try {
 			script = scriptProvider.getScript(
