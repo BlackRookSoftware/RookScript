@@ -10,8 +10,6 @@ package com.blackrook.rookscript;
 import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
 
 import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -41,7 +39,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 		FLOAT,
 		STRING,
 		OBJECTREF,
-		BUFFER,
 		LIST,
 		MAP,
 		ERROR;
@@ -104,18 +101,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		ScriptValue out = new ScriptValue();
 		out.setEmptyMap();
-		return out;
-	}
-	
-	/**
-	 * Creates a script value that is an empty buffer.
-	 * @param size the size of the buffer in bytes.
-	 * @return a new script value.
-	 */
-	public static ScriptValue createEmptyBuffer(int size)
-	{
-		ScriptValue out = new ScriptValue();
-		out.setEmptyBuffer(size);
 		return out;
 	}
 	
@@ -239,17 +224,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		this.type = Type.MAP;
 		this.ref = new MapType(4);
-		this.rawbits = 0L;
-	}
-	
-	/**
-	 * Sets this value to a new buffer (new reference).
-	 * @param size the size of the new buffer in bytes.
-	 */
-	public void setEmptyBuffer(int size)
-	{
-		this.type = Type.BUFFER;
-		this.ref = new BufferType(size);
 		this.rawbits = 0L;
 	}
 	
@@ -602,8 +576,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		switch (type)
 		{
-			case BUFFER:
-				return ((BufferType)ref).size();
 			case LIST:
 				return ((ListType)ref).size();
 			case MAP:
@@ -2269,55 +2241,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 		out.set(!operand.equals(operand2));
 	}
 
-	/**
-	 * The class used for a buffer of bytes.
-	 */
-	public static class BufferType implements Iterable<ScriptValue>
-	{
-		// TODO: Finish this.
-		
-		private ByteBuffer data;
-		
-		private BufferType(int size)
-		{
-			this.data = ByteBuffer.allocateDirect(size);
-			this.data.order(ByteOrder.nativeOrder());
-		}
-
-		/**
-		 * Sets the byte order of this buffer.
-		 * @param order the new byte order (true = big endian, false = little endian).
-		 */
-		public void setByteOrder(boolean order)
-		{
-			data.order(order ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
-		}
-		
-		/**
-		 * Gets the byte order of this buffer.
-		 * @return order the current byte order (true = big endian, false = little endian).
-		 */
-		public boolean getByteOrder()
-		{
-			return data.order() == ByteOrder.BIG_ENDIAN;
-		}
-		
-		@Override
-		public Iterator<ScriptValue> iterator()
-		{
-			return null;
-		}
-		
-		/**
-		 * @return the size of this buffer in bytes. 
-		 */
-		public int size()
-		{
-			return data.capacity();
-		}
-		
-	}
-	
 	/**
 	 * The class used for a list/set.
 	 */
