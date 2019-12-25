@@ -221,7 +221,7 @@ public final class ScriptBuilder
 	}
 	
 	/**
-	 * Adds a function resolver to this builder to be used in the script, clearing all resolvers first.
+	 * Adds a function resolver to this builder to be used in the script, <b>clearing all resolvers first.</b>
 	 * @param resolver the resolver to add.
 	 * @return the builder, for chained calls.
 	 * @see #andFunctionResolver(ScriptFunctionResolver)
@@ -234,7 +234,7 @@ public final class ScriptBuilder
 	}
 	
 	/**
-	 * Adds a function resolver to this builder to be used in the script, clearing all resolvers first.
+	 * Adds a function resolver to this builder to be used in the script, <b>clearing all resolvers first.</b>
 	 * @param namespace the namespace to use for the resolver.
 	 * @param resolver the resolver to add.
 	 * @return the builder, for chained calls.

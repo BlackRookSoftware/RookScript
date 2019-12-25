@@ -22,6 +22,7 @@ import com.blackrook.rookscript.struct.Lexer;
 /**
  * The parser that parses text for the script reader. 
  * @author Matthew Tropiano
+ * TODO: Parse namespaced host function calls.
  */
 public class ScriptParser extends Lexer.Parser
 {
@@ -233,12 +234,18 @@ public class ScriptParser extends Lexer.Parser
 	/*
 	 *  <Function> := "(" <Expression> ... ")"
 	 */
-	protected int parseFunctionCall(Script currentScript, String lexeme, boolean partial)
+	protected int parseFunctionCall(Script currentScript, String functionNamespace, String functionName, boolean partial)
 	{
+		if (!matchType(ScriptKernel.TYPE_LPAREN))
+		{
+			addErrorMessage("INTERNAL ERROR: Expected \"(\" - not verified first!");
+			return PARSEFUNCTION_FALSE;
+		}
+
 		// test type of call: host function first, then local script function.
 		ScriptFunctionType functionType;
 		Entry functionEntry;
-		if ((functionType = currentScript.getHostFunctionResolver().getNamespacedFunction(null, lexeme)) != null)
+		if ((functionType = currentScript.getHostFunctionResolver().getNamespacedFunction(functionNamespace, functionName)) != null)
 		{
 			int parsedCount;
 			if ((parsedCount = parseHostFunctionCall(currentScript, functionType, partial)) == PARSEFUNCTIONCALL_FALSE)
@@ -254,10 +261,10 @@ public class ScriptParser extends Lexer.Parser
 			while (functionType.getParameterCount() - (parsedCount++) > 0)
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 			
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST, lexeme));
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST, functionName));
 			return PARSEFUNCTION_TRUE;
 		}
-		else if ((functionEntry = currentScript.getFunctionEntry(lexeme)) != null)
+		else if ((functionEntry = currentScript.getFunctionEntry(functionName)) != null)
 		{
 			int paramCount = functionEntry.getParameterCount();
 			int parsedCount;
@@ -276,13 +283,13 @@ public class ScriptParser extends Lexer.Parser
 			while (paramCount - (parsedCount++) > 0)
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 			
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL, getFunctionLabel(lexeme)));
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL, getFunctionLabel(functionName)));
 	
 			return PARSEFUNCTION_TRUE;
 		}
 		else
 		{
-			addErrorMessage("\"" + lexeme + "\" is not the name of a valid function call - not host or local.");
+			addErrorMessage("\"" + functionName + "\" is not the name of a valid function call - not host or local.");
 			return PARSEFUNCTION_FALSE;
 		}
 	}
@@ -338,14 +345,14 @@ public class ScriptParser extends Lexer.Parser
 			String name = currentToken().getLexeme();
 			nextToken();
 			
-			if (!matchType(ScriptKernel.TYPE_LPAREN))
+			if (!currentType(ScriptKernel.TYPE_LPAREN))
 			{
 				addErrorMessage("Expected \"(\" after a function name.");
 				return false;
 			}
 
 			int ret;
-			if ((ret = parseFunctionCall(script, name, false)) == PARSEFUNCTION_FALSE)
+			if ((ret = parseFunctionCall(script, null, name, false)) == PARSEFUNCTION_FALSE)
 				return false;
 			
 			if (ret == PARSEFUNCTION_TRUE)
@@ -809,17 +816,19 @@ public class ScriptParser extends Lexer.Parser
 			"(" <ParameterList> ")" ";"   										(Must be function or host function)
 			"[" <Expression> "]" <ASSIGNMENTOPERATOR> <VariableAssignment> ";"	(Array variable assignment)
 			"." <IDENTIFIER> <ASSIGNMENTOPERATOR> <Expression> ";"				(Map variable assignment)
-			"::" <IDENTIFIER> <ASSIGNMENTOPERATOR> <Expression> ";"				(Scope variable assignment)
+			"::" <IDENTIFIER> 
+				"(" <ParameterList> ")" ";"										(Namespaced host function call)
+				<ASSIGNMENTOPERATOR> <Expression> ";"							(Scope variable assignment)
 			<ASSIGNMENTOPERATOR> <Expression> ";"								(variable assignment)
 			-> <PartialChain> ";"												(partial application chain)
 	 */
 	private boolean parseIdentifierStatement(Script currentScript, String identifierName)
 	{
 		// function call.
-		if (matchType(ScriptKernel.TYPE_LPAREN))
+		if (currentType(ScriptKernel.TYPE_LPAREN))
 		{
 			int funcret;
-			if ((funcret = parseFunctionCall(currentScript, identifierName, false)) == PARSEFUNCTION_FALSE)
+			if ((funcret = parseFunctionCall(currentScript, null, identifierName, false)) == PARSEFUNCTION_FALSE)
 				return false;
 
 			if (funcret == PARSEFUNCTION_TRUE)
@@ -1390,9 +1399,9 @@ public class ScriptParser extends Lexer.Parser
 					nextToken();
 					
 					// function call?
-					if (matchType(ScriptKernel.TYPE_LPAREN))
+					if (currentType(ScriptKernel.TYPE_LPAREN))
 					{
-						if (parseFunctionCall(currentScript, lexeme, false) == PARSEFUNCTION_FALSE)
+						if (parseFunctionCall(currentScript, null, lexeme, false) == PARSEFUNCTION_FALSE)
 							return false;
 					}
 					// array resolution or map deref?
@@ -1514,13 +1523,13 @@ public class ScriptParser extends Lexer.Parser
 		String functionName = currentToken().getLexeme();
 		nextToken();
 		
-		if (!matchType(ScriptKernel.TYPE_LPAREN))
+		if (!currentType(ScriptKernel.TYPE_LPAREN))
 		{
 			addErrorMessage("Expected function call after partial operator.");
 			return false;
 		}
 		
-		int funcret = parseFunctionCall(currentScript, functionName, true);
+		int funcret = parseFunctionCall(currentScript, null, functionName, true);
 		if (funcret == PARSEFUNCTION_FALSE)
 			return false;
 		
