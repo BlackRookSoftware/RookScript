@@ -833,7 +833,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	/**
 	 * @return a function resolver that handles all of the functions in this enum.
 	 */
-	public static final ScriptFunctionResolver getResolver()
+	public static final ScriptFunctionResolver createResolver()
 	{
 		return new EnumFunctionResolver(CommonFunctions.values());
 	}

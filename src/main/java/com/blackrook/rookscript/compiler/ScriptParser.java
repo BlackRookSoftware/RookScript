@@ -261,10 +261,14 @@ public class ScriptParser extends Lexer.Parser
 			while (functionType.getParameterCount() - (parsedCount++) > 0)
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 			
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST, functionName));
+			if (functionNamespace != null)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST_NAMESPACE, functionNamespace, functionName));
+			else
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST, functionName));
+
 			return PARSEFUNCTION_TRUE;
 		}
-		else if ((functionEntry = currentScript.getFunctionEntry(functionName)) != null)
+		else if (functionNamespace == null && (functionEntry = currentScript.getFunctionEntry(functionName)) != null)
 		{
 			int paramCount = functionEntry.getParameterCount();
 			int parsedCount;
@@ -286,6 +290,13 @@ public class ScriptParser extends Lexer.Parser
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL, getFunctionLabel(functionName)));
 	
 			return PARSEFUNCTION_TRUE;
+		}
+
+		// not found!
+		if (functionNamespace != null)
+		{
+			addErrorMessage("\"" + functionNamespace + "::" + functionName + "\" is not the name of a valid namespaced function call.");
+			return PARSEFUNCTION_FALSE;
 		}
 		else
 		{
@@ -342,22 +353,34 @@ public class ScriptParser extends Lexer.Parser
 		}
 		else if (currentType(ScriptKernel.TYPE_IDENTIFIER))
 		{
-			String name = currentToken().getLexeme();
+			String namespace = null;
+			String functionName = currentToken().getLexeme();
 			nextToken();
 			
+			// maybe a namespaced function
+			if (matchType(ScriptKernel.TYPE_DOUBLECOLON))
+			{
+				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+				{
+					addErrorMessage("Expected identifier after \"::\".");
+					return false;
+				}
+				
+				namespace = functionName;
+				functionName = currentToken().getLexeme();
+				nextToken();
+			}
+
 			if (!currentType(ScriptKernel.TYPE_LPAREN))
 			{
-				addErrorMessage("Expected \"(\" after a function name.");
+				addErrorMessage("Expected \"(\" or \"::\" after a function name.");
 				return false;
 			}
 
-			int ret;
-			if ((ret = parseFunctionCall(script, null, name, false)) == PARSEFUNCTION_FALSE)
+			if (parseFunctionCall(script, namespace, functionName, false) == PARSEFUNCTION_FALSE)
 				return false;
 			
-			if (ret == PARSEFUNCTION_TRUE)
-				script.addCommand(ScriptCommand.create(ScriptCommandType.POP));
-			
+			script.addCommand(ScriptCommand.create(ScriptCommandType.POP));
 			return true;
 		}
 		else
@@ -827,25 +850,20 @@ public class ScriptParser extends Lexer.Parser
 		// function call.
 		if (currentType(ScriptKernel.TYPE_LPAREN))
 		{
-			int funcret;
-			if ((funcret = parseFunctionCall(currentScript, null, identifierName, false)) == PARSEFUNCTION_FALSE)
+			if (parseFunctionCall(currentScript, null, identifierName, false) == PARSEFUNCTION_FALSE)
 				return false;
 
-			if (funcret == PARSEFUNCTION_TRUE)
+			if (matchType(ScriptKernel.TYPE_RIGHTARROW))
 			{
-				if (matchType(ScriptKernel.TYPE_RIGHTARROW))
-				{
-					if (!parsePartialChain(currentScript))
-						return false;
-				}
-
-				// statements should not have a stack value linger.
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP));
+				if (!parsePartialChain(currentScript))
+					return false;
 			}
 
+			// statements should not have a stack value linger.
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP));
 			return true;
 		}
-		// scope variable
+		// scope variable / namespaced function call.
 		else if (matchType(ScriptKernel.TYPE_DOUBLECOLON))
 		{
 			if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
@@ -861,30 +879,48 @@ public class ScriptParser extends Lexer.Parser
 			if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 			{
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, identifierName, scopeVar));
-
 				return parseListMapDerefStatementChain(currentScript);
 			}
-			
-			// else just push scope var
-			int assignmentType = currentToken().getType();
-			if (!isAssignmentOperator(assignmentType))
+			// might be namespaced host function.
+			else if (currentType(ScriptKernel.TYPE_LPAREN))
 			{
-				addErrorMessage("Expected assignment operator after a scope dereference.");
-				return false;
-			}
-			nextToken();
-			
-			if (isAccumulatingAssignmentOperator(assignmentType))
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, identifierName, scopeVar));
-			
-			if (!parseExpression(currentScript))
-				return false;
-			
-			if (isAccumulatingAssignmentOperator(assignmentType))
-				emitArithmeticCommand(currentScript, assignmentType);
+				if (parseFunctionCall(currentScript, identifierName, scopeVar, false) == PARSEFUNCTION_FALSE)
+					return false;
 
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SCOPE_VARIABLE, identifierName, scopeVar));
-			return true;
+				// partial chain?
+				if (matchType(ScriptKernel.TYPE_RIGHTARROW))
+				{
+					if (!parsePartialChain(currentScript))
+						return false;
+				}
+
+				// statements should not have a stack value linger.
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP));
+				return true;
+			}
+			// else just push scope var
+			else
+			{
+				int assignmentType = currentToken().getType();
+				if (!isAssignmentOperator(assignmentType))
+				{
+					addErrorMessage("Expected assignment operator after a scope dereference.");
+					return false;
+				}
+				nextToken();
+				
+				if (isAccumulatingAssignmentOperator(assignmentType))
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, identifierName, scopeVar));
+				
+				if (!parseExpression(currentScript))
+					return false;
+				
+				if (isAccumulatingAssignmentOperator(assignmentType))
+					emitArithmeticCommand(currentScript, assignmentType);
+	
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SCOPE_VARIABLE, identifierName, scopeVar));
+				return true;
+			}
 		}
 		// list index assignment or map assignment.
 		else if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
@@ -1261,7 +1297,7 @@ public class ScriptParser extends Lexer.Parser
 					mark(currentScript, labelend);	
 					
 				}
-				// null coalesce "Elvis" operator.
+				// null coalesce "Elvis" operator. FIXME: This is not what the Elvis operator does! Null-coalesce is "??"
 				else if (matchType(ScriptKernel.TYPE_COALESCE))
 				{
 					// treat with lowest possible precedence.
@@ -1408,7 +1444,6 @@ public class ScriptParser extends Lexer.Parser
 					else if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 					{
 						currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, lexeme));
-
 						if (!parseListMapDerefChain(currentScript))
 							return false;
 					}
@@ -1421,14 +1456,30 @@ public class ScriptParser extends Lexer.Parser
 							addErrorMessage("Expected identifier after scope dereference.");
 							return false;
 						}
-						
+
 						String var = currentToken().getLexeme();
 						nextToken();
 						
-						currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, lexeme, var));
+						// if deref list or map...
+						if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+						{
+							currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, lexeme, var));
+							if (!parseListMapDerefChain(currentScript))
+								return false;
+						}
+						// might be namespaced host function.
+						else if (currentType(ScriptKernel.TYPE_LPAREN))
+						{
+							if (parseFunctionCall(currentScript, lexeme, var, false) == PARSEFUNCTION_FALSE)
+								return false;
 
-						if (!parseListMapDerefChain(currentScript))
-							return false;
+							// partial chain?
+							if (matchType(ScriptKernel.TYPE_RIGHTARROW))
+							{
+								if (!parsePartialChain(currentScript))
+									return false;
+							}
+						}
 					}
 					// must be local variable?
 					else
@@ -1520,16 +1571,31 @@ public class ScriptParser extends Lexer.Parser
 			return false;
 		}
 
+		String namespace = null;
 		String functionName = currentToken().getLexeme();
 		nextToken();
 		
-		if (!currentType(ScriptKernel.TYPE_LPAREN))
+		// maybe a namespaced function
+		if (matchType(ScriptKernel.TYPE_DOUBLECOLON))
 		{
-			addErrorMessage("Expected function call after partial operator.");
-			return false;
+			if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+			{
+				addErrorMessage("Expected identifier after \"::\".");
+				return false;
+			}
+			
+			namespace = functionName;
+			functionName = currentToken().getLexeme();
+			nextToken();
 		}
 		
-		int funcret = parseFunctionCall(currentScript, null, functionName, true);
+		if (!currentType(ScriptKernel.TYPE_LPAREN))
+		{
+			addErrorMessage("Expected \"(\" or \"::\" after a function name.");
+			return false;
+		}
+
+		int funcret = parseFunctionCall(currentScript, namespace, functionName, true);
 		if (funcret == PARSEFUNCTION_FALSE)
 			return false;
 		

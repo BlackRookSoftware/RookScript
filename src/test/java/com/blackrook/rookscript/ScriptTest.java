@@ -52,9 +52,9 @@ public class ScriptTest
 		ScriptInstance instance = ScriptInstance.build()
 			.withSource(fileName, Utils.openResource(fileName))
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
-			.withFunctionResolver(CommonFunctions.getResolver())
-				.andFunctionResolver(StandardIOFunctions.getResolver())
-				.andFunctionResolver(MathFunctions.getResolver())
+			.withFunctionResolver(CommonFunctions.createResolver())
+				.andFunctionResolver(StandardIOFunctions.createResolver())
+				.andFunctionResolver(MathFunctions.createResolver())
 			.withScriptStack(16, 512)
 			.withScope("script", new DefaultVariableResolver())
 			.get();

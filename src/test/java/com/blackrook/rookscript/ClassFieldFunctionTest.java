@@ -45,9 +45,9 @@ public class ClassFieldFunctionTest
 		ScriptInstance instance = ScriptInstance.build()
 			.withSource(fileName, Utils.openResource(fileName))
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
-			.withFunctionResolver(CommonFunctions.getResolver())
-				.andFunctionResolver(StandardIOFunctions.getResolver())
-				.andFunctionResolver(MathFunctions.getResolver())
+			.withFunctionResolver(CommonFunctions.createResolver())
+				.andFunctionResolver(StandardIOFunctions.createResolver())
+				.andFunctionResolver(MathFunctions.createResolver())
 				.andFunctionResolver(fileResolver)
 			.withScriptStack(16, 512)
 			.get();

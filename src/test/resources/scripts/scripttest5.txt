@@ -6,5 +6,6 @@ entry main()
 	y = [1,2,3];
 	
 	println(y[4] ?: y[3] ?: y[2]);
+	println(5 || 7);
 }
 

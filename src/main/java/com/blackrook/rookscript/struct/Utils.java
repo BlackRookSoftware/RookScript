@@ -195,6 +195,42 @@ public final class Utils
 	}
 
 	/**
+	 * Attempts to parse a long from a string.
+	 * If the string is null or the empty string, this returns <code>def</code>.
+	 * @param s the input string.
+	 * @param def the fallback value to return.
+	 * @return the interpreted long integer or def if the input string is blank.
+	 */
+	public static long parseLong(String s, long def)
+	{
+		if (isEmpty(s))
+			return def;
+		try {
+			return Long.parseLong(s);
+		} catch (NumberFormatException e) {
+			return 0L;
+		}
+	}
+
+	/**
+	 * Attempts to parse a double from a string.
+	 * If the string is null or the empty string, this returns <code>def</code>.
+	 * @param s the input string.
+	 * @param def the fallback value to return.
+	 * @return the interpreted double or def if the input string is blank.
+	 */
+	public static double parseDouble(String s, double def)
+	{
+		if (isEmpty(s))
+			return def;
+		try {
+			return Double.parseDouble(s);
+		} catch (NumberFormatException e) {
+			return 0.0;
+		}
+	}
+
+	/**
 	 * Sets the value of a field on an object.
 	 * @param instance the object instance to set the field on.
 	 * @param field the field to set.
@@ -549,42 +585,6 @@ public final class Utils
 	public static <T> T createForType(Object object, Class<T> targetType)
 	{
 		return DEFAULT_CONVERTER.createForType("source", object, targetType);
-	}
-
-	/**
-	 * Attempts to parse a long from a string.
-	 * If the string is null or the empty string, this returns <code>def</code>.
-	 * @param s the input string.
-	 * @param def the fallback value to return.
-	 * @return the interpreted long integer or def if the input string is blank.
-	 */
-	public static long parseLong(String s, long def)
-	{
-		if (isEmpty(s))
-			return def;
-		try {
-			return Long.parseLong(s);
-		} catch (NumberFormatException e) {
-			return 0L;
-		}
-	}
-
-	/**
-	 * Attempts to parse a double from a string.
-	 * If the string is null or the empty string, this returns <code>def</code>.
-	 * @param s the input string.
-	 * @param def the fallback value to return.
-	 * @return the interpreted double or def if the input string is blank.
-	 */
-	public static double parseDouble(String s, double def)
-	{
-		if (isEmpty(s))
-			return def;
-		try {
-			return Double.parseDouble(s);
-		} catch (NumberFormatException e) {
-			return 0.0;
-		}
 	}
 
 	/**
