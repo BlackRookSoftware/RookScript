@@ -27,7 +27,8 @@ public class ScriptKernel extends Lexer.Kernel
 	public static final int TYPE_DOUBLECOLON = 11;
 	public static final int TYPE_PERIOD = 12;
 	
-	public static final int TYPE_COALESCE = 18;
+	public static final int TYPE_FALSECOALESCE = 17;
+	public static final int TYPE_NULLCOALESCE = 18;
 	public static final int TYPE_RIGHTARROW = 19;
 	public static final int TYPE_DASH = 20;
 	public static final int TYPE_PLUS = 21;
@@ -112,7 +113,8 @@ public class ScriptKernel extends Lexer.Kernel
 		addDelimiter("::", TYPE_DOUBLECOLON);
 		addDelimiter("?", TYPE_QUESTIONMARK);
 		addDelimiter("->", TYPE_RIGHTARROW);
-		addDelimiter("?:", TYPE_COALESCE);
+		addDelimiter("?:", TYPE_FALSECOALESCE);
+		addDelimiter("??", TYPE_NULLCOALESCE);
 
 		addDelimiter("+", TYPE_PLUS);
 		addDelimiter("-", TYPE_DASH);
@@ -167,8 +169,5 @@ public class ScriptKernel extends Lexer.Kernel
 		addCaseInsensitiveKeyword("break", TYPE_BREAK);
 		addCaseInsensitiveKeyword("continue", TYPE_CONTINUE);
 		addCaseInsensitiveKeyword("pragma", TYPE_PRAGMA);
-		
 	}
-	
 }
-

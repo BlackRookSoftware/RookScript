@@ -1266,12 +1266,13 @@ public class ScriptParser extends Lexer.Parser
 					mark(currentScript, labeltrue);
 					if (!parseExpression(currentScript))
 						return false;
-					
+
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.LOGICAL));
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, labelend));
 					mark(currentScript, labelfalse);
 
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, false));
-					mark(currentScript, labelend);	
+					mark(currentScript, labelend);
 				}
 				// logical or: short circuit
 				else if (matchType(ScriptKernel.TYPE_DOUBLEPIPE))
@@ -1290,15 +1291,15 @@ public class ScriptParser extends Lexer.Parser
 					if (!parseExpression(currentScript))
 						return false;
 					
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.LOGICAL));
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, labelend));
 					mark(currentScript, labeltrue);
 
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, true));
-					mark(currentScript, labelend);	
-					
+					mark(currentScript, labelend);
 				}
-				// null coalesce "Elvis" operator. FIXME: This is not what the Elvis operator does! Null-coalesce is "??"
-				else if (matchType(ScriptKernel.TYPE_COALESCE))
+				// false coalesce "Elvis" operator.
+				else if (matchType(ScriptKernel.TYPE_FALSECOALESCE))
 				{
 					// treat with lowest possible precedence.
 					if (!expressionReduceAll(currentScript, operatorStack, expressionValueCounter))
@@ -1308,13 +1309,31 @@ public class ScriptParser extends Lexer.Parser
 					String endLabel = currentScript.getNextGeneratedLabel(LABEL_COALESCE_END);
 					
 					mark(currentScript, startLabel);
-					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_COALESCE, endLabel));
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_FALSECOALESCE, endLabel));
 
 					if (!parseExpression(currentScript))
 						return false;
 
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, endLabel));
+					mark(currentScript, endLabel);
+				}
+				// null coalesce operator.
+				else if (matchType(ScriptKernel.TYPE_NULLCOALESCE))
+				{
+					// treat with lowest possible precedence.
+					if (!expressionReduceAll(currentScript, operatorStack, expressionValueCounter))
+						return false;
 					
+					String startLabel = currentScript.getNextGeneratedLabel(LABEL_COALESCE_START);
+					String endLabel = currentScript.getNextGeneratedLabel(LABEL_COALESCE_END);
+					
+					mark(currentScript, startLabel);
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_NULLCOALESCE, endLabel));
+
+					if (!parseExpression(currentScript))
+						return false;
+
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, endLabel));
 					mark(currentScript, endLabel);
 				}
 				// ternary operator type.

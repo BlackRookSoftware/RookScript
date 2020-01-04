@@ -220,11 +220,38 @@ public enum ScriptCommandType
 	},
 	
 	/**
+	 * Jump to label if stack top is true-equivalent, else pop.
+	 * Operand is label if false.
+	 * Sets a new command index.
+	 */
+	JUMP_FALSECOALESCE
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue sv = scriptInstance.getStackValue(0);
+			if (sv == null)
+				throw new ScriptExecutionException("stack is empty.");
+			else if (!sv.asBoolean())
+				scriptInstance.popStackValue();
+			else
+			{
+				String labelName =  String.valueOf(operand1);
+				int index = scriptInstance.getCommandIndex(labelName);
+				if (index < 0)
+					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
+				scriptInstance.setCurrentCommandIndex(index);
+			}
+			return true;
+		}
+	},
+	
+	/**
 	 * Jump to label if stack top is not null, else pop.
 	 * Operand is label if false.
 	 * Sets a new command index.
 	 */
-	JUMP_COALESCE
+	JUMP_NULLCOALESCE
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
@@ -735,6 +762,24 @@ public enum ScriptCommandType
 			return true;
 		}
 	},
+	
+	/**
+	 * Turns the topmost value into a boolean-equivalent value (the same as a not-not).
+	 * Pops one value.
+	 * Pushes one value.
+	 */
+	LOGICAL
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			Cache cache = getCache();
+			cache.temp.set(value.asBoolean());
+			scriptInstance.pushStackValue(cache.temp);
+			return true;
+		}
+	}, 
 	
 	/**
 	 * Logical Not.
