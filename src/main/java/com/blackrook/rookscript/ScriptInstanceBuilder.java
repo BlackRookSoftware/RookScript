@@ -16,10 +16,10 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
+import com.blackrook.rookscript.ScriptInstance.State;
 import com.blackrook.rookscript.compiler.ScriptReader;
 import com.blackrook.rookscript.compiler.ScriptReaderIncluder;
 import com.blackrook.rookscript.compiler.ScriptReaderOptions;
-import com.blackrook.rookscript.exception.ScriptBuilderException;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
@@ -31,7 +31,7 @@ import com.blackrook.rookscript.resolvers.scope.DefaultScopeResolver;
  * A script instance builder for new script instances and such. 
  * @author Matthew Tropiano
  */
-public final class ScriptBuilder
+public final class ScriptInstanceBuilder
 {
 	@FunctionalInterface
 	private interface ScriptProvider
@@ -73,7 +73,7 @@ public final class ScriptBuilder
 	private ScriptEnvironment environment;
 
 	// Can't instantiate via new.
-	ScriptBuilder()
+	ScriptInstanceBuilder()
 	{
 		this.scriptProvider = null;
 		this.readerIncluder = null;
@@ -92,7 +92,7 @@ public final class ScriptBuilder
 	 * @param sourceData the source data.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withSource(final String sourceData)
+	public ScriptInstanceBuilder withSource(final String sourceData)
 	{
 		scriptProvider = (functionResolver, includer, options)->{
 			return ScriptReader.read(sourceData, functionResolver, includer, options);
@@ -107,7 +107,7 @@ public final class ScriptBuilder
 	 * @param sourceData the source data.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withSource(final String sourcePath, final String sourceData)
+	public ScriptInstanceBuilder withSource(final String sourcePath, final String sourceData)
 	{
 		scriptProvider = (functionResolver, includer, options)->{
 			return ScriptReader.read(sourcePath, sourceData, functionResolver, includer, options);
@@ -121,7 +121,7 @@ public final class ScriptBuilder
 	 * @param sourceFile the source file.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withSource(final File sourceFile)
+	public ScriptInstanceBuilder withSource(final File sourceFile)
 	{
 		scriptProvider = (functionResolver, includer, options)->{
 			return ScriptReader.read(sourceFile, functionResolver, includer, options);
@@ -136,7 +136,7 @@ public final class ScriptBuilder
 	 * @param sourceStream the source stream.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withSource(final String streamPath, final InputStream sourceStream)
+	public ScriptInstanceBuilder withSource(final String streamPath, final InputStream sourceStream)
 	{
 		scriptProvider = (functionResolver, includer, options)->{
 			return ScriptReader.read(streamPath, sourceStream, functionResolver, includer, options);
@@ -151,7 +151,7 @@ public final class ScriptBuilder
 	 * @param sourceReader the source reader.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withSource(final String streamPath, final Reader sourceReader)
+	public ScriptInstanceBuilder withSource(final String streamPath, final Reader sourceReader)
 	{
 		scriptProvider = (functionResolver, includer, options)->{
 			return ScriptReader.read(streamPath, sourceReader, functionResolver, includer, options);
@@ -164,7 +164,7 @@ public final class ScriptBuilder
 	 * @param includer the reader includer to use.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder usingReaderIncluder(ScriptReaderIncluder includer)
+	public ScriptInstanceBuilder usingReaderIncluder(ScriptReaderIncluder includer)
 	{
 		this.readerIncluder = includer;
 		return this;
@@ -175,7 +175,7 @@ public final class ScriptBuilder
 	 * @param options the reader options to use.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder usingReaderOptions(ScriptReaderOptions options)
+	public ScriptInstanceBuilder usingReaderOptions(ScriptReaderOptions options)
 	{
 		this.readerOptions = options;
 		return this;
@@ -187,7 +187,7 @@ public final class ScriptBuilder
 	 * @param script the script to use.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withScript(final Script script)
+	public ScriptInstanceBuilder withScript(final Script script)
 	{
 		this.scriptProvider = (functionResolver, includer, options)->{
 			return script;
@@ -196,25 +196,27 @@ public final class ScriptBuilder
 	}
 	
 	/**
-	 * Attaches a new script instance stack used for this instance. 
+	 * Attaches a new script instance stack used for this instance.
+	 * Each instance created will create a new stack instance.
 	 * @param activationDepth the activation stack depth.
-	 * @param stackDepth the value stack depth.
+	 * @param valueStackDepth the value stack depth.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withScriptStack(final int activationDepth, final int stackDepth)
+	public ScriptInstanceBuilder withScriptStack(final int activationDepth, final int valueStackDepth)
 	{
 		this.stackProvider = ()->{
-			return new ScriptInstanceStack(activationDepth, stackDepth);
+			return new ScriptInstanceStack(activationDepth, valueStackDepth);
 		};
 		return this;
 	}
 	
 	/**
 	 * Attaches a script instance stack for this instance. 
+	 * Each instance created will reuse the provided stack instance.
 	 * @param stack the stack to use.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withScriptStack(final ScriptInstanceStack stack)
+	public ScriptInstanceBuilder withScriptStack(final ScriptInstanceStack stack)
 	{
 		this.stackProvider = ()->stack;
 		return this;
@@ -222,11 +224,12 @@ public final class ScriptBuilder
 	
 	/**
 	 * Adds a function resolver to this builder to be used in the script, <b>clearing all resolvers first.</b>
+	 * Each instance created will use the resolvers added for compiling and runtime.
 	 * @param resolver the resolver to add.
 	 * @return the builder, for chained calls.
 	 * @see #andFunctionResolver(ScriptFunctionResolver)
 	 */
-	public ScriptBuilder withFunctionResolver(ScriptFunctionResolver resolver)
+	public ScriptInstanceBuilder withFunctionResolver(ScriptFunctionResolver resolver)
 	{
 		globalResolvers.clear();
 		namedResolvers.clear();
@@ -235,12 +238,13 @@ public final class ScriptBuilder
 	
 	/**
 	 * Adds a function resolver to this builder to be used in the script, <b>clearing all resolvers first.</b>
+	 * Each instance created will use the resolvers added for compiling and runtime.
 	 * @param namespace the namespace to use for the resolver.
 	 * @param resolver the resolver to add.
 	 * @return the builder, for chained calls.
 	 * @see #andFunctionResolver(ScriptFunctionResolver)
 	 */
-	public ScriptBuilder withFunctionResolver(String namespace, ScriptFunctionResolver resolver)
+	public ScriptInstanceBuilder withFunctionResolver(String namespace, ScriptFunctionResolver resolver)
 	{
 		globalResolvers.clear();
 		namedResolvers.clear();
@@ -249,11 +253,12 @@ public final class ScriptBuilder
 	
 	/**
 	 * Adds a function resolver to this builder to be used in the script.
+	 * Each instance created will use the resolvers added for compiling and runtime.
 	 * @param resolver the resolver to add.
 	 * @return the builder, for chained calls.
 	 * @see #withFunctionResolver(ScriptFunctionResolver)
 	 */
-	public ScriptBuilder andFunctionResolver(ScriptFunctionResolver resolver)
+	public ScriptInstanceBuilder andFunctionResolver(ScriptFunctionResolver resolver)
 	{
 		globalResolvers.add(resolver);
 		return this;
@@ -261,12 +266,13 @@ public final class ScriptBuilder
 	
 	/**
 	 * Adds a function resolver to this builder to be used in the script.
+	 * Each instance created will use the resolvers added for compiling and runtime.
 	 * @param namespace the namespace to use for the resolver.
 	 * @param resolver the resolver to add.
 	 * @return the builder, for chained calls.
 	 * @see #withFunctionResolver(ScriptFunctionResolver)
 	 */
-	public ScriptBuilder andFunctionResolver(String namespace, ScriptFunctionResolver resolver)
+	public ScriptInstanceBuilder andFunctionResolver(String namespace, ScriptFunctionResolver resolver)
 	{
 		namedResolvers.put(namespace, resolver);
 		return this;
@@ -274,12 +280,13 @@ public final class ScriptBuilder
 	
 	/**
 	 * Adds a scope to be used in the script, clearing the set of scopes first.
+	 * Each instance created will be provided with the added scopes at runtime.
 	 * @param name the scope name.
 	 * @param resolver the scope resolver to add.
 	 * @return the builder, for chained calls.
 	 * @see #andScope(String, ScriptVariableResolver)
 	 */
-	public ScriptBuilder withScope(String name, ScriptVariableResolver resolver)
+	public ScriptInstanceBuilder withScope(String name, ScriptVariableResolver resolver)
 	{
 		scopeResolver.clear();
 		return andScope(name, resolver);
@@ -287,12 +294,13 @@ public final class ScriptBuilder
 	
 	/**
 	 * Adds a scope to be used in the script.
+	 * Each instance created will be provided with the added scopes at runtime.
 	 * @param name the scope name.
 	 * @param resolver the scope resolver to add.
 	 * @return the builder, for chained calls.
 	 * @see #withScope(String, ScriptVariableResolver)
 	 */
-	public ScriptBuilder andScope(String name, ScriptVariableResolver resolver)
+	public ScriptInstanceBuilder andScope(String name, ScriptVariableResolver resolver)
 	{
 		scopeResolver.addScope(name, resolver);
 		return this;
@@ -300,10 +308,12 @@ public final class ScriptBuilder
 	
 	/**
 	 * Sets the wait handler for the script instance.
+	 * Each instance created will use this wait handler when a script is forced into a {@link State#WAITING} state.
 	 * @param waitHandler the waiting handler to attach.
 	 * @return the builder, for chained calls.
+	 * @see ScriptInstance#wait(Object, Object)
 	 */
-	public ScriptBuilder withWaitHandler(ScriptWaitHandler waitHandler)
+	public ScriptInstanceBuilder withWaitHandler(ScriptWaitHandler waitHandler)
 	{
 		this.waitHandler = waitHandler;
 		return this;
@@ -311,35 +321,36 @@ public final class ScriptBuilder
 	
 	/**
 	 * Sets the script environment for this script.
+	 * Each instance created will use this environment.
 	 * @param environment the environment to use.
 	 * @return the builder, for chained calls.
 	 */
-	public ScriptBuilder withEnvironment(ScriptEnvironment environment)
+	public ScriptInstanceBuilder withEnvironment(ScriptEnvironment environment)
 	{
 		this.environment = environment;
 		return this;
 	}
 	
-	/**
-	 * Gets the instance built from the set components.
-	 * The script is compiled through this call. Any parsing errors are thrown as
-	 * ScriptBuilderException with the parser error as the cause.
-	 * @return a new ScriptInstance created from the characteristics set.
-	 * @throws ScriptBuilderException if the instance can't be built.
-	 */
-	public ScriptInstance get() 
+	private void buildCheckProviders()
 	{
 		if (scriptProvider == null)
-			throw new ScriptBuilderException("A script or script source.");
+			throw new BuilderException("A script or script source.");
 		if (stackProvider == null)
-			throw new ScriptBuilderException("An instance stack was not set.");
+			throw new BuilderException("An instance stack was not set.");
+	}
 
+	private MultiHostFunctionResolver buildHostFuctionResolver()
+	{
 		MultiHostFunctionResolver resolver = new MultiHostFunctionResolver();
 		for (ScriptFunctionResolver r : globalResolvers)
 			resolver.addResolver(r);
 		for (Map.Entry<String, ScriptFunctionResolver> r : namedResolvers.entrySet())
 			resolver.addNamedResolver(r.getKey(), r.getValue());
-		
+		return resolver;
+	}
+
+	private Script buildScript(MultiHostFunctionResolver resolver)
+	{
 		Script script;
 		try {
 			script = scriptProvider.getScript(
@@ -348,11 +359,43 @@ public final class ScriptBuilder
 				readerOptions != null ? readerOptions : ScriptReader.DEFAULT_OPTIONS
 			);
 		} catch (Exception e) {
-			throw new ScriptBuilderException("An error occurred building a script instance.", e);
+			throw new BuilderException("An error occurred building a script instance.", e);
 		}
+		return script;
+	}
+
+	/**
+	 * Gets the instance built from the set components.
+	 * The script is compiled through this call. Any parsing errors are thrown as
+	 * ScriptBuilderException with the parser error as the cause.
+	 * @return a new ScriptInstance created from the characteristics set.
+	 * @throws BuilderException if the instance can't be built.
+	 */
+	public ScriptInstance createInstance() 
+	{
+		buildCheckProviders();
+		MultiHostFunctionResolver resolver = buildHostFuctionResolver();
+		Script script = buildScript(resolver);
 
 		ScriptInstanceStack stack = stackProvider.getStack();
 		return new ScriptInstance(script, stack, scopeResolver, waitHandler, environment != null ? environment : ScriptEnvironment.create());
+	}
+
+	/**
+	 * Gets the instance built from the set components.
+	 * The script is compiled through this call. Any parsing errors are thrown as
+	 * ScriptBuilderException with the parser error as the cause.
+	 * @return a new ScriptInstance created from the characteristics set.
+	 * @throws BuilderException if the instance can't be built.
+	 */
+	public ScriptInstanceFactory createFactory() 
+	{
+		buildCheckProviders();
+		MultiHostFunctionResolver resolver = buildHostFuctionResolver();
+		Script script = buildScript(resolver);
+
+		ScriptInstanceStack stack = stackProvider.getStack();
+		return new ScriptInstanceFactory(script, stack.getActivationStackDepth(), stack.getValueStackDepth(), scopeResolver, waitHandler, environment != null ? environment : ScriptEnvironment.create());
 	}
 	
 	/**
@@ -362,15 +405,15 @@ public final class ScriptBuilder
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.
 	 * @return a new ScriptInstance created from the characteristics set.
-	 * @throws ScriptBuilderException if the instance can't be built.
+	 * @throws BuilderException if the instance can't be built.
 	 * @throws ScriptExecutionException if the provided amount of parameters do not match the amount of parameters that the script requires, 
 	 * 		or the provided entry point does not exist.
-	 * @see #get()
+	 * @see #createInstance()
 	 * @see ScriptInstance#call(String, Object...)
 	 */
 	public ScriptInstance call(String entryName, Object ... parameters)
 	{
-		ScriptInstance out = get();
+		ScriptInstance out = createInstance();
 		out.call(entryName, parameters);
 		return out;
 	}
@@ -386,15 +429,49 @@ public final class ScriptBuilder
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.
 	 * @return a new ScriptInstance created from the characteristics set.
-	 * @throws ScriptBuilderException if the instance can't be built.
+	 * @throws BuilderException if the instance can't be built.
 	 * @throws ScriptExecutionException if the provided amount of parameters do not match the amount of parameters that the script requires, 
 	 * 		or the provided entry point does not exist.
-	 * @see #get()
+	 * @see #createInstance()
 	 * @see ScriptInstance#callAndReturnAs(Class, String, Object...)
 	 */
 	public <T> T callAndReturnAs(Class<T> returnType, String entryName, Object ... parameters)
 	{
-		return get().callAndReturnAs(returnType, entryName, parameters);
+		return createInstance().callAndReturnAs(returnType, entryName, parameters);
+	}
+	
+	/**
+	 * Exception that can be thrown from {@link ScriptInstanceBuilder}.
+	 */
+	public class BuilderException extends RuntimeException
+	{
+		private static final long serialVersionUID = -2032491701653096911L;
+
+		public BuilderException()
+		{
+			super();
+		}
+
+		public BuilderException(String message, Throwable cause)
+		{
+			super(message, cause);
+		}
+
+		public BuilderException(String message) 
+		{
+			super(message);
+		}
+
+		public BuilderException(String message, Object ... args) 
+		{
+			super(String.format(message, args));
+		}
+
+		public BuilderException(Throwable cause)
+		{
+			super(cause);
+		}
+
 	}
 	
 }

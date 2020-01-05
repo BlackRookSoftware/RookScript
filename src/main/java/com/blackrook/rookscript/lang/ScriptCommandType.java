@@ -46,7 +46,7 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			if (scriptInstance.getFrameDepth() == 0)
+			if (scriptInstance.getCurrentActivationStackDepth() == 0)
 			{
 				scriptInstance.popFrame();
 				scriptInstance.terminate();

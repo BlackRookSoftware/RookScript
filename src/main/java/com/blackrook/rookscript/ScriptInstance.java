@@ -142,11 +142,11 @@ public class ScriptInstance
 	
 	/**
 	 * Returns a new builder for creating a new script instance piece by piece.
-	 * @return a new {@link ScriptBuilder} object.
+	 * @return a new {@link ScriptInstanceBuilder} object.
 	 */
-	public static ScriptBuilder build()
+	public static ScriptInstanceBuilder createBuilder()
 	{
-		return new ScriptBuilder();
+		return new ScriptInstanceBuilder();
 	}
 	
 	/**
@@ -520,13 +520,13 @@ public class ScriptInstance
 	}
 	
 	/**
-	 * Gets the frame depth.
+	 * Gets the activation (frame) depth.
 	 * If 0, then this is 0 functions deep - the starting entry point.
 	 * @return the depth of the activation stack. 
 	 */
-	public int getFrameDepth()
+	public int getCurrentActivationStackDepth()
 	{
-		return scriptInstanceStack.getFrameDepth();
+		return scriptInstanceStack.getCurrentActivationStackDepth();
 	}
 
 	/**
@@ -575,8 +575,8 @@ public class ScriptInstance
 		sb.append(state);
 		sb.append(" Commands:").append(' ').append(commandsExecuted);
 		sb.append(" Index:").append(' ').append(scriptInstanceStack.getCommandIndex());
-		sb.append(" Activation:").append(' ').append(scriptInstanceStack.getFrameDepth());
-		sb.append(" Stack:").append(' ').append(scriptInstanceStack.getValueStackDepth());
+		sb.append(" Activation:").append(' ').append(scriptInstanceStack.getCurrentActivationStackDepth());
+		sb.append(" Stack:").append(' ').append(scriptInstanceStack.getCurrentValueStackDepth());
 		return sb.toString();
 	}
 	

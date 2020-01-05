@@ -42,7 +42,7 @@ public class ClassFieldFunctionTest
 			return;
 		}
 		
-		ScriptInstance instance = ScriptInstance.build()
+		ScriptInstance instance = ScriptInstance.createBuilder()
 			.withSource(fileName, Utils.openResource(fileName))
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
 			.withFunctionResolver(CommonFunctions.createResolver())
@@ -50,7 +50,7 @@ public class ClassFieldFunctionTest
 				.andFunctionResolver(MathFunctions.createResolver())
 				.andFunctionResolver(fileResolver)
 			.withScriptStack(16, 512)
-			.get();
+			.createInstance();
 		
 		int x = 100;
 		while (x-- > 0)

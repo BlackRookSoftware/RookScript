@@ -49,7 +49,7 @@ public class ScriptTest
 			return;
 		}
 		
-		ScriptInstance instance = ScriptInstance.build()
+		ScriptInstance instance = ScriptInstance.createBuilder()
 			.withSource(fileName, Utils.openResource(fileName))
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
 			.withFunctionResolver(CommonFunctions.createResolver())
@@ -57,7 +57,7 @@ public class ScriptTest
 				.andFunctionResolver(MathFunctions.createResolver())
 			.withScriptStack(16, 512)
 			.withScope("script", new DefaultVariableResolver())
-			.get();
+			.createInstance();
 		
 		doDisassemble(instance);
 		doStress(instance, 1);

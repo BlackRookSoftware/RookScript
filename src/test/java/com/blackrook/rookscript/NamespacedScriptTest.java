@@ -44,7 +44,7 @@ public class NamespacedScriptTest
 	public static void main(String[] args) throws Exception
 	{
 		String res = "scripts/namespacetest.txt";
-		ScriptInstance instance = ScriptInstance.build()
+		ScriptInstance instance = ScriptInstance.createBuilder()
 			.withSource(res, Utils.openResource(res))
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
 			.withFunctionResolver(CommonFunctions.createResolver())
@@ -52,7 +52,7 @@ public class NamespacedScriptTest
 				.andFunctionResolver("math", MathFunctions.createResolver())
 			.withScriptStack(16, 512)
 			.withScope("script", new DefaultVariableResolver())
-			.get();
+			.createInstance();
 		
 		//doDisassemble(instance);
 		doStress(instance, 5000);
