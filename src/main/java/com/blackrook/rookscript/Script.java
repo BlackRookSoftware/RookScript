@@ -107,7 +107,7 @@ public class Script
 	}
 	
 	/**
-	 * Creates/sets an index for a subscript entry name in the script.
+	 * Creates/sets a command index for a subscript entry name in the script.
 	 * Entry names are case-insensitive.
 	 * @param name the name.
 	 * @param parameterCount the amount of parameters that this takes.
