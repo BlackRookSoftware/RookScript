@@ -2339,7 +2339,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		 */
 		public void readByte(ScriptValue destination)
 		{
-			
+			// TODO: Finish this.
 		}
 		
 		// TODO: Finish this.
