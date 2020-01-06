@@ -18,7 +18,7 @@ import java.io.StringReader;
 import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.ScriptAssembler;
 import com.blackrook.rookscript.exception.ScriptParseException;
-import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.struct.Utils;
 
 /**
@@ -117,7 +117,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if file is null. 
 	 */
-	public static Script read(String text, ScriptFunctionResolver resolver) throws IOException
+	public static Script read(String text, ScriptHostFunctionResolver resolver) throws IOException
 	{
 		return read(STREAMNAME_TEXT, new StringReader(text), resolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
 	}
@@ -132,7 +132,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if text is null. 
 	 */
-	public static Script read(String text, ScriptFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
+	public static Script read(String text, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
 	{
 		return read(STREAMNAME_TEXT, new StringReader(text), resolver, includer, DEFAULT_OPTIONS);
 	}
@@ -148,7 +148,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if text is null. 
 	 */
-	public static Script read(String text, ScriptFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	public static Script read(String text, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
 		return read(STREAMNAME_TEXT, new StringReader(text), resolver, includer, options);
 	}
@@ -163,7 +163,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if file is null. 
 	 */
-	public static Script read(String streamName, String text, ScriptFunctionResolver resolver) throws IOException
+	public static Script read(String streamName, String text, ScriptHostFunctionResolver resolver) throws IOException
 	{
 		return read(streamName, new StringReader(text), resolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
 	}
@@ -179,7 +179,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if text is null. 
 	 */
-	public static Script read(String streamName, String text, ScriptFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
+	public static Script read(String streamName, String text, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
 	{
 		return read(streamName, new StringReader(text), resolver, includer, DEFAULT_OPTIONS);
 	}
@@ -196,7 +196,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if text is null. 
 	 */
-	public static Script read(String streamName, String text, ScriptFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	public static Script read(String streamName, String text, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
 		return read(streamName, new StringReader(text), resolver, includer, options);
 	}
@@ -211,7 +211,7 @@ public final class ScriptReader
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if file is null. 
 	 */
-	public static Script read(File file, ScriptFunctionResolver resolver) throws IOException
+	public static Script read(File file, ScriptHostFunctionResolver resolver) throws IOException
 	{
 		return read(file, resolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
 	}
@@ -227,7 +227,7 @@ public final class ScriptReader
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if file is null. 
 	 */
-	public static Script read(File file, ScriptFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
+	public static Script read(File file, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
 	{
 		return read(file, resolver, includer, DEFAULT_OPTIONS);
 	}
@@ -244,7 +244,7 @@ public final class ScriptReader
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if file is null. 
 	 */
-	public static Script read(File file, ScriptFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	public static Script read(File file, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
 		FileInputStream fis = new FileInputStream(file);
 		try {
@@ -265,7 +265,7 @@ public final class ScriptReader
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if in is null. 
 	 */
-	public static Script read(String streamName, InputStream in, ScriptFunctionResolver resolver) throws IOException
+	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver resolver) throws IOException
 	{
 		return read(streamName, new InputStreamReader(in), resolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
 	}
@@ -282,7 +282,7 @@ public final class ScriptReader
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if in is null. 
 	 */
-	public static Script read(String streamName, InputStream in, ScriptFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
+	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
 	{
 		return read(streamName, new InputStreamReader(in), resolver, includer, DEFAULT_OPTIONS);
 	}
@@ -300,7 +300,7 @@ public final class ScriptReader
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if in is null. 
 	 */
-	public static Script read(String streamName, InputStream in, ScriptFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
 		return read(streamName, new InputStreamReader(in), resolver, includer, options);
 	}
@@ -316,7 +316,7 @@ public final class ScriptReader
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if f is null. 
 	 */
-	public static Script read(String streamName, Reader reader, ScriptFunctionResolver resolver) throws IOException
+	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver resolver) throws IOException
 	{
 		return read(streamName, reader, resolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
 	}
@@ -333,7 +333,7 @@ public final class ScriptReader
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if reader is null. 
 	 */
-	public static Script read(String streamName, Reader reader, ScriptFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
+	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
 	{
 		return read(streamName, reader, resolver, includer, DEFAULT_OPTIONS);
 	}
@@ -351,7 +351,7 @@ public final class ScriptReader
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if reader is null. 
 	 */
-	public static Script read(String streamName, Reader reader, ScriptFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
 		Script script = new Script();
 		script.setHostFunctionResolver(resolver);

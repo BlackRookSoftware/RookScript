@@ -1,0 +1,114 @@
+#!/usr/bin/env rookscript -i
+
+entry main()
+{
+	io::println(typeof(null));
+	io::println(typeof(true));
+	io::println(typeof(0));
+	io::println(typeof(0.5));
+	io::println(typeof("asd"));
+	io::println(typeof([]));
+	io::println(typeof({}));
+
+	s = "Matt Tropiano";
+	io::println(strupper(s)); 
+	io::println(strlower(s)); 
+	io::println(strtrim(" apple ")); 
+	io::println(strchar(s, 7));
+	io::println(substr(s, 5, 0));
+	
+	io::println(strindex(s, "a"));
+	io::println(strlastindex(s, "a"));
+	io::println(strindex(s, "x"));
+	io::println(strlastindex(s, "x"));
+	
+	list = [];
+	
+	io::println(listadd(list, 5));
+	io::println(listadd(list, 6));
+	io::println(listadd(list, 7));
+	io::println(listadd(list, 5));
+	io::println(list);
+
+	io::println(listaddat(list, 1, 0));
+	io::println(listaddat(list, 10, length(list)));
+	io::println(listaddat(list, 23, 3));
+	io::println(list);
+
+	io::println(listremove(list, 6));
+	io::println(list);
+
+	io::println(listremoveat(list, 3));
+	io::println(list);
+
+	listsort(list);
+	io::println(list);
+	
+	list2 = list(list);
+	list3 = list;
+	io::println(list);
+	io::println(list2);
+	io::println(list == list);
+	io::println(list == list2);
+	io::println(list == list3);
+
+	set1 = set([3,4,5,5,2,1]);
+	set2 = set([4,5,6,7,8,9]);
+	io::println(set1);
+	io::println(set2);
+	io::println(setunion(set1, set2));
+	io::println(setintersect(set1, set2));
+	io::println(setxor(set1, set2));
+	io::println(setdiff(set1, set2));
+
+	io::println(setunion(1, 2));
+	io::println(setunion(1, [1,2]));
+	io::println(setunion([1,2], 1));
+	io::println(setintersect(1, 2));
+	io::println(setintersect(1, [1,2]));
+	io::println(setintersect([1,2], 1));
+	io::println(setxor(1, 2));
+	io::println(setxor(1, [1,2]));
+	io::println(setxor([1,2], 1));
+	io::println(setdiff(1, 2));
+	io::println(setdiff(1, [1,2]));
+	io::println(setdiff([1,2], 1));
+
+	e = math::e();
+	pi = math::pi();
+
+	io::println(math::MIN(6,2));
+	io::println(math::MAX(6,2));
+	io::println(math::POW(6,2));
+	io::println(math::ROUND(6.5));
+	io::println(math::FLOOR(6.5));
+	io::println(math::CEILING(6.5));
+	io::println(math::FIX(234.456, 0));
+	io::println(math::FIX(234.456, 2));
+	io::println(math::FIX(234.456, -2));
+	io::println(e);
+	io::println(math::LOGE(e));
+	io::println(math::LOG10(10));
+	io::println(math::SQRT(16));
+	io::println(pi);
+	io::println(math::DEG2RAD(90));
+	io::println(math::RAD2DEG(pi*2));
+	io::println(math::SIN(0));
+	io::println(math::COS(0));
+	io::println(math::TAN(0));
+	io::println(math::ASIN(1));
+	io::println(math::ACOS(1));
+	io::println(math::ATAN(1));
+	io::println(math::MAX(7, 0)->math::MIN(4));
+	io::println(math::CLAMP(7, 0, 4));
+	io::println(math::WRAP(7, 0, 4));
+	io::println(math::LERP(0.6, 0, 10));
+	io::println(math::TOBOOLEAN(34));
+	io::println(math::TOINT(34.6));
+	io::println(math::TOFLOAT(34));
+	io::println(math::TOSTRING(34));
+	io::println(math::PARSEINT(34, 5));
+	io::println(math::COLOR(255, 255, 255, 255));
+	io::println(math::COLORF(1.0, 1.0, 1.0, 1.0));
+
+}

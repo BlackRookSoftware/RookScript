@@ -12,7 +12,7 @@ import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
-import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 import com.blackrook.rookscript.struct.ScriptThreadLocal.Cache;
@@ -46,7 +46,7 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			if (scriptInstance.getFrameDepth() == 0)
+			if (scriptInstance.getCurrentActivationStackDepth() == 0)
 			{
 				scriptInstance.popFrame();
 				scriptInstance.terminate();
@@ -90,8 +90,8 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			String name = String.valueOf(operand1);
-			ScriptFunctionResolver resolver = scriptInstance.getFunctionResolver();
-			ScriptFunctionType functionType = resolver.getFunctionByName(name);
+			ScriptHostFunctionResolver resolver = scriptInstance.getHostFunctionResolver();
+			ScriptFunctionType functionType = resolver.getNamespacedFunction(null, name);
 			if (functionType == null)
 				throw new ScriptExecutionException("host function "+name+" could not be resolved");
 			try {
@@ -100,6 +100,32 @@ public enum ScriptCommandType
 				throw e;
 			} catch (Throwable t) {
 				throw new ScriptExecutionException("host function "+name+" threw an exception.", t);
+			}
+		}
+	},
+	
+	/**
+	 * Call a namespaced host function.
+	 * Operand1 is namespace name.
+	 * Operand2 is function name.
+	 */
+	CALL_HOST_NAMESPACE
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			String namespace = String.valueOf(operand1);
+			String name = String.valueOf(operand2);
+			ScriptHostFunctionResolver resolver = scriptInstance.getHostFunctionResolver();
+			ScriptFunctionType functionType = resolver.getNamespacedFunction(namespace, name);
+			if (functionType == null)
+				throw new ScriptExecutionException("host function "+namespace+"::"+name+" could not be resolved");
+			try {
+				return functionType.execute(scriptInstance);
+			} catch (ScriptExecutionException e) {
+				throw e;
+			} catch (Throwable t) {
+				throw new ScriptExecutionException("host function "+namespace+"::"+name+" threw an exception.", t);
 			}
 		}
 	},
@@ -194,11 +220,38 @@ public enum ScriptCommandType
 	},
 	
 	/**
+	 * Jump to label if stack top is true-equivalent, else pop.
+	 * Operand is label if false.
+	 * Sets a new command index.
+	 */
+	JUMP_FALSECOALESCE
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue sv = scriptInstance.getStackValue(0);
+			if (sv == null)
+				throw new ScriptExecutionException("stack is empty.");
+			else if (!sv.asBoolean())
+				scriptInstance.popStackValue();
+			else
+			{
+				String labelName =  String.valueOf(operand1);
+				int index = scriptInstance.getCommandIndex(labelName);
+				if (index < 0)
+					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
+				scriptInstance.setCurrentCommandIndex(index);
+			}
+			return true;
+		}
+	},
+	
+	/**
 	 * Jump to label if stack top is not null, else pop.
 	 * Operand is label if false.
 	 * Sets a new command index.
 	 */
-	JUMP_COALESCE
+	JUMP_NULLCOALESCE
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
@@ -709,6 +762,24 @@ public enum ScriptCommandType
 			return true;
 		}
 	},
+	
+	/**
+	 * Turns the topmost value into a boolean-equivalent value (the same as a not-not).
+	 * Pops one value.
+	 * Pushes one value.
+	 */
+	LOGICAL
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue value = scriptInstance.popStackValue();
+			Cache cache = getCache();
+			cache.temp.set(value.asBoolean());
+			scriptInstance.pushStackValue(cache.temp);
+			return true;
+		}
+	}, 
 	
 	/**
 	 * Logical Not.

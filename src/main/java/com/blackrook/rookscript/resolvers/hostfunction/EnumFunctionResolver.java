@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.resolvers.function;
+package com.blackrook.rookscript.resolvers.hostfunction;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -56,13 +56,13 @@ public class EnumFunctionResolver implements ScriptFunctionResolver
 	}
 	
 	@Override
-	public ScriptFunctionType getFunctionByName(String name)
+	public ScriptFunctionType getFunction(String name)
 	{
 		return map.get(name.toLowerCase());
 	}
 	
 	@Override
-	public boolean containsFunctionByName(String name)
+	public boolean containsFunction(String name)
 	{
 		return map.containsKey(name.toLowerCase());
 	}

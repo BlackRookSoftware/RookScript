@@ -148,10 +148,43 @@ public class ScriptInstanceStack
 	}
 
 	/**
+	 * Gets the current activation stack depth.
+	 * If 0, then this is 0 functions deep. If -1, this instance has not been started.
+	 * @return the depth of the activation stack. 
+	 */
+	public int getCurrentActivationStackDepth()
+	{
+		return activationStackTop;
+	}
+
+	/**
+	 * @return the maximum depth of the activation stack.
+	 */
+	public int getActivationStackDepth()
+	{
+		return activationStack.length;
+	}
+
+	/**
+	 * @return the current value stack depth.
+	 */
+	public int getCurrentValueStackDepth()
+	{
+		return scriptValueStackTop;
+	}
+
+	/**
+	 * @return the maximum depth of the value stack.
+	 */
+	public int getValueStackDepth()
+	{
+		return scriptValueStack.length;
+	}
+
+	/**
 	 * Gets a corresponding script value by name.
 	 * Only looks at the topmost scope.
-	 * Changing the returned value does not change the value, unless it is a reference type
-	 * like a map or list.
+	 * Changing the returned value reference does not change the mapped value, unless the referenced object type like a map or list.
 	 * @param name the variable name.
 	 * @param out the destination variable for the value.
 	 * @return true if a corresponding value was fetched into out, false if not. If false, out is set to the null value.
@@ -196,16 +229,6 @@ public class ScriptInstanceStack
 	public int incrementCommandIndex()
 	{
 		return ++activationStack[activationStackTop];
-	}
-
-	/**
-	 * Gets the command index depth.
-	 * If 0, then this is 0 functions deep.
-	 * @return the depth of the activation stack. 
-	 */
-	public int getFrameDepth()
-	{
-		return activationStackTop;
 	}
 
 	/**
@@ -267,15 +290,6 @@ public class ScriptInstanceStack
 		return scriptValueStack[scriptValueStackTop - depthFromTop];
 	}
 	
-	/**
-	 * Script stack depth.
-	 * @return the current values stack depth.
-	 */
-	public int getValueStackDepth()
-	{
-		return scriptValueStackTop;
-	}
-
 	/**
 	 * Nullifies values from an arbitrary index in the stack down to the current
 	 * top of the stack (but not the current top).  

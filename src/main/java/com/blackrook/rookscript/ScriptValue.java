@@ -1192,10 +1192,11 @@ public class ScriptValue implements Comparable<ScriptValue>
 				return !isNaN() && Double.longBitsToDouble(rawbits) != 0.0; 
 			case STRING:
 				return ((String)ref).length() == 0;
+			case OBJECTREF:
 			case LIST:
 			case MAP:
-			case OBJECTREF:
-				return !Utils.isEmpty(ref); 
+			case ERROR:
+				return ref != null; 
 		}
 	}
 

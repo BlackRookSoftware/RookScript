@@ -30,16 +30,22 @@ public class ScriptEnvironment
 	}
 	
 	/**
-	 * Builds an environment link connected to a host and standard streams.
-	 * @param hostInterface the host interface object.
-	 * @param standardOut the stream to use for the standard output stream.
-	 * @param standardErr the stream to use for the standard error stream.
-	 * @param standardIn the stream to use for the standard input stream.
+	 * Builds an environment link connected to nothing.
 	 * @return a new script environment to bind to an instance.
 	 */
-	public static ScriptEnvironment create(Object hostInterface, PrintStream standardOut, PrintStream standardErr, InputStream standardIn)
+	public static ScriptEnvironment create()
 	{
-		return new ScriptEnvironment(hostInterface, standardOut, standardErr, standardIn);
+		return new ScriptEnvironment(null, null, null, null);
+	}
+
+	/**
+	 * Builds an environment link for just the host interface object.
+	 * @param hostInterface the host interface object.
+	 * @return a new script environment to bind to an instance.
+	 */
+	public static ScriptEnvironment create(Object hostInterface)
+	{
+		return new ScriptEnvironment(hostInterface, null, null, null);
 	}
 
 	/**
@@ -55,27 +61,16 @@ public class ScriptEnvironment
 	}
 
 	/**
-	 * Builds an environment link for just the host interface object.
+	 * Builds an environment link connected to a host and standard streams.
 	 * @param hostInterface the host interface object.
+	 * @param standardOut the stream to use for the standard output stream.
+	 * @param standardErr the stream to use for the standard error stream.
+	 * @param standardIn the stream to use for the standard input stream.
 	 * @return a new script environment to bind to an instance.
 	 */
-	public static ScriptEnvironment create(Object hostInterface)
+	public static ScriptEnvironment create(Object hostInterface, PrintStream standardOut, PrintStream standardErr, InputStream standardIn)
 	{
-		return new ScriptEnvironment(hostInterface, null, null, null);
-	}
-
-	/**
-	 * Builds an environment link for the standard I/O streams and the host interface object.
-	 * All of standard streams are used for out, error, and in.
-	 * @param hostInterface the host interface object.
-	 * @return a new script environment to bind to an instance.
-	 * @see System#out
-	 * @see System#err
-	 * @see System#in
-	 */
-	public static ScriptEnvironment createStandardEnvironment(Object hostInterface)
-	{
-		return new ScriptEnvironment(hostInterface, System.out, System.err, System.in);
+		return new ScriptEnvironment(hostInterface, standardOut, standardErr, standardIn);
 	}
 
 	/**
@@ -92,12 +87,17 @@ public class ScriptEnvironment
 	}
 
 	/**
-	 * Builds an environment link connected to nothing.
+	 * Builds an environment link for the standard I/O streams and the host interface object.
+	 * All of standard streams are used for out, error, and in.
+	 * @param hostInterface the host interface object.
 	 * @return a new script environment to bind to an instance.
+	 * @see System#out
+	 * @see System#err
+	 * @see System#in
 	 */
-	public static ScriptEnvironment create()
+	public static ScriptEnvironment createStandardEnvironment(Object hostInterface)
 	{
-		return new ScriptEnvironment(null, null, null, null);
+		return new ScriptEnvironment(hostInterface, System.out, System.err, System.in);
 	}
 
 	/**

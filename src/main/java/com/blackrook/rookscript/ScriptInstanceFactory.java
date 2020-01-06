@@ -14,11 +14,10 @@ import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 
 /**
  * Factory class for assembling script instances.
- * This factory pools {@link ScriptInstanceStack}s, since creating and destroying them would be costly on the GC.
- * @param <H> the host instance type.  
+ * This factory pools {@link ScriptInstanceStack}s, since creating and destroying them could be costly on the GC.
  * @author Matthew Tropiano
  */
-public class ScriptInstanceFactory<H extends Object>
+public class ScriptInstanceFactory
 {
 	public static final int DEFAULT_ACTIVATION_DEPTH = 16;
 	public static final int DEFAULT_STACK_DEPTH = 512;
