@@ -30,11 +30,14 @@ public class ScriptTest
 	
 	private static void doStress(ScriptInstance instance, int times)
 	{
+		ScriptValue out = ScriptValue.create(null);
 		while (times-- > 0)
 		{
 			long nanos = System.nanoTime();
 			instance.call("main");
-			System.out.println("Script returns: "+instance.popStackValue()+" "+(System.nanoTime()-nanos)+" ns");
+			nanos = System.nanoTime() - nanos;
+			instance.popStackValue(out);
+			System.out.println("Script returns: " + out + " " + nanos + " ns");
 		}
 	}
 	

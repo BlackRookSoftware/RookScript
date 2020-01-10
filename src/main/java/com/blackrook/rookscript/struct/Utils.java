@@ -15,8 +15,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Comparator;
 
-import com.blackrook.rookscript.ScriptValue.ListType;
-import com.blackrook.rookscript.ScriptValue.MapType;
+import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
@@ -105,10 +104,8 @@ public final class Utils
 			return ((Number)obj).doubleValue() == 0.0;
 		else if (obj instanceof String)
 			return ((String)obj).trim().length() == 0;
-		else if (obj instanceof ListType)
-			return ((ListType)obj).isEmpty();
-		else if (obj instanceof MapType)
-			return ((MapType)obj).isEmpty();
+		else if (obj instanceof ScriptValue)
+			return ((ScriptValue)obj).empty();
 		else if (obj instanceof Collection<?>)
 			return ((Collection<?>)obj).isEmpty();
 		else

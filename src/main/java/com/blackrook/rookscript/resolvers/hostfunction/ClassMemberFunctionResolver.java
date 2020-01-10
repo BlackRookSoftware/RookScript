@@ -25,8 +25,6 @@ import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionType.Usage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
-import com.blackrook.rookscript.struct.ScriptThreadLocal;
-import com.blackrook.rookscript.struct.ScriptThreadLocal.Cache;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.FieldInfo;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
@@ -42,6 +40,11 @@ import com.blackrook.rookscript.struct.Utils;
  */
 public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 {
+	// Threadlocal "stack" values.
+	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<InvokerCache> OBJECTARRAYS = ThreadLocal.withInitial(()->new InvokerCache());
+
 	/** The map of name to function type. */
 	private Map<String, ScriptFunctionType> map;
 	/** The valid type to verify. */
@@ -465,11 +468,18 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(paramTypes.length);
+			ScriptValue value = CACHEVALUE1.get();
+			Object[] vbuf = OBJECTARRAYS.get().getParamArray(paramTypes.length);
 			for (int i = vbuf.length - 1; i >= 0; i--)
-				vbuf[i] = scriptInstance.popStackValue().createForType(paramTypes[i]);
+			{
+				scriptInstance.popStackValue(value);
+				vbuf[i] = value.createForType(paramTypes[i]);
+			}
 			
-			scriptInstance.pushStackValue(ScriptValue.create(type, Utils.construct(constructor, vbuf)));
+			value.set(type, Utils.construct(constructor, vbuf));
+			scriptInstance.pushStackValue(value);
+
+			value.setNull();
 			Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
 			return true;
 		}
@@ -523,8 +533,10 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			ScriptValue instance = scriptInstance.popStackValue();
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue instance = CACHEVALUE2.get();
+			scriptInstance.popStackValue(value);
+			scriptInstance.popStackValue(instance);
 		
 			Object object = instance.asObject();
 			
@@ -533,6 +545,9 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			
 			Utils.setFieldValue(object, field, value.createForType(type));
 			scriptInstance.pushStackValue(chained ? object : null);
+
+			value.setNull();
+			instance.setNull();
 			return true;
 		}
 		
@@ -583,16 +598,17 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			ScriptValue instance = scriptInstance.popStackValue();
+			ScriptValue temp = CACHEVALUE1.get();
+			scriptInstance.popStackValue(temp);
 	
-			Object object = instance.asObject();
+			Object object = temp.asObject();
 			
 			if (!validType.isAssignableFrom(object.getClass()))
 				throw new ScriptExecutionException("First parameter is not the correct type.");
 			
-			Cache cache = ScriptThreadLocal.getCache();
-			cache.temp.set(type, Utils.getFieldValue(object, field));
-			scriptInstance.pushStackValue(cache.temp);
+			temp.set(type, Utils.getFieldValue(object, field));
+			scriptInstance.pushStackValue(temp);
+			temp.setNull();
 			return true;
 		}
 		
@@ -652,11 +668,14 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			Object object = null;			
+			ScriptValue temp = CACHEVALUE1.get();
+			scriptInstance.popStackValue(temp);
+
+			Object object = null;
 			if (!isStatic)
 			{
-				ScriptValue instance = scriptInstance.popStackValue();
-				object = instance.asObject();
+				scriptInstance.popStackValue(temp);
+				object = temp.asObject();
 			}
 			
 			if (!validType.isAssignableFrom(object.getClass()))
@@ -668,9 +687,12 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 					throw see; 
 			}
 			
-			Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(paramTypes.length);
+			Object[] vbuf = OBJECTARRAYS.get().getParamArray(paramTypes.length);
 			for (int i = vbuf.length - 1; i >= 0; i++)
-				vbuf[i] = scriptInstance.popStackValue().createForType(paramTypes[i]);
+			{
+				scriptInstance.popStackValue(temp);
+				vbuf[i] = temp.createForType(paramTypes[i]);
+			}
 
 			Object retval = null;
 			try 
@@ -684,9 +706,8 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 				}
 				else
 				{
-					Cache cache = ScriptThreadLocal.getCache();
-					cache.temp.set(type, retval);
-					retval = cache.temp;
+					temp.set(type, retval);
+					retval = temp;
 				}
 			} 
 			catch (Throwable t) 
@@ -698,6 +719,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			}
 
 			scriptInstance.pushStackValue(retval);
+			temp.setNull();
 			return true;
 		}
 
@@ -707,6 +729,26 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			return "Method " + validType.getSimpleName() + "." + method.getName() + ": " + name + "(" + getParameterCount() + ")";
 		}
 		
+	}
+
+	// Parameter array cache.
+	private static class InvokerCache
+	{
+		private HashMap<Integer, Object[]> map;
+		
+		private InvokerCache()
+		{
+			map = new HashMap<>();
+		}
+		
+		public Object[] getParamArray(int size)
+		{
+			Object[] out;
+			if ((out = map.get(size)) == null)
+				map.put(size, out = new Object[size]);
+			return out;
+		}
+
 	}
 
 }

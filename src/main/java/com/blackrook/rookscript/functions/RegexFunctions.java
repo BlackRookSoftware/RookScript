@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import com.blackrook.rookscript.ScriptInstance;
+import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
@@ -34,17 +35,26 @@ public enum RegexFunctions implements ScriptFunctionType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			String regex = scriptInstance.popStackValue().asString();
-			
-			try {
-				PatternUtils.get(regex);
-			} catch (PatternSyntaxException e) {
-				scriptInstance.pushStackValue(false);
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String regex = temp.asString();
+				
+				try {
+					PatternUtils.get(regex);
+				} catch (PatternSyntaxException e) {
+					scriptInstance.pushStackValue(false);
+					return true;
+				}
+				
+				scriptInstance.pushStackValue(true);
 				return true;
 			}
-			
-			scriptInstance.pushStackValue(true);
-			return true;
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -60,23 +70,35 @@ public enum RegexFunctions implements ScriptFunctionType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			String regex = scriptInstance.popStackValue().asString();
-			String str = scriptInstance.popStackValue().asString();
-			
-			Pattern p = null;
-			try {
-				p = PatternUtils.get(regex);
-			} catch (PatternSyntaxException e) {
-				scriptInstance.pushStackValue(ErrorType.create(e));
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String regex = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+
+				Pattern p = null;
+				try {
+					p = PatternUtils.get(regex);
+				} catch (PatternSyntaxException e) {
+					scriptInstance.pushStackValue(ErrorType.create(e));
+					return true;
+				}
+				if (p != null)
+					scriptInstance.pushStackValue(Pattern.compile(regex).split(str));
+				else
+					scriptInstance.pushStackValue(null);
 				return true;
 			}
-			if (p != null)
-				scriptInstance.pushStackValue(Pattern.compile(regex).split(str));
-			else
-				scriptInstance.pushStackValue(null);
-			return true;
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
+	
+	// TODO: Add more functions.
 	
 	;
 	
@@ -108,5 +130,8 @@ public enum RegexFunctions implements ScriptFunctionType
 	
 	@Override
 	public abstract boolean execute(ScriptInstance scriptInstance);
+
+	// Threadlocal "stack" values.
+	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 
 }

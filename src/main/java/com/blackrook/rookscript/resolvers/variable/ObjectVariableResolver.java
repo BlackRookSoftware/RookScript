@@ -7,8 +7,6 @@
  ******************************************************************************/
 package com.blackrook.rookscript.resolvers.variable;
 
-import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -16,7 +14,6 @@ import java.util.Map;
 
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
-import com.blackrook.rookscript.struct.ScriptThreadLocal;
 import com.blackrook.rookscript.struct.Utils;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.FieldInfo;
@@ -31,6 +28,10 @@ import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
  */
 public class ObjectVariableResolver<T> implements ScriptVariableResolver
 {
+	// Threadlocal "stack" values.
+	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<Object[]> OBJECTARRAY1 = ThreadLocal.withInitial(()->new Object[1]);
+
 	/** Instance. */
 	private T instance;
 	/** Map of resolvers. */
@@ -113,7 +114,7 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 	@Override
 	public boolean getValue(String name, ScriptValue out)
 	{
-		ScriptValue sv = getCache().temp;
+		ScriptValue sv = CACHEVALUE1.get();
 
 		GetterSetter gs;
 		if ((gs = fieldMap.get(name)) == null)
@@ -124,6 +125,7 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 		
 		sv.set(gs.get());
 		out.set(sv);
+		sv.setNull();
 		return true;
 	}
 
@@ -174,14 +176,14 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 			
 			if (field != null)
 			{
-				Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(1);
+				Object[] vbuf = OBJECTARRAY1.get();
 				vbuf[0] = value.createForType(type);
 				Utils.setFieldValue(instance, field, vbuf);
 				vbuf[0] = null; // arrays are shared - purge refs after use.
 			}
 			else if (setter != null)
 			{
-				Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(1);
+				Object[] vbuf = OBJECTARRAY1.get();
 				vbuf[0] = value.createForType(type);
 				Utils.invokeBlind(setter, instance, vbuf);
 				vbuf[0] = null; // arrays are shared - purge refs after use.

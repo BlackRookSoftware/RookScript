@@ -29,10 +29,18 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			ScriptValue arg = scriptInstance.popStackValue();
-			scriptInstance.getEnvironment().print(arg.asString());
-			scriptInstance.pushStackValue(null);
-			return true;
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.getEnvironment().print(temp.asString());
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 
@@ -46,10 +54,18 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			ScriptValue arg = scriptInstance.popStackValue();
-			scriptInstance.getEnvironment().printErr(arg.asString());
-			scriptInstance.pushStackValue(null);
-			return true;
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.getEnvironment().printErr(temp.asString());
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 
@@ -63,11 +79,19 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			ScriptValue arg = scriptInstance.popStackValue();
-			scriptInstance.getEnvironment().print(arg.asString());
-			scriptInstance.getEnvironment().print('\n');
-			scriptInstance.pushStackValue(null);
-			return true;
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.getEnvironment().print(temp.asString());
+				scriptInstance.getEnvironment().print('\n');
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 
@@ -81,11 +105,19 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance)
 		{
-			ScriptValue arg = scriptInstance.popStackValue();
-			scriptInstance.getEnvironment().printErr(arg.asString());
-			scriptInstance.getEnvironment().printErr('\n');
-			scriptInstance.pushStackValue(null);
-			return true;
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.getEnvironment().printErr(temp.asString());
+				scriptInstance.getEnvironment().printErr('\n');
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 
@@ -120,12 +152,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	@Override
 	public abstract boolean execute(ScriptInstance scriptInstance);
 
-	// wraps a single value into a list.
-	protected ScriptValue wrapList(ScriptValue sv)
-	{
-		ScriptValue out = ScriptValue.createEmptyList();
-		out.listAdd(sv);
-		return out;
-	}
-	
+	// Threadlocal "stack" values.
+	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+
 }

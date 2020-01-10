@@ -7,8 +7,6 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
-import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
-
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,9 +16,7 @@ import java.util.Map;
 
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
-import com.blackrook.rookscript.struct.ScriptThreadLocal;
 import com.blackrook.rookscript.struct.Utils;
-import com.blackrook.rookscript.struct.ScriptThreadLocal.Cache;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.FieldInfo;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
@@ -31,6 +27,11 @@ import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
  */
 public class ScriptValue implements Comparable<ScriptValue>
 {
+	// Threadlocal "stack" values.
+	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<Object[]> OBJECTARRAY1 = ThreadLocal.withInitial(()->new Object[1]);
+
 	public static enum Type
 	{
 		NULL,
@@ -148,40 +149,24 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
-	 * Creates a copy of this value.
-	 * The copy process is DEEP - lists and maps are copied as well, except for native objects
-	 * (the references are copied, but not what they point to).
-	 * @return a new ScriptValue.
-	 */
-	public ScriptValue copy()
-	{
-		if (isList())
-		{
-			ListType list = (ListType)this.ref;
-			ScriptValue[] array = new ScriptValue[list.size()];
-			for (int i = 0; i < array.length; i++)
-				array[i] = list.get(i).copy();
-			return create(array);
-		}
-		else if (isMap())
-		{
-			MapType scope = (MapType)this.ref;
-			ScriptValue copy = createEmptyMap();
-			for (Entry e : scope)
-				copy.mapSet(e.getName(), create(e.getValue().copy()));
-			return copy;
-		}
-		else
-			return create(this);
-	}
-
-	/**
 	 * Sets this value to the null value.
 	 */
 	public void setNull()
 	{
 		this.type = Type.NULL;
 		this.ref = null;
+		this.rawbits = 0L;
+	}
+	
+	/**
+	 * Sets this value to a new empty list (new reference) initialized by nulls.
+	 * @param size the initial of the new empty list.
+	 * @param capacity the inner capacity of the new empty list.
+	 */
+	public void setEmptyList(int size, int capacity)
+	{
+		this.type = Type.LIST;
+		this.ref = new ListType(size, capacity);
 		this.rawbits = 0L;
 	}
 	
@@ -426,12 +411,8 @@ public class ScriptValue implements Comparable<ScriptValue>
 			if (clazz.isArray())
 			{
 				int len = Array.getLength(value);
-				ListType list = new ListType(0, len); 
-				this.type = Type.LIST;
-				this.ref = list;
-				this.rawbits = 0L;
-				for (int i = 0; i < len; i++)
-					list.add(create(Array.get(value, i)));
+				setEmptyList(len);
+				listExtract((Object[])value);
 			}
 			else
 			{
@@ -615,7 +596,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			case FLOAT:
 				return isNaN() || Double.longBitsToDouble(rawbits) == 0.0;
 			case LIST:
-				return ((ListType)ref).size() == 0;
+				return ((ListType)ref).isEmpty();
 			case MAP:
 				return ((MapType)ref).isEmpty();
 			default:
@@ -642,6 +623,22 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
+	 * Sets the contents of this list to the provided collection.
+	 * @param list the list to set.
+	 * @return true if set, false if not.
+	 */
+	public <T> boolean listExtract(T[] list)
+	{
+		if (!isList())
+			return false;
+
+		for (T obj : list)
+			listAdd(obj);
+		
+		return true;
+	}
+	
+	/**
 	 * Sets a value in this list.
 	 * If the index is outside of the range of the list's indices, it is not added.
 	 * @param index the list index to set.
@@ -657,7 +654,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		ListType list = (ListType)ref;
 		if (index < 0 || index >= list.size())
 			return false;
-		list.get(index).set(value);
+		list.set(index, value);
 		return true;
 	}
 	
@@ -673,8 +670,17 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return false;
 
 		ListType list = (ListType)ref;
-		list.add(create(value));
-		return true;
+		ScriptValue temp = CACHEVALUE1.get();
+		try
+		{
+			temp.set(value);
+			list.add(temp);
+			return true;
+		}
+		finally
+		{
+			temp.setNull();
+		}
 	}
 	
 	/**
@@ -683,6 +689,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * @param value the value to add (converted to internal value).
 	 * @return true if added, false if not.
 	 * @see #isList()
+	 * FIXME: Not working??
 	 */
 	public boolean listAddAt(int index, Object value)
 	{
@@ -690,8 +697,18 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return false;
 		
 		ListType list = (ListType)ref;
-		list.add(index, create(value));
-		return true;
+		
+		ScriptValue temp = CACHEVALUE1.get();
+		try
+		{
+			temp.set(value);
+			list.add(index, temp);
+			return true;
+		}
+		finally
+		{
+			temp.setNull();
+		}
 	}
 	
 	/**
@@ -706,39 +723,50 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return false;
 
 		ListType list = (ListType)ref;
-		Cache cache = getCache();
-		cache.value1.set(value);
-		return list.remove(cache.value1);
+		ScriptValue temp = CACHEVALUE1.get();
+		try
+		{
+			temp.set(value);
+			boolean out = list.remove(temp);
+			return out;
+		}
+		finally
+		{
+			temp.setNull();
+		}
 	}
 	
 	/**
 	 * Removes a value from this value at an index, if it is a list.
 	 * @param index the index to remove.
-	 * @return the value removed if removed, null if not a list nor set.
+	 * @param out the output value - the value that was removed, or set to null if not a list nor a valid index.
+	 * @return true if this is a list and the index is valid and a value was removed, false otherwise.
 	 * @see #isList()
 	 */
-	public ScriptValue listRemoveAt(int index)
+	public boolean listRemoveAt(int index, ScriptValue out)
 	{
 		if (!isList())
-			return null;
-	
-		ListType list = (ListType)ref;
-		return list.removeIndex(index);
+			return false;
+
+		((ListType)ref).removeIndex(index, out);
+		return true;
 	}
 
 	/**
 	 * Gets a value at an index, if it is a list.
 	 * NOTE: This returns a reference, not a new instance!
 	 * @param index the list index to return.
+	 * @param out the output value - the value at the index, or set to null if not a list nor a valid index.
 	 * @return the value at the index, or null if not a list nor a valid index.
 	 * @see #isList()
 	 */
-	public ScriptValue listGetByIndex(int index)
+	public boolean listGetByIndex(int index, ScriptValue out)
 	{
 		if (!isList())
-			return null;
+			return false;
 	
-		return ((ListType)ref).get(index);
+		((ListType)ref).get(index, out);
+		return true;
 	}
 
 	/**
@@ -753,9 +781,17 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return -1;
 	
 		ListType list = (ListType)ref;
-		Cache cache = getCache();
-		cache.value1.set(value);
-		return list.indexOf(cache.value1);
+		ScriptValue temp = CACHEVALUE1.get();
+		try
+		{
+			temp.set(value);
+			int out = list.indexOf(temp);
+			return out;
+		}
+		finally
+		{
+			temp.setNull();
+		}
 	}
 
 	/**
@@ -798,14 +834,22 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return false;
 	
 		ListType list = (ListType)ref;
-		Cache cache = getCache();
-		cache.value1.set(value);
-		if (list.search(cache.value1) < 0)
+		ScriptValue temp = CACHEVALUE1.get();
+		try
 		{
-			list.add(create(value));
-			list.sort();
+			temp.set(value);
+			if (list.search(temp) < 0)
+			{
+				list.add(temp);
+				list.sort();
+				return true;
+			}
+			return false;
 		}
-		return true;
+		finally
+		{
+			temp.setNull();
+		}
 	}
 
 	/**
@@ -822,17 +866,24 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return false;
 
 		ListType list = (ListType)ref;
-		Cache cache = getCache();
-		cache.value1.set(value);
-		int index = list.search(cache.value1);
-		if (index >= 0)
+		ScriptValue temp = CACHEVALUE1.get();
+		try
 		{
-			list.removeIndex(index);
-			return true;
+			temp.set(value);
+			int index = list.search(temp);
+			if (index >= 0)
+			{
+				list.removeIndex(index, temp);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
-		else
+		finally
 		{
-			return false;
+			temp.setNull();
 		}
 	}
 	
@@ -851,9 +902,17 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return false;
 
 		ListType list = (ListType)ref;
-		Cache cache = getCache();
-		cache.value1.set(value);
-		return list.search(cache.value1) >= 0;
+		ScriptValue temp = CACHEVALUE1.get();
+		try
+		{
+			temp.set(value);
+			boolean out = list.search(temp) >= 0;
+			return out;
+		}
+		finally
+		{
+			temp.setNull();
+		}
 	}
 
 	/**
@@ -871,9 +930,17 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return -1;
 
 		ListType list = (ListType)ref;
-		Cache cache = getCache();
-		cache.value1.set(value);
-		return list.search(cache.value1);
+		ScriptValue temp = CACHEVALUE1.get();
+		try
+		{
+			temp.set(value);
+			int out = list.search(temp);
+			return out;
+		}
+		finally
+		{
+			temp.setNull();
+		}
 	}
 
 	/**
@@ -889,10 +956,17 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return false;
 		
 		MapType map = (MapType)ref;
-		Cache cache = getCache();
-		cache.value1.set(value);
-		map.setValue(key, cache.value1);
-		return true;
+		ScriptValue temp = CACHEVALUE1.get();
+		try
+		{
+			temp.set(value);
+			map.setValue(key, temp);
+			return true;
+		}
+		finally
+		{
+			temp.setNull();
+		}
 	}
 	
 	/**
@@ -1018,14 +1092,14 @@ public class ScriptValue implements Comparable<ScriptValue>
 			MethodInfo mi;
 			if ((fi = Utils.isNull(profile.getPublicFieldsByAlias().get(name), profile.getPublicFieldsByName().get(name))) != null)
 			{
-				Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(1);
+				Object[] vbuf = OBJECTARRAY1.get();
 				vbuf[0] = value.createForType(fi.getType());
 				Utils.setFieldValue(object, fi.getField(), vbuf);
 				Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
 			}
 			else if ((mi = Utils.isNull(profile.getSetterMethodsByAlias().get(name), profile.getSetterMethodsByName().get(name))) != null)
 			{
-				Object[] vbuf = ScriptThreadLocal.getInvokerCache().getParamArray(1);
+				Object[] vbuf = OBJECTARRAY1.get();
 				vbuf[0] = value.createForType(mi.getType());
 				Utils.invokeBlind(mi.getMethod(), object, vbuf);
 				Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
@@ -1581,6 +1655,15 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	@Override
+	public int hashCode()
+	{
+		if (isRaw())
+			return Long.hashCode(rawbits);
+		else
+			return ref.hashCode();
+	}
+	
+	@Override
 	public boolean equals(Object obj)
 	{
 		if (obj instanceof ScriptValue)
@@ -1755,12 +1838,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	// Up-converts the cached values.
-	private static void convertUp(Cache cacheValue, ScriptValue operand, ScriptValue operand2)
+	private static void convertUp(ScriptValue cache1, ScriptValue cache2, ScriptValue operand, ScriptValue operand2)
 	{
 		if (operand.type.ordinal() < operand2.type.ordinal())
-			cacheValue.value1.convertTo(operand2.type);
+			cache1.convertTo(operand2.type);
 		else if (operand.type.ordinal() > operand2.type.ordinal())
-			cacheValue.value2.convertTo(operand.type);
+			cache2.convertTo(operand.type);
 	}
 
 	/**
@@ -1777,28 +1860,37 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return;
 		}
 		
-		Cache cacheValue = getCache();
-		cacheValue.value1.set(operand);
-		cacheValue.value2.set(operand2);
-		convertUp(cacheValue, operand, operand2);
-		
-		switch (cacheValue.value2.type)
+		ScriptValue cache1 = CACHEVALUE1.get();
+		ScriptValue cache2 = CACHEVALUE2.get();
+		// FIXME: String concatenation broke somehow.
+		try
 		{
-			default:
-				out.set(Double.NaN);
-				return;
-			case BOOLEAN:
-				out.set(cacheValue.value1.asBoolean() || cacheValue.value2.asBoolean());
-				return;
-			case INTEGER:
-				out.set(cacheValue.value1.asLong() + cacheValue.value2.asLong());
-				return;
-			case FLOAT:
-				out.set(cacheValue.value1.asDouble() + cacheValue.value2.asDouble());
-				return;
-			case STRING:
-				out.set(cacheValue.value1.asString() + cacheValue.value2.asString());
-				return;
+			cache1.set(operand);
+			cache2.set(operand2);
+			convertUp(cache1, cache2, operand, operand2);
+			switch (cache2.type)
+			{
+				default:
+					out.set(Double.NaN);
+					return;
+				case BOOLEAN:
+					out.set(cache1.asBoolean() || cache2.asBoolean());
+					return;
+				case INTEGER:
+					out.set(cache1.asLong() + cache2.asLong());
+					return;
+				case FLOAT:
+					out.set(cache1.asDouble() + cache2.asDouble());
+					return;
+				case STRING:
+					out.set(cache1.asString() + cache2.asString());
+					return;
+			}
+		}
+		finally
+		{
+			cache1.setNull();
+			cache2.setNull();
 		}
 	}
 	
@@ -1816,26 +1908,34 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return;
 		}
 
-		Cache cacheValue = getCache();
-		cacheValue.value1.set(operand);
-		cacheValue.value2.set(operand2);
-		convertUp(cacheValue, operand, operand2);
-		
-		switch (cacheValue.value2.type)
+		ScriptValue cache1 = CACHEVALUE1.get();
+		ScriptValue cache2 = CACHEVALUE2.get();
+		try
 		{
-			default:
-				out.set(Double.NaN);
-				return;
-			case BOOLEAN:
-				boolean v1 = cacheValue.value1.asBoolean();
-				out.set(!v1 ? false : (cacheValue.value2.asBoolean() ? false : v1));
-				return;
-			case INTEGER:
-				out.set(cacheValue.value1.asLong() - cacheValue.value2.asLong());
-				return;
-			case FLOAT:
-				out.set(cacheValue.value1.asDouble() - cacheValue.value2.asDouble());
-				return;
+			cache1.set(operand);
+			cache2.set(operand2);
+			convertUp(cache1, cache2, operand, operand2);
+			switch (cache2.type)
+			{
+				default:
+					out.set(Double.NaN);
+					return;
+				case BOOLEAN:
+					boolean v1 = cache1.asBoolean();
+					out.set(!v1 ? false : (cache2.asBoolean() ? false : v1));
+					return;
+				case INTEGER:
+					out.set(cache1.asLong() - cache2.asLong());
+					return;
+				case FLOAT:
+					out.set(cache1.asDouble() - cache2.asDouble());
+					return;
+			}
+		}
+		finally
+		{
+			cache1.setNull();
+			cache2.setNull();
 		}
 	}
 
@@ -1853,25 +1953,33 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return;
 		}
 
-		Cache cacheValue = getCache();
-		cacheValue.value1.set(operand);
-		cacheValue.value2.set(operand2);
-		convertUp(cacheValue, operand, operand2);
-		
-		switch (cacheValue.value2.type)
+		ScriptValue cache1 = CACHEVALUE1.get();
+		ScriptValue cache2 = CACHEVALUE2.get();
+		try
 		{
-			default:
-				out.set(Double.NaN);
-				return;
-			case BOOLEAN:
-				out.set(cacheValue.value1.asBoolean() && cacheValue.value2.asBoolean());
-				return;
-			case INTEGER:
-				out.set(cacheValue.value1.asLong() * cacheValue.value2.asLong());
-				return;
-			case FLOAT:
-				out.set(cacheValue.value1.asDouble() * cacheValue.value2.asDouble());
-				return;
+			cache1.set(operand);
+			cache2.set(operand2);
+			convertUp(cache1, cache2, operand, operand2);
+			switch (cache2.type)
+			{
+				default:
+					out.set(Double.NaN);
+					return;
+				case BOOLEAN:
+					out.set(cache1.asBoolean() && cache2.asBoolean());
+					return;
+				case INTEGER:
+					out.set(cache1.asLong() * cache2.asLong());
+					return;
+				case FLOAT:
+					out.set(cache1.asDouble() * cache2.asDouble());
+					return;
+			}
+		}
+		finally
+		{
+			cache1.setNull();
+			cache2.setNull();
 		}
 	}
 
@@ -1889,29 +1997,37 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return;
 		}
 
-		Cache cacheValue = getCache();
-		cacheValue.value1.set(operand);
-		cacheValue.value2.set(operand2);
-		convertUp(cacheValue, operand, operand2);
-		
-		switch (cacheValue.value2.type)
+		ScriptValue cache1 = CACHEVALUE1.get();
+		ScriptValue cache2 = CACHEVALUE2.get();
+		try
 		{
-			default:
-				out.set(Double.NaN);
-				return;
-			case BOOLEAN:
-				out.set(cacheValue.value1.asBoolean());
-				return;
-			case INTEGER:
-				long dividend = cacheValue.value2.asLong();
-				if (dividend != 0)
-					out.set(cacheValue.value1.asLong() / dividend);
-				else
+			cache1.set(operand);
+			cache2.set(operand2);
+			convertUp(cache1, cache2, operand, operand2);
+			switch (cache2.type)
+			{
+				default:
 					out.set(Double.NaN);
-				return;
-			case FLOAT:
-				out.set(cacheValue.value1.asDouble() / cacheValue.value2.asDouble());
-				return;
+					return;
+				case BOOLEAN:
+					out.set(cache1.asBoolean());
+					return;
+				case INTEGER:
+					long dividend = cache2.asLong();
+					if (dividend != 0)
+						out.set(cache1.asLong() / dividend);
+					else
+						out.set(Double.NaN);
+					return;
+				case FLOAT:
+					out.set(cache1.asDouble() / cache2.asDouble());
+					return;
+			}
+		}
+		finally
+		{
+			cache1.setNull();
+			cache2.setNull();
 		}
 	}
 
@@ -1929,29 +2045,37 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return;
 		}
 
-		Cache cacheValue = getCache();
-		cacheValue.value1.set(operand);
-		cacheValue.value2.set(operand2);
-		convertUp(cacheValue, operand, operand2);
-		
-		switch (cacheValue.value2.type)
+		ScriptValue cache1 = CACHEVALUE1.get();
+		ScriptValue cache2 = CACHEVALUE2.get();
+		try
 		{
-			default:
-				out.set(Double.NaN);
-				return;
-			case BOOLEAN:
-				out.set(cacheValue.value1.asBoolean());
-				return;
-			case INTEGER:
-				long dividend = cacheValue.value2.asLong();
-				if (dividend != 0)
-					out.set(cacheValue.value1.asLong() % dividend);
-				else
+			cache1.set(operand);
+			cache2.set(operand2);
+			convertUp(cache1, cache2, operand, operand2);
+			switch (cache2.type)
+			{
+				default:
 					out.set(Double.NaN);
-				return;
-			case FLOAT:
-				out.set(cacheValue.value1.asDouble() % cacheValue.value2.asDouble());
-				return;
+					return;
+				case BOOLEAN:
+					out.set(cache1.asBoolean());
+					return;
+				case INTEGER:
+					long dividend = cache2.asLong();
+					if (dividend != 0)
+						out.set(cache1.asLong() % dividend);
+					else
+						out.set(Double.NaN);
+					return;
+				case FLOAT:
+					out.set(cache1.asDouble() % cache2.asDouble());
+					return;
+			}
+		}
+		finally
+		{
+			cache1.setNull();
+			cache2.setNull();
 		}
 	}
 
@@ -1969,23 +2093,31 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return;
 		}
 
-		Cache cacheValue = getCache();
-		cacheValue.value1.set(operand);
-		cacheValue.value2.set(operand2);
-		convertUp(cacheValue, operand, operand2);
-		
-		switch (cacheValue.value2.type)
+		ScriptValue cache1 = CACHEVALUE1.get();
+		ScriptValue cache2 = CACHEVALUE2.get();
+		try
 		{
-			default:
-				out.set(Double.NaN);
-				return;
-			case BOOLEAN:
-				out.set(cacheValue.value1.asBoolean() && cacheValue.value2.asBoolean());
-				return;
-			case INTEGER:
-			case FLOAT:
-				out.set(cacheValue.value1.rawbits & cacheValue.value2.rawbits);
-				return;
+			cache1.set(operand);
+			cache2.set(operand2);
+			convertUp(cache1, cache2, operand, operand2);
+			switch (cache2.type)
+			{
+				default:
+					out.set(Double.NaN);
+					return;
+				case BOOLEAN:
+					out.set(cache1.asBoolean() && cache2.asBoolean());
+					return;
+				case INTEGER:
+				case FLOAT:
+					out.set(cache1.rawbits & cache2.rawbits);
+					return;
+			}
+		}
+		finally
+		{
+			cache1.setNull();
+			cache2.setNull();
 		}
 	}
 
@@ -2003,23 +2135,31 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return;
 		}
 
-		Cache cacheValue = getCache();
-		cacheValue.value1.set(operand);
-		cacheValue.value2.set(operand2);
-		convertUp(cacheValue, operand, operand2);
-		
-		switch (cacheValue.value2.type)
+		ScriptValue cache1 = CACHEVALUE1.get();
+		ScriptValue cache2 = CACHEVALUE2.get();
+		try
 		{
-			default:
-				out.set(Double.NaN);
-				return;
-			case BOOLEAN:
-				out.set(cacheValue.value1.asBoolean() || cacheValue.value2.asBoolean());
-				return;
-			case INTEGER:
-			case FLOAT:
-				out.set(cacheValue.value1.rawbits | cacheValue.value2.rawbits);
-				return;
+			cache1.set(operand);
+			cache2.set(operand2);
+			convertUp(cache1, cache2, operand, operand2);
+			switch (cache2.type)
+			{
+				default:
+					out.set(Double.NaN);
+					return;
+				case BOOLEAN:
+					out.set(cache1.asBoolean() || cache2.asBoolean());
+					return;
+				case INTEGER:
+				case FLOAT:
+					out.set(cache1.rawbits | cache2.rawbits);
+					return;
+			}
+		}
+		finally
+		{
+			cache1.setNull();
+			cache2.setNull();
 		}
 	}
 
@@ -2037,23 +2177,31 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return;
 		}
 
-		Cache cacheValue = getCache();
-		cacheValue.value1.set(operand);
-		cacheValue.value2.set(operand2);
-		convertUp(cacheValue, operand, operand2);
-		
-		switch (cacheValue.value2.type)
+		ScriptValue cache1 = CACHEVALUE1.get();
+		ScriptValue cache2 = CACHEVALUE2.get();
+		try
 		{
-			default:
-				out.set(Double.NaN);
-				return;
-			case BOOLEAN:
-				out.set(cacheValue.value1.asBoolean() ^ cacheValue.value2.asBoolean());
-				return;
-			case INTEGER:
-			case FLOAT:
-				out.set(cacheValue.value1.rawbits ^ cacheValue.value2.rawbits);
-				return;
+			cache1.set(operand);
+			cache2.set(operand2);
+			convertUp(cache1, cache2, operand, operand2);
+			switch (cache2.type)
+			{
+				default:
+					out.set(Double.NaN);
+					return;
+				case BOOLEAN:
+					out.set(cache1.asBoolean() ^ cache2.asBoolean());
+					return;
+				case INTEGER:
+				case FLOAT:
+					out.set(cache1.rawbits ^ cache2.rawbits);
+					return;
+			}
+		}
+		finally
+		{
+			cache1.setNull();
+			cache2.setNull();
 		}
 	}
 
@@ -2362,17 +2510,23 @@ public class ScriptValue implements Comparable<ScriptValue>
 		/**
 		 * Removes an object at an index.
 		 * @param index the index.
-		 * @return the value removed or null if out of range.
+		 * @param out the output value, set to the removed value.
+		 * @return true if a value was removed, false if not (index was out of range).
 		 */
-		public ScriptValue removeIndex(int index)
+		public boolean removeIndex(int index, ScriptValue out)
 		{
 			ScriptValue sv = data[index];
 			if (index < 0 || index >= size)
-				return null;
+			{
+				out.setNull();
+				return false;
+			}
 			for (int i = index; i < size - 1; i++)
 				data[i] = data[i + 1];
 			data[--size] = sv;
-			return sv;
+			out.set(sv);
+			sv.setNull();
+			return true;
 		}
 
 		/**
@@ -2382,23 +2536,43 @@ public class ScriptValue implements Comparable<ScriptValue>
 		 */
 		public boolean remove(ScriptValue value)
 		{
-			int idx = indexOf(value);
-			if (idx >= 0)
+			ScriptValue temp = CACHEVALUE2.get();
+			try
 			{
-				removeIndex(idx);
-				return true;
+				int idx = indexOf(value);
+				if (idx >= 0)
+				{
+					removeIndex(idx, temp);
+					return true;
+				}
+				return false;
 			}
-			return false;
+			finally
+			{
+				temp.setNull();
+			}
 		}
 		
 		/**
 		 * Gets a value from the list at an index.
 		 * @param index the provided index.
-		 * @return the value at the index, or null if out of bounds.
+		 * @param out the output value, set to the desired value.
 		 */
-		public ScriptValue get(int index)
+		public void get(int index, ScriptValue out)
 		{
-			return Utils.arrayElement(data, index);
+			out.set(Utils.arrayElement(data, index));
+		}
+		
+		/**
+		 * Sets a value from the list at an index.
+		 * @param index the provided index.
+		 * @param value the value to set.
+		 */
+		public void set(int index, Object value)
+		{
+			ScriptValue sv = Utils.arrayElement(data, index);
+			if (sv != null)
+				sv.set(value);
 		}
 		
 		/**
@@ -2477,12 +2651,20 @@ public class ScriptValue implements Comparable<ScriptValue>
 			@Override
 			public void remove()
 			{
-				if (removed)
-					return;
-				
-				removeIndex(cur - 1);
-				removed = true;
-				cur--;
+				ScriptValue temp = CACHEVALUE2.get();
+				try
+				{
+					if (removed)
+						return;
+					
+					removeIndex(cur - 1, temp);
+					removed = true;
+					cur--;
+				}
+				finally
+				{
+					temp.setNull();
+				}
 			}
 		}
 	}
