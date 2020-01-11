@@ -689,7 +689,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * @param value the value to add (converted to internal value).
 	 * @return true if added, false if not.
 	 * @see #isList()
-	 * FIXME: Not working??
 	 */
 	public boolean listAddAt(int index, Object value)
 	{
@@ -1127,6 +1126,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		{
 			default:
 				return false;
+			case NULL:
 			case BOOLEAN:
 			case INTEGER:
 			case FLOAT:
@@ -1862,7 +1862,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		
 		ScriptValue cache1 = CACHEVALUE1.get();
 		ScriptValue cache2 = CACHEVALUE2.get();
-		// FIXME: String concatenation broke somehow.
+
 		try
 		{
 			cache1.set(operand);
@@ -2488,7 +2488,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 			
 			ScriptValue sv = data[size];
 			for (int i = size; i > index; i--)
-				data[size] = data[size - 1];
+				data[i] = data[i - 1];
 			data[index] = sv;
 			sv.set(value);
 			size++;

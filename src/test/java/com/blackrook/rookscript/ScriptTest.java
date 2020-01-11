@@ -62,8 +62,8 @@ public class ScriptTest
 			.withScope("script", new DefaultVariableResolver())
 			.createInstance();
 		
-		doDisassemble(instance);
-		doStress(instance, 1);
+		//doDisassemble(instance);
+		doStress(instance, 5000);
 	}
 	
 }
