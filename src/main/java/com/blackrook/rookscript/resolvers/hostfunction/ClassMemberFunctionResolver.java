@@ -669,24 +669,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		public boolean execute(ScriptInstance scriptInstance)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
-			scriptInstance.popStackValue(temp);
 
-			Object object = null;
-			if (!isStatic)
-			{
-				scriptInstance.popStackValue(temp);
-				object = temp.asObject();
-			}
-			
-			if (!validType.isAssignableFrom(object.getClass()))
-			{
-				ScriptExecutionException see = new ScriptExecutionException("First parameter is not the correct type.");
-				if (errorHandling)
-					scriptInstance.pushStackValue(see);
-				else
-					throw see; 
-			}
-			
 			Object[] vbuf = OBJECTARRAYS.get().getParamArray(paramTypes.length);
 			for (int i = vbuf.length - 1; i >= 0; i++)
 			{
@@ -694,6 +677,22 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 				vbuf[i] = temp.createForType(paramTypes[i]);
 			}
 
+			Object object = null;
+			if (!isStatic)
+			{
+				scriptInstance.popStackValue(temp);
+				object = temp.asObject();
+				
+				if (!validType.isAssignableFrom(object.getClass()))
+				{
+					ScriptExecutionException see = new ScriptExecutionException("First parameter is not the correct type.");
+					if (errorHandling)
+						scriptInstance.pushStackValue(see);
+					else
+						throw see; 
+				}
+			}
+			
 			Object retval = null;
 			try 
 			{
