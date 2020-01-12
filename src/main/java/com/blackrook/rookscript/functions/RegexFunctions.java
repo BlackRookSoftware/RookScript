@@ -33,7 +33,7 @@ public enum RegexFunctions implements ScriptFunctionType
 	ISREGEX(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -44,11 +44,11 @@ public enum RegexFunctions implements ScriptFunctionType
 				try {
 					PatternUtils.get(regex);
 				} catch (PatternSyntaxException e) {
-					scriptInstance.pushStackValue(false);
+					returnValue.set(false);
 					return true;
 				}
 				
-				scriptInstance.pushStackValue(true);
+				returnValue.set(true);
 				return true;
 			}
 			finally
@@ -68,7 +68,7 @@ public enum RegexFunctions implements ScriptFunctionType
 	REGEXSPLIT(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -82,13 +82,13 @@ public enum RegexFunctions implements ScriptFunctionType
 				try {
 					p = PatternUtils.get(regex);
 				} catch (PatternSyntaxException e) {
-					scriptInstance.pushStackValue(ErrorType.create(e));
+					returnValue.set(ErrorType.create(e));
 					return true;
 				}
 				if (p != null)
-					scriptInstance.pushStackValue(Pattern.compile(regex).split(str));
+					returnValue.set(Pattern.compile(regex).split(str));
 				else
-					scriptInstance.pushStackValue(null);
+					returnValue.setNull();
 				return true;
 			}
 			finally
@@ -129,7 +129,7 @@ public enum RegexFunctions implements ScriptFunctionType
 	}
 	
 	@Override
-	public abstract boolean execute(ScriptInstance scriptInstance);
+	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));

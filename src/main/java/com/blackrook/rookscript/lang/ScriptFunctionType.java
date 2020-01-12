@@ -8,6 +8,7 @@
 package com.blackrook.rookscript.lang;
 
 import com.blackrook.rookscript.ScriptInstance;
+import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 
 /**
@@ -34,13 +35,14 @@ public interface ScriptFunctionType
 	public Usage getUsage();
 	
 	/**
-	 * Executes this function.
+	 * Executes this function. The value in <code>returnValue</code> is automatically pushed onto the stack after the call.
 	 * If a {@link Throwable} is thrown from this call, it is wrapped in a {@link ScriptExecutionException}.
 	 * {@link ScriptExecutionException}s are thrown as-is.
 	 * @param scriptInstance the originating script instance.
+	 * @param returnValue the value pushed to the stack on return.
 	 * @return if false, this halts script execution, else if true, continue.
 	 */
-	public boolean execute(ScriptInstance scriptInstance);
+	public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
 
 	/**
 	 * Function usage info.

@@ -466,22 +466,27 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		}
 	
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
 			Object[] vbuf = OBJECTARRAYS.get().getParamArray(paramTypes.length);
-			for (int i = vbuf.length - 1; i >= 0; i--)
+			try 
 			{
-				scriptInstance.popStackValue(value);
-				vbuf[i] = value.createForType(paramTypes[i]);
+				for (int i = vbuf.length - 1; i >= 0; i--)
+				{
+					scriptInstance.popStackValue(value);
+					vbuf[i] = value.createForType(paramTypes[i]);
+				}
+				
+				value.set(type, Utils.construct(constructor, vbuf));
+				returnValue.set(value);
+				return true;
 			}
-			
-			value.set(type, Utils.construct(constructor, vbuf));
-			scriptInstance.pushStackValue(value);
-
-			value.setNull();
-			Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
-			return true;
+			finally
+			{
+				value.setNull();
+				Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
+			}
 		}
 	
 		@Override
@@ -531,24 +536,29 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		}
 	
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
 			ScriptValue instance = CACHEVALUE2.get();
-			scriptInstance.popStackValue(value);
-			scriptInstance.popStackValue(instance);
-		
-			Object object = instance.asObject();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				scriptInstance.popStackValue(instance);
 			
-			if (!validType.isAssignableFrom(object.getClass()))
-				throw new ScriptExecutionException("First parameter is not the correct type.");
-			
-			Utils.setFieldValue(object, field, value.createForType(type));
-			scriptInstance.pushStackValue(chained ? object : null);
-
-			value.setNull();
-			instance.setNull();
-			return true;
+				Object object = instance.asObject();
+				
+				if (!validType.isAssignableFrom(object.getClass()))
+					throw new ScriptExecutionException("First parameter is not the correct type.");
+				
+				Utils.setFieldValue(object, field, value.createForType(type));
+				returnValue.set(chained ? object : null);
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				instance.setNull();
+			}
 		}
 		
 		@Override
@@ -596,20 +606,26 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		}
 	
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
-			scriptInstance.popStackValue(temp);
-	
-			Object object = temp.asObject();
-			
-			if (!validType.isAssignableFrom(object.getClass()))
-				throw new ScriptExecutionException("First parameter is not the correct type.");
-			
-			temp.set(type, Utils.getFieldValue(object, field));
-			scriptInstance.pushStackValue(temp);
-			temp.setNull();
-			return true;
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				
+				Object object = temp.asObject();
+				
+				if (!validType.isAssignableFrom(object.getClass()))
+					throw new ScriptExecutionException("First parameter is not the correct type.");
+				
+				temp.set(type, Utils.getFieldValue(object, field));
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 		
 		@Override
@@ -666,60 +682,65 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		}
 		
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
-
 			Object[] vbuf = OBJECTARRAYS.get().getParamArray(paramTypes.length);
-			for (int i = vbuf.length - 1; i >= 0; i++)
+			try
 			{
-				scriptInstance.popStackValue(temp);
-				vbuf[i] = temp.createForType(paramTypes[i]);
-			}
+				for (int i = vbuf.length - 1; i >= 0; i++)
+				{
+					scriptInstance.popStackValue(temp);
+					vbuf[i] = temp.createForType(paramTypes[i]);
+				}
 
-			Object object = null;
-			if (!isStatic)
-			{
-				scriptInstance.popStackValue(temp);
-				object = temp.asObject();
+				Object object = null;
+				if (!isStatic)
+				{
+					scriptInstance.popStackValue(temp);
+					object = temp.asObject();
+					
+					if (!validType.isAssignableFrom(object.getClass()))
+					{
+						ScriptExecutionException see = new ScriptExecutionException("First parameter is not the correct type.");
+						if (errorHandling)
+							returnValue.set(see);
+						else
+							throw see; 
+					}
+				}
 				
-				if (!validType.isAssignableFrom(object.getClass()))
+				Object retval = null;
+				try 
 				{
-					ScriptExecutionException see = new ScriptExecutionException("First parameter is not the correct type.");
-					if (errorHandling)
-						scriptInstance.pushStackValue(see);
+					retval = Utils.invokeBlind(method, object, vbuf);
+
+					if (chained)
+					{
+						retval = object;
+					}
 					else
-						throw see; 
-				}
-			}
-			
-			Object retval = null;
-			try 
-			{
-				retval = Utils.invokeBlind(method, object, vbuf);
-				Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
-
-				if (chained)
+					{
+						temp.set(type, retval);
+						retval = temp;
+					}
+				} 
+				catch (Throwable t) 
 				{
-					retval = object;
+					if (errorHandling)
+						retval = t;
+					else
+						throw t;
 				}
-				else
-				{
-					temp.set(type, retval);
-					retval = temp;
-				}
-			} 
-			catch (Throwable t) 
-			{
-				if (errorHandling)
-					retval = t;
-				else
-					throw t;
-			}
 
-			scriptInstance.pushStackValue(retval);
-			temp.setNull();
-			return true;
+				returnValue.set(retval);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+				Arrays.fill(vbuf, null);
+			}
 		}
 
 		@Override

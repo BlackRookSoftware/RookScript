@@ -28,7 +28,7 @@ public enum MathFunctions implements ScriptFunctionType
 	MIN(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			ScriptValue arg2 = CACHEVALUE2.get();
@@ -37,9 +37,9 @@ public enum MathFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(arg2);
 				scriptInstance.popStackValue(arg1);
 				if (arg1.compareTo(arg2) < 0)
-					scriptInstance.pushStackValue(arg1);
+					returnValue.set(arg1);
 				else
-					scriptInstance.pushStackValue(arg2);
+					returnValue.set(arg2);
 				return true;
 			}
 			finally
@@ -58,7 +58,7 @@ public enum MathFunctions implements ScriptFunctionType
 	MAX(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			ScriptValue arg2 = CACHEVALUE2.get();
@@ -67,9 +67,9 @@ public enum MathFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(arg2);
 				scriptInstance.popStackValue(arg1);
 				if (arg1.compareTo(arg2) < 0)
-					scriptInstance.pushStackValue(arg2);
+					returnValue.set(arg2);
 				else
-					scriptInstance.pushStackValue(arg1);
+					returnValue.set(arg1);
 				return true;
 			}
 			finally
@@ -89,7 +89,7 @@ public enum MathFunctions implements ScriptFunctionType
 	POW(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -98,7 +98,7 @@ public enum MathFunctions implements ScriptFunctionType
 				double power = temp.asDouble();
 				scriptInstance.popStackValue(temp);
 				double value = temp.asDouble();
-				scriptInstance.pushStackValue(Math.pow(value, power));
+				returnValue.set(Math.pow(value, power));
 				return true;
 			}
 			finally
@@ -116,13 +116,13 @@ public enum MathFunctions implements ScriptFunctionType
 	ROUND(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.round(temp.asDouble()));
+				returnValue.set(Math.round(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -140,13 +140,13 @@ public enum MathFunctions implements ScriptFunctionType
 	FLOOR(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.floor(temp.asDouble()));
+				returnValue.set(Math.floor(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -164,13 +164,13 @@ public enum MathFunctions implements ScriptFunctionType
 	CEILING(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.ceil(temp.asDouble()));
+				returnValue.set(Math.ceil(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -190,7 +190,7 @@ public enum MathFunctions implements ScriptFunctionType
 	FIX(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -200,7 +200,7 @@ public enum MathFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				double value = temp.asDouble();
 				double p = Math.pow(10, -place);
-				scriptInstance.pushStackValue(Math.round(value * p) / p);
+				returnValue.set(Math.round(value * p) / p);
 				return true;
 			}
 			finally
@@ -216,9 +216,9 @@ public enum MathFunctions implements ScriptFunctionType
 	E(0)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
-			scriptInstance.pushStackValue(Math.E);
+			returnValue.set(Math.E);
 			return true;
 		}
 	},
@@ -230,13 +230,13 @@ public enum MathFunctions implements ScriptFunctionType
 	LOGE(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.log(temp.asDouble()));
+				returnValue.set(Math.log(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -253,13 +253,13 @@ public enum MathFunctions implements ScriptFunctionType
 	LOG10(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.log10(temp.asDouble()));
+				returnValue.set(Math.log10(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -277,13 +277,13 @@ public enum MathFunctions implements ScriptFunctionType
 	SQRT(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.sqrt(temp.asDouble()));
+				returnValue.set(Math.sqrt(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -299,9 +299,9 @@ public enum MathFunctions implements ScriptFunctionType
 	PI(0)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
-			scriptInstance.pushStackValue(Math.PI);
+			returnValue.set(Math.PI);
 			return true;
 		}
 	},
@@ -313,13 +313,13 @@ public enum MathFunctions implements ScriptFunctionType
 	DEG2RAD(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Utils.degToRad(temp.asDouble()));
+				returnValue.set(Utils.degToRad(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -336,13 +336,13 @@ public enum MathFunctions implements ScriptFunctionType
 	RAD2DEG(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Utils.radToDeg(temp.asDouble()));
+				returnValue.set(Utils.radToDeg(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -359,13 +359,13 @@ public enum MathFunctions implements ScriptFunctionType
 	SIN(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.sin(temp.asDouble()));
+				returnValue.set(Math.sin(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -382,13 +382,13 @@ public enum MathFunctions implements ScriptFunctionType
 	COS(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.cos(temp.asDouble()));
+				returnValue.set(Math.cos(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -405,13 +405,13 @@ public enum MathFunctions implements ScriptFunctionType
 	TAN(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.tan(temp.asDouble()));
+				returnValue.set(Math.tan(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -428,13 +428,13 @@ public enum MathFunctions implements ScriptFunctionType
 	ASIN(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.asin(temp.asDouble()));
+				returnValue.set(Math.asin(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -451,13 +451,13 @@ public enum MathFunctions implements ScriptFunctionType
 	ACOS(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.acos(temp.asDouble()));
+				returnValue.set(Math.acos(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -474,13 +474,13 @@ public enum MathFunctions implements ScriptFunctionType
 	ATAN(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(Math.atan(temp.asDouble()));
+				returnValue.set(Math.atan(temp.asDouble()));
 				return true;
 			}
 			finally
@@ -499,7 +499,7 @@ public enum MathFunctions implements ScriptFunctionType
 	CLAMP(3)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -510,7 +510,7 @@ public enum MathFunctions implements ScriptFunctionType
 				double arg2 = temp.asDouble();
 				scriptInstance.popStackValue(temp);
 				double arg1 = temp.asDouble();
-				scriptInstance.pushStackValue(Utils.clampValue(arg1, arg2, arg3));
+				returnValue.set(Utils.clampValue(arg1, arg2, arg3));
 				return true;
 			}
 			finally
@@ -529,7 +529,7 @@ public enum MathFunctions implements ScriptFunctionType
 	WRAP(3)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -540,7 +540,7 @@ public enum MathFunctions implements ScriptFunctionType
 				double arg2 = temp.asDouble();
 				scriptInstance.popStackValue(temp);
 				double arg1 = temp.asDouble();
-				scriptInstance.pushStackValue(Utils.wrapValue(arg1, arg2, arg3));
+				returnValue.set(Utils.wrapValue(arg1, arg2, arg3));
 				return true;
 			}
 			finally
@@ -559,7 +559,7 @@ public enum MathFunctions implements ScriptFunctionType
 	LERP(3)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -570,7 +570,7 @@ public enum MathFunctions implements ScriptFunctionType
 				double arg2 = temp.asDouble();
 				scriptInstance.popStackValue(temp);
 				double arg1 = temp.asDouble();
-				scriptInstance.pushStackValue(Utils.linearInterpolate(arg1, arg2, arg3));
+				returnValue.set(Utils.linearInterpolate(arg1, arg2, arg3));
 				return true;
 			}
 			finally
@@ -587,13 +587,13 @@ public enum MathFunctions implements ScriptFunctionType
 	TOBOOLEAN(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(temp.asBoolean());
+				returnValue.set(temp.asBoolean());
 				return true;
 			}
 			finally
@@ -610,13 +610,13 @@ public enum MathFunctions implements ScriptFunctionType
 	TOINT(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(temp.asLong());
+				returnValue.set(temp.asLong());
 				return true;
 			}
 			finally
@@ -633,13 +633,13 @@ public enum MathFunctions implements ScriptFunctionType
 	TOFLOAT(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(temp.asDouble());
+				returnValue.set(temp.asDouble());
 				return true;
 			}
 			finally
@@ -656,13 +656,13 @@ public enum MathFunctions implements ScriptFunctionType
 	TOSTRING(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(temp.asString());
+				returnValue.set(temp.asString());
 				return true;
 			}
 			finally
@@ -680,7 +680,7 @@ public enum MathFunctions implements ScriptFunctionType
 	PARSEINT(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -690,10 +690,10 @@ public enum MathFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				String value = temp.asString();
 				try {
-					scriptInstance.pushStackValue(Integer.parseInt(value, radix));
+					returnValue.set(Integer.parseInt(value, radix));
 					return true;
 				} catch (NumberFormatException e) {
-					scriptInstance.pushStackValue(Double.NaN);
+					returnValue.set(Double.NaN);
 					return true;
 				}
 			}
@@ -714,7 +714,7 @@ public enum MathFunctions implements ScriptFunctionType
 	COLOR(4)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -728,7 +728,7 @@ public enum MathFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				byte red = temp.asByte();
 				long argb = alpha << 24 | red << 16 | green << 8 | blue;
-				scriptInstance.pushStackValue(argb);
+				returnValue.set(argb);
 				return true;
 			}
 			finally
@@ -748,7 +748,7 @@ public enum MathFunctions implements ScriptFunctionType
 	COLORF(4)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -766,7 +766,7 @@ public enum MathFunctions implements ScriptFunctionType
 					| ((int)(red * 255.0) & 0x0ff) << 16 
 					| ((int)(green * 255.0) & 0x0ff) << 8 
 					| ((int)(blue * 255.0) & 0x0ff);
-				scriptInstance.pushStackValue(argb);
+				returnValue.set(argb);
 				return true;
 			}
 			finally
@@ -806,7 +806,7 @@ public enum MathFunctions implements ScriptFunctionType
 	}
 	
 	@Override
-	public abstract boolean execute(ScriptInstance scriptInstance);
+	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));

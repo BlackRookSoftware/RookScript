@@ -91,12 +91,19 @@ public enum ScriptCommandType
 			ScriptFunctionType functionType = resolver.getNamespacedFunction(null, name);
 			if (functionType == null)
 				throw new ScriptExecutionException("host function "+name+" could not be resolved");
+			
+			ScriptValue ret = RETURNVALUE.get();
+			ret.setNull();
 			try {
-				return functionType.execute(scriptInstance);
+				boolean c = functionType.execute(scriptInstance, ret);
+				scriptInstance.pushStackValue(ret);
+				return c;
 			} catch (ScriptExecutionException e) {
 				throw e;
 			} catch (Throwable t) {
 				throw new ScriptExecutionException("host function "+name+" threw an exception.", t);
+			} finally {
+				ret.setNull();
 			}
 		}
 	},
@@ -117,12 +124,19 @@ public enum ScriptCommandType
 			ScriptFunctionType functionType = resolver.getNamespacedFunction(namespace, name);
 			if (functionType == null)
 				throw new ScriptExecutionException("host function "+namespace+"::"+name+" could not be resolved");
+
+			ScriptValue ret = RETURNVALUE.get();
+			ret.setNull();
 			try {
-				return functionType.execute(scriptInstance);
+				boolean c = functionType.execute(scriptInstance, ret);
+				scriptInstance.pushStackValue(ret);
+				return c;
 			} catch (ScriptExecutionException e) {
 				throw e;
 			} catch (Throwable t) {
 				throw new ScriptExecutionException("host function "+namespace+"::"+name+" threw an exception.", t);
+			} finally {
+				ret.setNull();
 			}
 		}
 	},
@@ -1684,5 +1698,6 @@ public enum ScriptCommandType
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<ScriptValue> CACHEVALUE3 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> RETURNVALUE = ThreadLocal.withInitial(()->ScriptValue.create(null));
 
 }

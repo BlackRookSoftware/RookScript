@@ -27,14 +27,13 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	PRINT(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
 				scriptInstance.getEnvironment().print(temp.asString());
-				scriptInstance.pushStackValue(null);
 				return true;
 			}
 			finally
@@ -52,14 +51,13 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	PRINTERR(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
 				scriptInstance.getEnvironment().printErr(temp.asString());
-				scriptInstance.pushStackValue(null);
 				return true;
 			}
 			finally
@@ -77,7 +75,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	PRINTLN(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -103,7 +101,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	PRINTLNERR(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -111,7 +109,6 @@ public enum StandardIOFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				scriptInstance.getEnvironment().printErr(temp.asString());
 				scriptInstance.getEnvironment().printErr('\n');
-				scriptInstance.pushStackValue(null);
 				return true;
 			}
 			finally
@@ -150,7 +147,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	}
 	
 	@Override
-	public abstract boolean execute(ScriptInstance scriptInstance);
+	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));

@@ -33,13 +33,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	TYPEOF(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(arg1);
-				scriptInstance.pushStackValue(arg1.getTypeName());
+				returnValue.set(arg1.getTypeName());
 				return true;
 			}
 			finally
@@ -56,13 +56,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	ISERROR(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(arg1);
-				scriptInstance.pushStackValue(arg1.isError());
+				returnValue.set(arg1.isError());
 				return true;
 			}
 			finally
@@ -80,7 +80,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	ERRORTYPE(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			try
@@ -88,12 +88,14 @@ public enum CommonFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(arg1);
 				if (!arg1.isError())
 				{
-					scriptInstance.pushStackValue(null);
+					returnValue.setNull();
 					return true;
 				}
-				
-				scriptInstance.pushStackValue(arg1.asObjectType(ErrorType.class).getType());
-				return true;
+				else
+				{
+					returnValue.set(arg1.asObjectType(ErrorType.class).getType());
+					return true;
+				}
 			}
 			finally
 			{
@@ -110,7 +112,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	ERRORMSG(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			try
@@ -118,12 +120,14 @@ public enum CommonFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(arg1);
 				if (!arg1.isError())
 				{
-					scriptInstance.pushStackValue(null);
+					returnValue.setNull();
 					return true;
 				}
-				
-				scriptInstance.pushStackValue(arg1.asObjectType(ErrorType.class).getMessage());
-				return true;
+				else
+				{
+					returnValue.set(arg1.asObjectType(ErrorType.class).getMessage());
+					return true;
+				}
 			}
 			finally
 			{
@@ -140,7 +144,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	ERRORLOCALMSG(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			try
@@ -148,12 +152,14 @@ public enum CommonFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(arg1);
 				if (!arg1.isError())
 				{
-					scriptInstance.pushStackValue(null);
+					returnValue.setNull();
 					return true;
 				}
-				
-				scriptInstance.pushStackValue(arg1.asObjectType(ErrorType.class).getLocalizedMessage());
-				return true;
+				else
+				{
+					returnValue.set(arg1.asObjectType(ErrorType.class).getLocalizedMessage());
+					return true;
+				}
 			}
 			finally
 			{
@@ -170,7 +176,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	ERRORMAP(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			ScriptValue temp = CACHEVALUE2.get();
@@ -179,17 +185,19 @@ public enum CommonFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(arg1);
 				if (!arg1.isError())
 				{
-					scriptInstance.pushStackValue(false);
+					returnValue.set(false);
 					return true;
 				}
-				
-				ErrorType error = arg1.asObjectType(ErrorType.class);
-				temp.setEmptyMap();
-				temp.mapSet("type", error.getType());
-				temp.mapSet("message", error.getMessage());
-				temp.mapSet("localizedMessage", error.getLocalizedMessage());
-				scriptInstance.pushStackValue(temp);
-				return true;
+				else
+				{
+					ErrorType error = arg1.asObjectType(ErrorType.class);
+					temp.setEmptyMap();
+					temp.mapSet("type", error.getType());
+					temp.mapSet("message", error.getMessage());
+					temp.mapSet("localizedMessage", error.getLocalizedMessage());
+					returnValue.set(temp);
+					return true;
+				}
 			}
 			finally
 			{
@@ -211,13 +219,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	LENGTH(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(arg1);
-				scriptInstance.pushStackValue(arg1.length());
+				returnValue.set(arg1.length());
 				return true;
 			}
 			finally
@@ -241,13 +249,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	EMPTY(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(arg1);
-				scriptInstance.pushStackValue(arg1.empty());
+				returnValue.set(arg1.empty());
 				return true;
 			}
 			finally
@@ -264,13 +272,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	STRUPPER(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(arg1);
-				scriptInstance.pushStackValue(arg1.asString().toUpperCase());
+				returnValue.set(arg1.asString().toUpperCase());
 				return true;
 			}
 			finally
@@ -287,13 +295,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	STRLOWER(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(arg1);
-				scriptInstance.pushStackValue(arg1.asString().toLowerCase());
+				returnValue.set(arg1.asString().toLowerCase());
 				return true;
 			}
 			finally
@@ -310,13 +318,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	STRTRIM(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(arg1);
-				scriptInstance.pushStackValue(arg1.asString().trim());
+				returnValue.set(arg1.asString().trim());
 				return true;
 			}
 			finally
@@ -335,7 +343,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	STRCHAR(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -345,9 +353,9 @@ public enum CommonFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				String str = temp.asString();
 				if (value < 0 || value >= str.length())
-					scriptInstance.pushStackValue(null);
+					returnValue.setNull();
 				else
-					scriptInstance.pushStackValue(String.valueOf(str.charAt(value)));
+					returnValue.set(String.valueOf(str.charAt(value)));
 				return true;
 			}
 			finally
@@ -367,7 +375,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	SUBSTR(3)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -380,13 +388,13 @@ public enum CommonFunctions implements ScriptFunctionType
 				String str = temp.asString();
 				int length = str.length();
 				if (startIndex < 0 || startIndex >= length)
-					scriptInstance.pushStackValue(null);
+					returnValue.setNull();
 				else if (endIndex < 0 && endIndex > length)
-					scriptInstance.pushStackValue(null);
+					returnValue.setNull();
 				else if (endIndex < startIndex)
-					scriptInstance.pushStackValue(null);
+					returnValue.setNull();
 				else
-					scriptInstance.pushStackValue(str.substring(startIndex, endIndex));
+					returnValue.set(str.substring(startIndex, endIndex));
 				return true;
 			}
 			finally
@@ -405,7 +413,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	STRINDEX(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -414,7 +422,7 @@ public enum CommonFunctions implements ScriptFunctionType
 				String targetStr = temp.asString();
 				scriptInstance.popStackValue(temp);
 				String str = temp.asString();
-				scriptInstance.pushStackValue(str.indexOf(targetStr));
+				returnValue.set(str.indexOf(targetStr));
 				return true;
 			}
 			finally
@@ -433,7 +441,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	STRLASTINDEX(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
@@ -442,7 +450,7 @@ public enum CommonFunctions implements ScriptFunctionType
 				String targetStr = temp.asString();
 				scriptInstance.popStackValue(temp);
 				String str = temp.asString();
-				scriptInstance.pushStackValue(str.lastIndexOf(targetStr));
+				returnValue.set(str.lastIndexOf(targetStr));
 				return true;
 			}
 			finally
@@ -460,7 +468,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	LIST(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
 			ScriptValue newlist = CACHEVALUE2.get();
@@ -476,13 +484,13 @@ public enum CommonFunctions implements ScriptFunctionType
 						value.listGetByIndex(i, temp);
 						newlist.listSetByIndex(i, temp);
 					}
-					scriptInstance.pushStackValue(newlist);
+					returnValue.set(newlist);
 				}
 				else
 				{
 					newlist.setEmptyList(4);
 					newlist.listSetByIndex(0, value);
-					scriptInstance.pushStackValue(newlist);
+					returnValue.set(newlist);
 				}
 				return true;
 			}
@@ -504,7 +512,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	LISTADD(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue item = CACHEVALUE1.get();
 			ScriptValue list = CACHEVALUE2.get();
@@ -512,7 +520,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(item);
 				scriptInstance.popStackValue(list);
-				scriptInstance.pushStackValue(list.listAdd(item));
+				returnValue.set(list.listAdd(item));
 				return true;				
 			}
 			finally
@@ -533,7 +541,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	LISTADDAT(3)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue item = CACHEVALUE1.get();
 			ScriptValue list = CACHEVALUE2.get();
@@ -543,7 +551,7 @@ public enum CommonFunctions implements ScriptFunctionType
 				int index = item.asInt();
 				scriptInstance.popStackValue(item);
 				scriptInstance.popStackValue(list);
-				scriptInstance.pushStackValue(list.listAddAt(index, item));
+				returnValue.set(list.listAddAt(index, item));
 				return true;
 			}
 			finally
@@ -564,7 +572,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	LISTREMOVE(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue item = CACHEVALUE1.get();
 			ScriptValue list = CACHEVALUE2.get();
@@ -572,7 +580,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(item);
 				scriptInstance.popStackValue(list);
-				scriptInstance.pushStackValue(list.listRemove(item));
+				returnValue.set(list.listRemove(item));
 				return true;
 			}
 			finally
@@ -593,7 +601,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	LISTREMOVEAT(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			ScriptValue list = CACHEVALUE2.get();
@@ -603,7 +611,7 @@ public enum CommonFunctions implements ScriptFunctionType
 				int index = temp.asInt();
 				scriptInstance.popStackValue(list);
 				list.listRemoveAt(index, temp);
-				scriptInstance.pushStackValue(temp);
+				returnValue.set(temp);
 				return true;
 			}
 			finally
@@ -623,14 +631,14 @@ public enum CommonFunctions implements ScriptFunctionType
 	LISTSORT(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
 				temp.sort();
-				scriptInstance.pushStackValue(temp);
+				returnValue.set(temp);
 				return true;
 			}
 			finally
@@ -650,7 +658,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	LISTCONTAINS(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue item = CACHEVALUE1.get();
 			ScriptValue list = CACHEVALUE2.get();
@@ -658,7 +666,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(item);
 				scriptInstance.popStackValue(list);
-				scriptInstance.pushStackValue(list.listContains(item));
+				returnValue.set(list.listContains(item));
 				return true;
 			}
 			finally
@@ -679,7 +687,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	LISTINDEX(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue item = CACHEVALUE1.get();
 			ScriptValue list = CACHEVALUE2.get();
@@ -687,7 +695,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(item);
 				scriptInstance.popStackValue(list);
-				scriptInstance.pushStackValue(list.listGetIndexOf(item));
+				returnValue.set(list.listGetIndexOf(item));
 				return true;
 			}
 			finally
@@ -707,7 +715,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	SET(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
 			ScriptValue newset = CACHEVALUE2.get();
@@ -729,7 +737,7 @@ public enum CommonFunctions implements ScriptFunctionType
 					newset.setAdd(value);
 				}
 				
-				scriptInstance.pushStackValue(newset);
+				returnValue.set(newset);
 				return true;
 			}
 			finally
@@ -749,7 +757,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETADD(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
 			ScriptValue set = CACHEVALUE2.get();
@@ -757,7 +765,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(value);
 				scriptInstance.popStackValue(set);
-				scriptInstance.pushStackValue(set.setAdd(value));
+				returnValue.set(set.setAdd(value));
 				return true;
 			}
 			finally
@@ -777,7 +785,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETREMOVE(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
 			ScriptValue set = CACHEVALUE2.get();
@@ -785,7 +793,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(value);
 				scriptInstance.popStackValue(set);
-				scriptInstance.pushStackValue(set.setRemove(value));
+				returnValue.set(set.setRemove(value));
 				return true;
 			}
 			finally
@@ -806,7 +814,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETCONTAINS(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
 			ScriptValue set = CACHEVALUE2.get();
@@ -814,7 +822,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(value);
 				scriptInstance.popStackValue(set);
-				scriptInstance.pushStackValue(set.setContains(value));
+				returnValue.set(set.setContains(value));
 				return true;
 			}
 			finally
@@ -835,7 +843,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETSEARCH(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
 			ScriptValue set = CACHEVALUE2.get();
@@ -843,7 +851,7 @@ public enum CommonFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(value);
 				scriptInstance.popStackValue(set);
-				scriptInstance.pushStackValue(set.setSearch(value));
+				returnValue.set(set.setSearch(value));
 				return true;
 			}
 			finally
@@ -863,7 +871,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETUNION(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue set2 = CACHEVALUE1.get();
 			ScriptValue set1 = CACHEVALUE2.get();
@@ -900,7 +908,7 @@ public enum CommonFunctions implements ScriptFunctionType
 					out.setAdd(temp);
 				}
 				
-				scriptInstance.pushStackValue(out);
+				returnValue.set(out);
 				return true;
 			}
 			finally
@@ -922,7 +930,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETINTERSECT(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue set2 = CACHEVALUE1.get();
 			ScriptValue set1 = CACHEVALUE2.get();
@@ -958,7 +966,7 @@ public enum CommonFunctions implements ScriptFunctionType
 						out.setAdd(temp);
 				}
 				
-				scriptInstance.pushStackValue(out);
+				returnValue.set(out);
 				return true;
 			}
 			finally
@@ -980,7 +988,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETXOR(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue set2 = CACHEVALUE1.get();
 			ScriptValue set1 = CACHEVALUE2.get();
@@ -1021,7 +1029,7 @@ public enum CommonFunctions implements ScriptFunctionType
 						out.setAdd(temp);
 				}
 				
-				scriptInstance.pushStackValue(out);
+				returnValue.set(out);
 				return true;
 			}
 			finally
@@ -1043,7 +1051,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETDIFF(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue set2 = CACHEVALUE1.get();
 			ScriptValue set1 = CACHEVALUE2.get();
@@ -1081,7 +1089,7 @@ public enum CommonFunctions implements ScriptFunctionType
 					out.setRemove(temp);
 				}
 				
-				scriptInstance.pushStackValue(out);
+				returnValue.set(out);
 				return true;
 			}
 			finally
@@ -1103,7 +1111,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	MAPKEYS(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance) 
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
 		{
 			ScriptValue map = CACHEVALUE1.get();
 			ScriptValue out = CACHEVALUE2.get();
@@ -1112,15 +1120,17 @@ public enum CommonFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(map);
 				if (!map.isMap())
 				{
-					scriptInstance.pushStackValue(false);
+					returnValue.set(false);
 					return true;
 				}
-				
-				out.setEmptyList();
-				for (Entry e : map.asObjectType(MapType.class))
-					out.setAdd(e.getName());
-				scriptInstance.pushStackValue(out);
-				return true;
+				else
+				{
+					out.setEmptyList();
+					for (Entry e : map.asObjectType(MapType.class))
+						out.setAdd(e.getName());
+					returnValue.set(out);
+					return true;
+				}
 			}
 			finally
 			{
@@ -1138,7 +1148,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	MAPVALUE(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance) 
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
 		{
 			ScriptValue keyValue = CACHEVALUE1.get();
 			ScriptValue map = CACHEVALUE2.get();
@@ -1150,13 +1160,15 @@ public enum CommonFunctions implements ScriptFunctionType
 
 				if (!map.isMap())
 				{
-					scriptInstance.pushStackValue(null);
+					returnValue.setNull();
 					return true;
 				}
-				
-				map.mapGet(keyValue.asString(), out);
-				scriptInstance.pushStackValue(out);
-				return true;
+				else
+				{
+					map.mapGet(keyValue.asString(), out);
+					returnValue.set(out);
+					return true;
+				}
 			}
 			finally
 			{
@@ -1180,7 +1192,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	MAPMERGE(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance) 
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
 		{
 			ScriptValue map2 = CACHEVALUE1.get();
 			ScriptValue map1 = CACHEVALUE2.get();
@@ -1193,7 +1205,7 @@ public enum CommonFunctions implements ScriptFunctionType
 				
 				if (!map1.isMap())
 				{
-					scriptInstance.pushStackValue(out);
+					returnValue.set(out);
 					return true;
 				}
 				
@@ -1202,14 +1214,14 @@ public enum CommonFunctions implements ScriptFunctionType
 				
 				if (!map2.isMap())
 				{
-					scriptInstance.pushStackValue(out);
+					returnValue.set(out);
 					return true;
 				}
 
 				for (Entry e : map2.asObjectType(MapType.class))
 					out.mapSet(e.getName(), e.getValue());
 				
-				scriptInstance.pushStackValue(out);
+				returnValue.set(out);
 				return true;
 			}
 			finally
@@ -1249,7 +1261,7 @@ public enum CommonFunctions implements ScriptFunctionType
 	}
 	
 	@Override
-	public abstract boolean execute(ScriptInstance scriptInstance);
+	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue value);
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
