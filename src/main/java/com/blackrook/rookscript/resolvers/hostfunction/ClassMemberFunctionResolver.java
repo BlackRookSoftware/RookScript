@@ -401,7 +401,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	public ClassMemberFunctionResolver<C> addMethod(String functionName, Method method, Type type, boolean chained, boolean errorHandling, Usage usage)
 	{
 		String name = functionName.toLowerCase();
-		map.put(name, new MethodInvoker(name, method, type, usage, chained, errorHandling));
+		map.put(name, new MethodInvoker(name, method, type, chained, errorHandling, usage));
 		return this;
 	}
 	
@@ -651,7 +651,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		private boolean isStatic;
 		private Class<?>[] paramTypes;
 
-		private MethodInvoker(String name, Method method, Type type, Usage usage, boolean chained, boolean errorHandling)
+		private MethodInvoker(String name, Method method, Type type, boolean chained, boolean errorHandling, Usage usage)
 		{
 			this.name = name;
 			this.method = method;

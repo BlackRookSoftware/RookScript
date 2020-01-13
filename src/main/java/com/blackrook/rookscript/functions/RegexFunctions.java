@@ -14,6 +14,7 @@ import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
+import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
 import com.blackrook.rookscript.struct.PatternUtils;
@@ -25,13 +26,22 @@ import com.blackrook.rookscript.struct.PatternUtils;
 public enum RegexFunctions implements ScriptFunctionType
 {
 	
-	/**
-	 * Checks if a string is a valid RegEx pattern.
-	 * If the pattern is malformed, this returns false, else true.
-	 * ARG1: The string. 
-	 */
 	ISREGEX(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions("Checks if a string is a valid RegEx pattern.")
+				.parameter("message", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string to test.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if the pattern is malformed, false otherwise.")
+				)
+			;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -58,15 +68,23 @@ public enum RegexFunctions implements ScriptFunctionType
 		}
 	},
 	
-	/**
-	 * Splits a string by a RegEx pattern.
-	 * Returns an array.
-	 * If the pattern is malformed, this returns an error type.
-	 * ARG1: The string (converted). 
-	 * ARG2: The RegEx pattern to split on.
-	 */
 	REGEXSPLIT(2)
 	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions("Splits a string by a RegEx pattern.")
+				.parameter("string", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string to split.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "A list of strings."), 
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "If the pattern is malformed.")
+				)
+			;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -85,10 +103,8 @@ public enum RegexFunctions implements ScriptFunctionType
 					returnValue.set(ErrorType.create(e));
 					return true;
 				}
-				if (p != null)
-					returnValue.set(Pattern.compile(regex).split(str));
-				else
-					returnValue.setNull();
+				
+				returnValue.set(p.split(str));
 				return true;
 			}
 			finally
@@ -103,9 +119,11 @@ public enum RegexFunctions implements ScriptFunctionType
 	;
 	
 	private final int parameterCount;
+	private Usage usage;
 	private RegexFunctions(int parameterCount)
 	{
 		this.parameterCount = parameterCount;
+		this.usage = null;
 	}
 	
 	/**
@@ -125,11 +143,15 @@ public enum RegexFunctions implements ScriptFunctionType
 	@Override
 	public Usage getUsage()
 	{
-		return null;
+		if (usage == null)
+			usage = usage();
+		return usage;
 	}
 	
 	@Override
 	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
+
+	protected abstract Usage usage();
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));

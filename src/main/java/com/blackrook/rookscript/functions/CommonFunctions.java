@@ -12,6 +12,7 @@ import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.ScriptValue.MapType;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
+import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
@@ -22,16 +23,25 @@ import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entr
  */
 public enum CommonFunctions implements ScriptFunctionType
 {	
-	/**
-	 * Returns the "length" of a value.
-	 * ARG1: The value. 
-	 * 
-	 * Strings: string length.
-	 * Lists: list length.
-	 * Others: 1
-	 */
 	TYPEOF(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions("Returns the type name of a value.")
+				.parameter("value", 
+					ScriptFunctionUsage.type("The provided value.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, 
+						"The type name. Can be \"null\", \"boolean\", \"integer\", " +
+						"\"float\", \"string\", \"list\", \"map\", \"error\", or an \"objectref\" string."
+					)
+				)
+			;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -49,12 +59,22 @@ public enum CommonFunctions implements ScriptFunctionType
 		}
 	},
 
-	/**
-	 * Returns if the provided value is an error type. True if so, false if not.
-	 * ARG1: The value. 
-	 */
 	ISERROR(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions("Checks if the provided value is an error type.")
+				.parameter("value", 
+					ScriptFunctionUsage.type("The provided value.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if so, false if not.")
+				)
+			;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -72,13 +92,23 @@ public enum CommonFunctions implements ScriptFunctionType
 		}
 	},
 	
-	/**
-	 * Returns the error type.
-	 * If not an error, this returns null.
-	 * ARG1: The value. 
-	 */
 	ERRORTYPE(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions("Returns the error type. If not an error, this returns null.")
+				.parameter("error", 
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The error type.")
+				)
+			;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -104,13 +134,23 @@ public enum CommonFunctions implements ScriptFunctionType
 		}
 	},
 
-	/**
-	 * Returns the error message.
-	 * If not an error, this returns null.
-	 * ARG1: The value. 
-	 */
 	ERRORMSG(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions("Returns the error message. If not an error, this returns null.")
+				.parameter("error", 
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The error message.")
+				)
+			;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -136,13 +176,23 @@ public enum CommonFunctions implements ScriptFunctionType
 		}
 	},
 
-	/**
-	 * Returns the localized error message.
-	 * If not an error, this returns false.
-	 * ARG1: The value. 
-	 */
 	ERRORLOCALMSG(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions("Returns the localized error message. If not an error, this returns null.")
+				.parameter("error", 
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The localized error message.")
+				)
+			;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -168,13 +218,23 @@ public enum CommonFunctions implements ScriptFunctionType
 		}
 	},
 
-	/**
-	 * Returns an error type as a map.
-	 * If not an error, this returns false.
-	 * ARG1: The value. 
-	 */
 	ERRORMAP(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions("Returns an error type as a map. If not an error, this returns null.")
+				.parameter("error", 
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
+					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "A map of {type:STRING, message:STRING, localizedmessage:STRING}.")
+				)
+			;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -194,7 +254,7 @@ public enum CommonFunctions implements ScriptFunctionType
 					temp.setEmptyMap();
 					temp.mapSet("type", error.getType());
 					temp.mapSet("message", error.getMessage());
-					temp.mapSet("localizedMessage", error.getLocalizedMessage());
+					temp.mapSet("localizedmessage", error.getLocalizedMessage());
 					returnValue.set(temp);
 					return true;
 				}
@@ -218,6 +278,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	LENGTH(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -249,6 +316,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	EMPTY(1)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
@@ -271,6 +345,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	STRUPPER(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -295,6 +376,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	STRLOWER(1)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue arg1 = CACHEVALUE1.get();
@@ -317,6 +405,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	STRTRIM(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -342,6 +437,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	STRCHAR(2)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -374,6 +476,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	SUBSTR(3)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -413,6 +522,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	STRINDEX(2)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
@@ -441,6 +557,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	STRLASTINDEX(2)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
@@ -467,6 +590,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	LIST(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -504,6 +634,38 @@ public enum CommonFunctions implements ScriptFunctionType
 	}, 
 	
 	/**
+	 * Creates a new list of a specific length, all values initialized to null.
+	 * ARG1: The new list length.
+	 */
+	LISTNEW(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				int length = temp.asInt();
+				temp.setEmptyList(length, length);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	}, 
+	
+	/**
 	 * Adds a value to a list. 
 	 * If the "list" argument is not a list or not added, this returns false, else true.
 	 * ARG1: The list to add the item to. 
@@ -511,6 +673,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	LISTADD(2)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -540,6 +709,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	LISTADDAT(3)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -572,6 +748,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	LISTREMOVE(2)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue item = CACHEVALUE1.get();
@@ -600,6 +783,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	LISTREMOVEAT(2)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -631,6 +821,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	LISTSORT(1)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
@@ -657,6 +854,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	LISTCONTAINS(2)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -687,6 +891,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	LISTINDEX(2)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue item = CACHEVALUE1.get();
@@ -714,6 +925,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	SET(1)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -749,6 +967,27 @@ public enum CommonFunctions implements ScriptFunctionType
 	},
 	
 	/**
+	 * Creates a new set of a specific length, all values initialized to null.
+	 * This is entirely identical to {@link #LISTNEW} - this is here for expressing clarity of intent in script code.
+	 * ARG1: The new set length.
+	 */
+	SETNEW(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			return LISTNEW.execute(scriptInstance, returnValue);
+		}
+	}, 
+	
+	/**
 	 * Adds a value to a list, expected to be set up like a set.
 	 * Returns true if value was added (and is not already in the list), false otherwise.
 	 * ARG1: The set (list).
@@ -756,6 +995,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	SETADD(2)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -784,6 +1030,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	SETREMOVE(2)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -814,6 +1067,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETCONTAINS(2)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
@@ -843,6 +1103,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETSEARCH(2)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
@@ -870,6 +1137,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	SETUNION(2)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -930,6 +1204,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETINTERSECT(2)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue set2 = CACHEVALUE1.get();
@@ -987,6 +1268,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	SETXOR(2)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
@@ -1051,6 +1339,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	SETDIFF(2)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue set2 = CACHEVALUE1.get();
@@ -1111,6 +1406,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	MAPKEYS(1)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
 		{
 			ScriptValue map = CACHEVALUE1.get();
@@ -1147,6 +1449,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	 */
 	MAPVALUE(2)
 	{
+		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
 		{
@@ -1192,6 +1501,13 @@ public enum CommonFunctions implements ScriptFunctionType
 	MAPMERGE(2)
 	{
 		@Override
+		protected Usage usage()
+		{
+			// TODO: Finish this.
+			return null;
+		}
+		
+		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
 		{
 			ScriptValue map2 = CACHEVALUE1.get();
@@ -1235,9 +1551,11 @@ public enum CommonFunctions implements ScriptFunctionType
 	;
 	
 	private final int parameterCount;
+	private Usage usage;
 	private CommonFunctions(int parameterCount)
 	{
 		this.parameterCount = parameterCount;
+		this.usage = null;
 	}
 	
 	/**
@@ -1257,11 +1575,15 @@ public enum CommonFunctions implements ScriptFunctionType
 	@Override
 	public Usage getUsage()
 	{
-		return null;
+		if (usage == null)
+			usage = usage();
+		return usage;
 	}
 	
 	@Override
 	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue value);
+
+	protected abstract Usage usage();
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
