@@ -34,8 +34,7 @@ public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
 	}
 	
 	/**
-	 * Creates a new usage builder.
-	 * @return
+	 * @return a new usage description.
 	 */
 	public static ScriptFunctionUsage create()
 	{
@@ -78,6 +77,7 @@ public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
 	/**
 	 * Sets the instructions.
 	 * @param instructions the new instructions.
+	 * @return itself.
 	 */
 	public ScriptFunctionUsage instructions(String instructions)
 	{
@@ -89,6 +89,7 @@ public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
 	 * Adds a parameter's usage.
 	 * @param name the parameter name.
 	 * @param usages each accepted type and its description.
+	 * @return itself.
 	 */
 	public ScriptFunctionUsage parameter(String name, TypeUsage ... usages)
 	{
@@ -98,8 +99,8 @@ public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
 	
 	/**
 	 * Adds return types.
-	 * @param name the parameter name.
-	 * @param typeUsages each accepted type and its description.
+	 * @param typeUsages each returned type and its description.
+	 * @return itself.
 	 */
 	public ScriptFunctionUsage returns(TypeUsage ... typeUsages)
 	{

@@ -7,8 +7,9 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Collection;
@@ -2460,59 +2461,77 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static class BufferType
 	{
-		private ByteBuffer data;
+		private byte[] data;
+		private ByteOrder byteOrder;
 		
-		private BufferType(int size, ByteOrder order)
+		private BufferType(int size, ByteOrder byteOrder)
 		{
-			this.data = ByteBuffer.allocateDirect(size)
-				.order(order)
-				.position(0);
+			this.data = new byte[size];
+			this.byteOrder = byteOrder;
 		}
 
 		/**
 		 * Sets the byte order of this buffer.
-		 * @param order the new byte order (true = big endian, false = little endian).
+		 * @param byteOrder the new byte order.
 		 */
-		public void setByteOrder(boolean order)
+		public void setByteOrder(ByteOrder byteOrder)
 		{
-			data.order(order ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN);
+			this.byteOrder = byteOrder;
 		}
 		
 		/**
 		 * Gets the byte order of this buffer.
-		 * @return order the current byte order (true = big endian, false = little endian).
+		 * @return order the current byte order.
 		 */
-		public boolean getByteOrder()
+		public ByteOrder getByteOrder()
 		{
-			return data.order() == ByteOrder.BIG_ENDIAN;
+			return byteOrder;
 		}
 		
 		/**
-		 * Gets the buffer's current position.
-		 * @return the current buffer position.
+		 * Reads bytes from an input stream into this buffer.
+		 * @param index the destination index.
+		 * @param in the input stream to read from.
+		 * @param length the amount of bytes to read.
+		 * @return the amount of bytes actually read (see {@link InputStream#read(byte[], int, int)}).
+		 * @throws IOException if a read error occurs.
+		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds the buffer length. 
 		 */
-		public int getPosition()
+		public int readBytes(int index, InputStream in, int length) throws IOException
 		{
-			return data.position();
+			return in.read(data, index, length);
+		}
+
+		/**
+		 * Reads bytes from another buffer into this one.
+		 * @param index the destination index.
+		 * @param buffer the source buffer.
+		 * @param offset the offset into the provided buffer to start the read from.
+		 * @param length the amount of bytes to read.
+		 * @return the amount of bytes read (length).
+		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds this buffer's length 
+		 * 		or <code>index + length</code> exceeds the length of the provided buffer. 
+		 */
+		public int readBytes(int index, BufferType buffer, int offset, int length)
+		{
+			readBytes(index, buffer.data, offset, length);
+			return length;
 		}
 		
 		/**
-		 * Sets the buffer's current position.
-		 * @param pos the new buffer position.
+		 * Reads bytes from a byte array into this buffer.
+		 * @param index the destination index.
+		 * @param bytes the source array.
+		 * @param offset the offset into the provided array to start the read from.
+		 * @param length the amount of bytes to read.
+		 * @return the amount of bytes read (length).
+		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds this buffer's length 
+		 * 		or <code>index + length</code> exceeds the length of the provided buffer. 
 		 */
-		public void setPosition(int pos)
+		public int readBytes(int index, byte[] bytes, int offset, int length)
 		{
-			data.position(pos);
-		}
-		
-		/**
-		 * Reads a byte value into the buffer.
-		 * If the end of the buffer is reached, an error is set.
-		 * @param destination the value to set.
-		 */
-		public void readByte(ScriptValue destination)
-		{
-			// TODO: Finish this.
+			System.arraycopy(bytes, offset, data, index, length);
+			return length;
 		}
 		
 		// TODO: Finish this.
@@ -2522,7 +2541,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		 */
 		public int size()
 		{
-			return data.capacity();
+			return data.length;
 		}
 		
 	}
