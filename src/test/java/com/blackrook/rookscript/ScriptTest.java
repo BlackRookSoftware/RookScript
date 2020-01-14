@@ -28,14 +28,26 @@ public class ScriptTest
 		System.out.print(sw);
 	}
 	
-	private static void doStress(ScriptInstance instance, int times)
+	private static void doStress(ScriptInstance instance, final int times)
 	{
-		while (times-- > 0)
+		ScriptValue out = ScriptValue.create(null);
+		long total = 0L;
+		long min = Long.MAX_VALUE;
+		long max = Long.MIN_VALUE;
+		
+		int x = times;
+		while (x-- > 0)
 		{
 			long nanos = System.nanoTime();
 			instance.call("main");
-			System.out.println("Script returns: "+instance.popStackValue()+" "+(System.nanoTime()-nanos)+" ns");
+			nanos = System.nanoTime() - nanos;
+			total += nanos;
+			min = Math.min(min, nanos);
+			max = Math.max(max, nanos);
+			instance.popStackValue(out);
+			System.out.println("Script returns: " + out + " " + nanos + " ns");
 		}
+		System.out.printf("Min/Avg/Max: %d / %d / %d ns\n", min, (total / times), max);
 	}
 	
 	public static void main(String[] args) throws Exception
@@ -59,8 +71,8 @@ public class ScriptTest
 			.withScope("script", new DefaultVariableResolver())
 			.createInstance();
 		
-		doDisassemble(instance);
-		doStress(instance, 1);
+		//doDisassemble(instance);
+		doStress(instance, 5000);
 	}
 	
 }

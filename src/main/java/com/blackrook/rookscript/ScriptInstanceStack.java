@@ -266,28 +266,40 @@ public class ScriptInstanceStack
 
 	/**
 	 * Pops a value off the stack.
-	 * @return the value at the top of the stack, or null if none left.
+	 * @param out the output value.
 	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
 	 */
-	public ScriptValue popStackValue()
+	public void popStackValue(ScriptValue out)
 	{
 		if (scriptValueStackTop < 0)
 			throw new ScriptStackException("value stack underflow");
-		return scriptValueStack[scriptValueStackTop--];
+		out.set(scriptValueStack[scriptValueStackTop]);
+		scriptValueStack[scriptValueStackTop--].setNull();
+	}
+
+	/**
+	 * Pops a value off the stack, ignoring output.
+	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
+	 */
+	public void popStackValue()
+	{
+		if (scriptValueStackTop < 0)
+			throw new ScriptStackException("value stack underflow");
+		scriptValueStack[scriptValueStackTop--].setNull();
 	}
 
 	/**
 	 * Gets a value on the stack (reference).
 	 * @param depthFromTop the depth from the top (0 is top, 1 ... N is N places down).
-	 * @return the value at the top of the stack, or null if none left.
+	 * @param out the output value.
 	 * @throws ScriptStackException if the top minus the depth escapes the active stack bounds. 
 	 */
-	public ScriptValue getStackValue(int depthFromTop)
+	public void getStackValue(int depthFromTop, ScriptValue out)
 	{
 		int d = scriptValueStackTop - depthFromTop;
 		if (d < 0 || d > scriptValueStackTop)
 			throw new ScriptStackException("nonexistant stack position");
-		return scriptValueStack[scriptValueStackTop - depthFromTop];
+		out.set(scriptValueStack[scriptValueStackTop - depthFromTop]);
 	}
 	
 	/**

@@ -7,15 +7,12 @@
  ******************************************************************************/
 package com.blackrook.rookscript.lang;
 
-import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
-
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
-import com.blackrook.rookscript.struct.ScriptThreadLocal.Cache;
 
 /**
  * Directive type for scripts.
@@ -94,12 +91,19 @@ public enum ScriptCommandType
 			ScriptFunctionType functionType = resolver.getNamespacedFunction(null, name);
 			if (functionType == null)
 				throw new ScriptExecutionException("host function "+name+" could not be resolved");
+			
+			ScriptValue ret = RETURNVALUE.get();
+			ret.setNull();
 			try {
-				return functionType.execute(scriptInstance);
+				boolean c = functionType.execute(scriptInstance, ret);
+				scriptInstance.pushStackValue(ret);
+				return c;
 			} catch (ScriptExecutionException e) {
 				throw e;
 			} catch (Throwable t) {
 				throw new ScriptExecutionException("host function "+name+" threw an exception.", t);
+			} finally {
+				ret.setNull();
 			}
 		}
 	},
@@ -120,12 +124,19 @@ public enum ScriptCommandType
 			ScriptFunctionType functionType = resolver.getNamespacedFunction(namespace, name);
 			if (functionType == null)
 				throw new ScriptExecutionException("host function "+namespace+"::"+name+" could not be resolved");
+
+			ScriptValue ret = RETURNVALUE.get();
+			ret.setNull();
 			try {
-				return functionType.execute(scriptInstance);
+				boolean c = functionType.execute(scriptInstance, ret);
+				scriptInstance.pushStackValue(ret);
+				return c;
 			} catch (ScriptExecutionException e) {
 				throw e;
 			} catch (Throwable t) {
 				throw new ScriptExecutionException("host function "+namespace+"::"+name+" threw an exception.", t);
+			} finally {
+				ret.setNull();
 			}
 		}
 	},
@@ -162,14 +173,22 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			String labelName;
-			ScriptValue sv = scriptInstance.popStackValue();
-			labelName = sv.asBoolean() ? String.valueOf(operand1) : String.valueOf(operand2);
-			
-			int index = scriptInstance.getCommandIndex(labelName);
-			if (index < 0)
-				throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-			scriptInstance.setCurrentCommandIndex(index);
-			return true;
+			ScriptValue sv = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(sv);
+				labelName = sv.asBoolean() ? String.valueOf(operand1) : String.valueOf(operand2);
+				
+				int index = scriptInstance.getCommandIndex(labelName);
+				if (index < 0)
+					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
+				scriptInstance.setCurrentCommandIndex(index);
+				return true;
+			} 
+			finally 
+			{
+				sv.setNull();
+			}
 		}
 	},
 	
@@ -183,16 +202,25 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue sv = scriptInstance.popStackValue();
-			if (sv.asBoolean())
+			ScriptValue sv = CACHEVALUE1.get();
+			try 
 			{
-				String labelName =  String.valueOf(operand1);
-				int index = scriptInstance.getCommandIndex(labelName);
-				if (index < 0)
-					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-				scriptInstance.setCurrentCommandIndex(index);
+				scriptInstance.popStackValue(sv);
+				boolean b = sv.asBoolean();
+				if (b)
+				{
+					String labelName =  String.valueOf(operand1);
+					int index = scriptInstance.getCommandIndex(labelName);
+					if (index < 0)
+						throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
+					scriptInstance.setCurrentCommandIndex(index);
+				}
+				return true;
+			} 
+			finally
+			{
+				sv.setNull();
 			}
-			return true;
 		}
 	},
 	
@@ -206,16 +234,25 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue sv = scriptInstance.popStackValue();
-			if (!sv.asBoolean())
+			ScriptValue sv = CACHEVALUE1.get();
+			try 
 			{
-				String labelName =  String.valueOf(operand1);
-				int index = scriptInstance.getCommandIndex(labelName);
-				if (index < 0)
-					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-				scriptInstance.setCurrentCommandIndex(index);
+				scriptInstance.popStackValue(sv);
+				boolean b = sv.asBoolean();
+				if (!b)
+				{
+					String labelName =  String.valueOf(operand1);
+					int index = scriptInstance.getCommandIndex(labelName);
+					if (index < 0)
+						throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
+					scriptInstance.setCurrentCommandIndex(index);
+				}
+				return true;
+			} 
+			finally
+			{
+				sv.setNull();
 			}
-			return true;
 		}
 	},
 	
@@ -229,20 +266,27 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue sv = scriptInstance.getStackValue(0);
-			if (sv == null)
-				throw new ScriptExecutionException("stack is empty.");
-			else if (!sv.asBoolean())
-				scriptInstance.popStackValue();
-			else
+			ScriptValue sv = CACHEVALUE1.get();
+			try 
 			{
-				String labelName =  String.valueOf(operand1);
-				int index = scriptInstance.getCommandIndex(labelName);
-				if (index < 0)
-					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-				scriptInstance.setCurrentCommandIndex(index);
+				scriptInstance.getStackValue(0, sv);
+				boolean b = sv.asBoolean();
+				if (!b)
+					scriptInstance.popStackValue();
+				else
+				{
+					String labelName =  String.valueOf(operand1);
+					int index = scriptInstance.getCommandIndex(labelName);
+					if (index < 0)
+						throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
+					scriptInstance.setCurrentCommandIndex(index);
+				}
+				return true;
+			} 
+			finally 
+			{
+				sv.setNull();
 			}
-			return true;
 		}
 	},
 	
@@ -256,20 +300,27 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue sv = scriptInstance.getStackValue(0);
-			if (sv == null)
-				throw new ScriptExecutionException("stack is empty.");
-			else if (sv.isNull())
-				scriptInstance.popStackValue();
-			else
+			ScriptValue sv = CACHEVALUE1.get();
+			try 
 			{
-				String labelName =  String.valueOf(operand1);
-				int index = scriptInstance.getCommandIndex(labelName);
-				if (index < 0)
-					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-				scriptInstance.setCurrentCommandIndex(index);
+				scriptInstance.getStackValue(0, sv);
+				boolean b = sv.isNull();
+				if (b)
+					scriptInstance.popStackValue();
+				else
+				{
+					String labelName =  String.valueOf(operand1);
+					int index = scriptInstance.getCommandIndex(labelName);
+					if (index < 0)
+						throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
+					scriptInstance.setCurrentCommandIndex(index);
+				}
+				return true;
+			} 
+			finally 
+			{
+				sv.setNull();
 			}
-			return true;
 		}
 	},
 	
@@ -283,21 +334,28 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			Cache cache = getCache();
-			if (operand1 instanceof Long)
-				cache.temp.set((Long)operand1);
-			else if (operand1 instanceof Double)
-				cache.temp.set((Double)operand1);
-			else if (operand1 instanceof Boolean)
-				cache.temp.set((Boolean)operand1);
-			else if (operand1 instanceof String)
-				cache.temp.set((String)operand1);
-			else if (operand1 == null)
-				throw new ScriptExecutionException("Attempt to push null value");
-			else
-				cache.temp.set(operand1);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue sv = CACHEVALUE1.get();
+			try 
+			{
+				if (operand1 instanceof Long)
+					sv.set((Long)operand1);
+				else if (operand1 instanceof Double)
+					sv.set((Double)operand1);
+				else if (operand1 instanceof Boolean)
+					sv.set((Boolean)operand1);
+				else if (operand1 instanceof String)
+					sv.set((String)operand1);
+				else if (operand1 == null)
+					throw new ScriptExecutionException("Attempt to push null value");
+				else
+					sv.set(operand1);
+				scriptInstance.pushStackValue(sv);
+				return true;
+			} 
+			finally 
+			{
+				sv.setNull();
+			}
 		}
 	},
 	
@@ -311,10 +369,16 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			Cache cache = getCache();
-			cache.temp.setNull();
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue sv = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.pushStackValue(sv);
+				return true;
+			}
+			finally
+			{
+				sv.setNull();
+			}
 		}
 	},
 	
@@ -329,12 +393,18 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			String name = String.valueOf(operand1);
-			ScriptValue value = getCache().temp;
-			scriptInstance.getValue(name, value);
-			scriptInstance.pushStackValue(value);
-			return true;
+			ScriptValue sv = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.getValue(name, sv);
+				scriptInstance.pushStackValue(sv);
+				return true;
+			}
+			finally
+			{
+				sv.setNull();
+			}
 		}
-		
 	},
 	
 	/**
@@ -350,24 +420,30 @@ public enum ScriptCommandType
 		{
 			String scopeName = String.valueOf(operand1);
 			String variableName = String.valueOf(operand2);
-			ScriptVariableResolver scope;
-			if ((scope = scriptInstance.getScopeResolver().getScope(scopeName)) == null)
+			ScriptValue sv = CACHEVALUE1.get();
+			try
 			{
-				scriptInstance.pushStackValue(null);
-				return true;
-			}
+				ScriptVariableResolver scope;
+				if ((scope = scriptInstance.getScopeResolver().getScope(scopeName)) == null)
+				{
+					scriptInstance.pushStackValue(null);
+					return true;
+				}
 
-			ScriptValue value = getCache().temp;
-			if (!scope.getValue(variableName, value))
-			{
-				scriptInstance.pushStackValue(null);
+				if (!scope.getValue(variableName, sv))
+				{
+					scriptInstance.pushStackValue(null);
+					return true;
+				}
+				
+				scriptInstance.pushStackValue(sv);
 				return true;
 			}
-			
-			scriptInstance.pushStackValue(value);
-			return true;
+			finally
+			{
+				sv.setNull();
+			}
 		}
-		
 	},
 	
 	/**
@@ -379,9 +455,16 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			Cache cache = getCache();
-			cache.temp.setEmptyList();
-			scriptInstance.pushStackValue(cache.temp);
+			ScriptValue sv = CACHEVALUE1.get();
+			try
+			{
+				sv.setEmptyList();
+				scriptInstance.pushStackValue(sv);
+			}
+			finally
+			{
+				sv.setNull();
+			}
 			return true;
 		}
 	},
@@ -398,19 +481,26 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			int length = scriptInstance.popStackValue().asInt();
-
-			ScriptValue[] list = new ScriptValue[length];
-			for (int i = 0; i < length; i++)
-				list[i] = ScriptValue.create(null);
-			
-			while (length-- > 0)
+			ScriptValue sv = CACHEVALUE1.get();
+			ScriptValue temp = CACHEVALUE2.get();
+			try
 			{
-				ScriptValue popped = scriptInstance.popStackValue();
-				list[length].set(popped);
+				scriptInstance.popStackValue(sv);
+				int length = sv.asInt();
+				sv.setEmptyList(length, length);
+				while (length-- > 0)
+				{
+					scriptInstance.popStackValue(temp);
+					sv.listSetByIndex(length, temp);
+				}
+				scriptInstance.pushStackValue(sv);
+				return true;
 			}
-			scriptInstance.pushStackValue(list);
-			return true;
+			finally
+			{
+				sv.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -425,18 +515,31 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue indexValue = scriptInstance.popStackValue();
-			ScriptValue listValue = scriptInstance.popStackValue();
-
-			if (!listValue.isList())
+			ScriptValue indexValue = CACHEVALUE1.get();
+			ScriptValue listValue = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try 
 			{
-				scriptInstance.pushStackValue(null);
-				return true;
-			}
+				scriptInstance.popStackValue(indexValue);
+				scriptInstance.popStackValue(listValue);
 
-			int index = indexValue.asInt();
-			scriptInstance.pushStackValue(listValue.listGetByIndex(index));
-			return true;
+				if (!listValue.isList())
+				{
+					scriptInstance.pushStackValue(null);
+					return true;
+				}
+
+				int index = indexValue.asInt();
+				listValue.listGetByIndex(index, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			} 
+			finally 
+			{
+				indexValue.setNull();
+				listValue.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -451,18 +554,31 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue indexValue = scriptInstance.getStackValue(0);
-			ScriptValue listValue = scriptInstance.getStackValue(1);
-
-			if (!listValue.isList())
+			ScriptValue indexValue = CACHEVALUE1.get();
+			ScriptValue listValue = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
 			{
-				scriptInstance.pushStackValue(null);
+				scriptInstance.getStackValue(0, indexValue);
+				scriptInstance.getStackValue(1, listValue);
+
+				if (!listValue.isList())
+				{
+					scriptInstance.pushStackValue(null);
+					return true;
+				}
+				
+				int index = indexValue.asInt();
+				listValue.listGetByIndex(index, temp);
+				scriptInstance.pushStackValue(temp);
 				return true;
 			}
-			
-			int index = indexValue.asInt();
-			scriptInstance.pushStackValue(listValue.listGetByIndex(index));
-			return true;
+			finally
+			{
+				indexValue.setNull();
+				listValue.setNull();
+				temp.setNull();
+			}
 		}
 	},
 
@@ -475,10 +591,17 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			Cache cache =  getCache();
-			cache.temp.setEmptyMap();
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				temp.setEmptyMap();
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 
@@ -494,17 +617,29 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			int amount = scriptInstance.popStackValue().asInt();
-			ScriptValue map = ScriptValue.createEmptyMap();
-			
-			while (amount-- > 0)
+			ScriptValue temp = CACHEVALUE1.get();
+			ScriptValue popped = CACHEVALUE2.get();
+			ScriptValue keyValue = CACHEVALUE3.get();
+			try
 			{
-				ScriptValue popped = scriptInstance.popStackValue();
-				ScriptValue keyValue = scriptInstance.popStackValue();
-				map.mapSet(keyValue.asString(), popped);
+				scriptInstance.popStackValue(temp);
+				int amount = temp.asInt();
+				temp.setEmptyMap(amount);
+				while (amount-- > 0)
+				{
+					scriptInstance.popStackValue(popped);
+					scriptInstance.popStackValue(keyValue);
+					temp.mapSet(keyValue.asString(), popped);
+				}
+				scriptInstance.pushStackValue(temp);
+				return true;
 			}
-			scriptInstance.pushStackValue(map);
-			return true;
+			finally
+			{
+				temp.setNull();
+				popped.setNull();
+				keyValue.setNull();
+			}
 		}
 	},
 	
@@ -519,20 +654,31 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue keyValue = scriptInstance.popStackValue();
-			ScriptValue mapValue = scriptInstance.popStackValue();
-			
-			if (!mapValue.isMap())
+			ScriptValue temp = CACHEVALUE1.get();
+			ScriptValue keyValue = CACHEVALUE2.get();
+			ScriptValue mapValue = CACHEVALUE3.get();
+			try
 			{
-				scriptInstance.pushStackValue(null);
+				scriptInstance.popStackValue(keyValue);
+				scriptInstance.popStackValue(mapValue);
+				
+				if (!mapValue.isMap())
+				{
+					scriptInstance.pushStackValue(null);
+					return true;
+				}
+				
+				String key = keyValue.asString();
+				mapValue.mapGet(key, temp);
+				scriptInstance.pushStackValue(temp);
 				return true;
 			}
-			
-			String key = keyValue.asString();
-			ScriptValue temp = getCache().temp;
-			mapValue.mapGet(key, temp);
-			scriptInstance.pushStackValue(temp);
-			return true;
+			finally
+			{
+				temp.setNull();
+				keyValue.setNull();
+				mapValue.setNull();
+			}
 		}
 	}, 
 	
@@ -547,20 +693,31 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue keyValue = scriptInstance.getStackValue(0);
-			ScriptValue mapValue = scriptInstance.getStackValue(1);
-
-			if (!mapValue.isMap())
+			ScriptValue temp = CACHEVALUE1.get();
+			ScriptValue keyValue = CACHEVALUE2.get();
+			ScriptValue mapValue = CACHEVALUE3.get();
+			try
 			{
-				scriptInstance.pushStackValue(null);
+				scriptInstance.getStackValue(0, keyValue);
+				scriptInstance.getStackValue(1, mapValue);
+
+				if (!mapValue.isMap())
+				{
+					scriptInstance.pushStackValue(null);
+					return true;
+				}
+				
+				String key = keyValue.asString();
+				mapValue.mapGet(key, temp);
+				scriptInstance.pushStackValue(temp);
 				return true;
 			}
-			
-			String key = keyValue.asString();
-			ScriptValue temp = getCache().temp;
-			mapValue.mapGet(key, temp);
-			scriptInstance.pushStackValue(temp);
-			return true;
+			finally
+			{
+				temp.setNull();
+				keyValue.setNull();
+				mapValue.setNull();
+			}
 		}
 	},
 	
@@ -588,9 +745,17 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			String name = String.valueOf(operand1);
-			ScriptValue value = scriptInstance.popStackValue();
-			scriptInstance.setValue(name, value);
-			return true;
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.setValue(name, temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -605,25 +770,33 @@ public enum ScriptCommandType
 		{
 			String scopeName = String.valueOf(operand1);
 			String variableName = String.valueOf(operand2);
-			ScriptValue value = scriptInstance.popStackValue();
-
-			ScriptScopeResolver resolver = scriptInstance.getScopeResolver();
-			if (resolver == null)
+			ScriptValue value = CACHEVALUE1.get();
+			try
 			{
-				scriptInstance.pushStackValue(null);
+				scriptInstance.popStackValue(value);
+
+				ScriptScopeResolver resolver = scriptInstance.getScopeResolver();
+				if (resolver == null)
+				{
+					scriptInstance.pushStackValue(null);
+					return true;
+				}
+
+				ScriptVariableResolver scope;
+				if ((scope = resolver.getScope(scopeName)) == null)
+				{
+					scriptInstance.pushStackValue(null);
+					return true;
+				}
+
+				if (!scope.isReadOnly(variableName))
+					scope.setValue(variableName, value);
 				return true;
 			}
-
-			ScriptVariableResolver scope;
-			if ((scope = resolver.getScope(scopeName)) == null)
+			finally
 			{
-				scriptInstance.pushStackValue(null);
-				return true;
+				value.setNull();
 			}
-
-			if (!scope.isReadOnly(variableName))
-				scope.setValue(variableName, value);
-			return true;
 		}
 	},
 	
@@ -637,16 +810,28 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			ScriptValue indexValue = scriptInstance.popStackValue();
-			ScriptValue listValue = scriptInstance.popStackValue();
-			
-			if (!listValue.isList())
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue indexValue = CACHEVALUE2.get();
+			ScriptValue listValue = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				scriptInstance.popStackValue(indexValue);
+				scriptInstance.popStackValue(listValue);
+
+				if (!listValue.isList())
+					return true;
+				
+				int index = indexValue.asInt();
+				listValue.listSetByIndex(index, value);
 				return true;
-			
-			int index = indexValue.asInt();
-			listValue.listSetByIndex(index, value);
-			return true;
+			}
+			finally
+			{
+				value.setNull();
+				indexValue.setNull();
+				listValue.setNull();
+			}
 		}
 	},
 	
@@ -660,16 +845,28 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			ScriptValue keyValue = scriptInstance.popStackValue();
-			ScriptValue mapValue = scriptInstance.popStackValue();
-			
-			if (!mapValue.isMap())
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue keyValue = CACHEVALUE2.get();
+			ScriptValue mapValue = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				scriptInstance.popStackValue(keyValue);
+				scriptInstance.popStackValue(mapValue);
+
+				if (!mapValue.isMap())
+					return true;
+				
+				String key = keyValue.asString();
+				mapValue.mapSet(key, value);
 				return true;
-			
-			String key = keyValue.asString();
-			mapValue.mapSet(key, value);
-			return true;
+			}
+			finally
+			{
+				value.setNull();
+				keyValue.setNull();
+				mapValue.setNull();
+			}
 		}
 	},
 	
@@ -684,10 +881,17 @@ public enum ScriptCommandType
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			String name = String.valueOf(operand1);
-			Cache cache = getCache();
-			cache.temp.set(operand2);
-			scriptInstance.setValue(name, cache.temp);
-			return true;
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				temp.set(operand2);
+				scriptInstance.setValue(name, temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -703,10 +907,17 @@ public enum ScriptCommandType
 		{
 			String name = String.valueOf(operand1);
 			String valname = String.valueOf(operand2);
-			ScriptValue value = getCache().temp;
-			scriptInstance.getValue(valname, value);
-			scriptInstance.setValue(name, value);
-			return true;
+			ScriptValue value = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.getValue(valname, value);
+				scriptInstance.setValue(name, value);
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+			}
 		}
 	},
 
@@ -719,11 +930,20 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.logicalNot(value, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue temp = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				ScriptValue.logicalNot(value, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -737,11 +957,20 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.negate(value, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue temp = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				ScriptValue.negate(value, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -755,11 +984,20 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.absolute(value, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue temp = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				ScriptValue.absolute(value, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -773,11 +1011,18 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			cache.temp.set(value.asBoolean());
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				temp.set(temp.asBoolean());
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	}, 
 	
@@ -791,11 +1036,20 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.logicalNot(value, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue temp = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				ScriptValue.logicalNot(value, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -809,12 +1063,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.add(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.add(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -828,12 +1093,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.subtract(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.subtract(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -847,12 +1123,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.multiply(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.multiply(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -866,12 +1153,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.divide(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.divide(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -885,12 +1183,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.modulo(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.modulo(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -904,12 +1213,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.and(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.and(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -923,12 +1243,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.or(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.or(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -942,12 +1273,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.xor(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.xor(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -961,12 +1303,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.logicalAnd(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.logicalAnd(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -980,12 +1333,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.logicalOr(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.logicalOr(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -999,12 +1363,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.leftShift(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.leftShift(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1018,12 +1393,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.rightShift(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.rightShift(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1037,12 +1423,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.rightShiftPadded(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.rightShiftPadded(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1056,12 +1453,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.less(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.less(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1075,12 +1483,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.lessOrEqual(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.lessOrEqual(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1094,12 +1513,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.greater(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.greater(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1113,12 +1543,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.greaterOrEqual(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.greaterOrEqual(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1132,12 +1573,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.equal(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.equal(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1151,12 +1603,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.notEqual(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.notEqual(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1170,12 +1633,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.strictEqual(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.strictEqual(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1189,12 +1663,23 @@ public enum ScriptCommandType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
-			ScriptValue value2 = scriptInstance.popStackValue();
-			ScriptValue value1 = scriptInstance.popStackValue();
-			Cache cache = getCache();
-			ScriptValue.strictNotEqual(value1, value2, cache.temp);
-			scriptInstance.pushStackValue(cache.temp);
-			return true;
+			ScriptValue value2 = CACHEVALUE1.get();
+			ScriptValue value1 = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value2);
+				scriptInstance.popStackValue(value1);
+				ScriptValue.strictNotEqual(value1, value2, temp);
+				scriptInstance.pushStackValue(temp);
+				return true;
+			}
+			finally
+			{
+				value2.setNull();
+				value1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -1208,5 +1693,11 @@ public enum ScriptCommandType
 	 * @return if false, this halts script execution, else if true, continue.
 	 */
 	public abstract boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2);
+
+	// Threadlocal "stack" values.
+	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> CACHEVALUE3 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> RETURNVALUE = ThreadLocal.withInitial(()->ScriptValue.create(null));
 
 }

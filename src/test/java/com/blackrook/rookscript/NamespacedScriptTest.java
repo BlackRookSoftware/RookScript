@@ -32,11 +32,14 @@ public class NamespacedScriptTest
 	{
 		final long x = times;
 		long nanototal = System.nanoTime();
+		ScriptValue out = ScriptValue.create(null);
 		while (times-- > 0)
 		{
 			long nanos = System.nanoTime();
 			instance.call("main");
-			System.out.println("Script returns: "+instance.popStackValue()+" "+(System.nanoTime()-nanos)+" ns");
+			nanos = System.nanoTime() - nanos;
+			instance.popStackValue(out);
+			System.out.println("Script returns: " + out + " " + nanos + " ns");
 		}
 		System.out.println("Average: "+((System.nanoTime() - nanototal) / x)+" ns");
 	}

@@ -7,13 +7,12 @@
  ******************************************************************************/
 package com.blackrook.rookscript.functions;
 
-import static com.blackrook.rookscript.struct.ScriptThreadLocal.getCache;
-
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.ScriptValue.MapType;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
+import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
@@ -24,296 +23,638 @@ import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entr
  */
 public enum CommonFunctions implements ScriptFunctionType
 {	
-	/**
-	 * Returns the "length" of a value.
-	 * ARG1: The value. 
-	 * 
-	 * Strings: string length.
-	 * Lists: list length.
-	 * Others: 1
-	 */
 	TYPEOF(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			scriptInstance.pushStackValue(scriptInstance.popStackValue().getTypeName());
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the type name of a value."
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The provided value.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, 
+						"The type name. Can be \"null\", \"boolean\", \"integer\", " +
+						"\"float\", \"string\", \"list\", \"map\", \"error\", or an \"objectref\" string."
+					)
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(arg1);
+				returnValue.set(arg1.getTypeName());
+				return true;
+			}
+			finally
+			{
+				arg1.setNull();
+			}
 		}
 	},
 
-	/**
-	 * Returns if the provided value is an error type. True if so, false if not.
-	 * ARG1: The value. 
-	 */
 	ISERROR(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			scriptInstance.pushStackValue(scriptInstance.popStackValue().isError());
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if the provided value is an error type."
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The provided value.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if so, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(arg1);
+				returnValue.set(arg1.isError());
+				return true;
+			}
+			finally
+			{
+				arg1.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Returns the error type.
-	 * If not an error, this returns false.
-	 * ARG1: The value. 
-	 */
 	ERRORTYPE(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue sv = scriptInstance.popStackValue();
-			if (!sv.isError())
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the error type. If not an error, this returns null."
+				)
+				.parameter("error", 
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The error type.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
 			{
-				scriptInstance.pushStackValue(false);
-				return true;
+				scriptInstance.popStackValue(arg1);
+				if (!arg1.isError())
+				{
+					returnValue.setNull();
+					return true;
+				}
+				else
+				{
+					returnValue.set(arg1.asObjectType(ErrorType.class).getType());
+					return true;
+				}
 			}
-			
-			scriptInstance.pushStackValue(sv.asObjectType(ErrorType.class).getType());
-			return true;
+			finally
+			{
+				arg1.setNull();
+			}
 		}
 	},
 
-	/**
-	 * Returns the error message.
-	 * If not an error, this returns false.
-	 * ARG1: The value. 
-	 */
 	ERRORMSG(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue sv = scriptInstance.popStackValue();
-			if (!sv.isError())
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the error message. If not an error, this returns null."
+				)
+				.parameter("error", 
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The error message.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
 			{
-				scriptInstance.pushStackValue(false);
-				return true;
+				scriptInstance.popStackValue(arg1);
+				if (!arg1.isError())
+				{
+					returnValue.setNull();
+					return true;
+				}
+				else
+				{
+					returnValue.set(arg1.asObjectType(ErrorType.class).getMessage());
+					return true;
+				}
 			}
-			
-			scriptInstance.pushStackValue(sv.asObjectType(ErrorType.class).getMessage());
-			return true;
+			finally
+			{
+				arg1.setNull();
+			}
 		}
 	},
 
-	/**
-	 * Returns the localized error message.
-	 * If not an error, this returns false.
-	 * ARG1: The value. 
-	 */
 	ERRORLOCALMSG(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue sv = scriptInstance.popStackValue();
-			if (!sv.isError())
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the localized error message. If not an error, this returns null."
+				)
+				.parameter("error", 
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The localized error message.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
 			{
-				scriptInstance.pushStackValue(false);
-				return true;
+				scriptInstance.popStackValue(arg1);
+				if (!arg1.isError())
+				{
+					returnValue.setNull();
+					return true;
+				}
+				else
+				{
+					returnValue.set(arg1.asObjectType(ErrorType.class).getLocalizedMessage());
+					return true;
+				}
 			}
-			
-			scriptInstance.pushStackValue(sv.asObjectType(ErrorType.class).getLocalizedMessage());
-			return true;
+			finally
+			{
+				arg1.setNull();
+			}
 		}
 	},
 
-	/**
-	 * Returns an error type as a map.
-	 * If not an error, this returns false.
-	 * ARG1: The value. 
-	 */
 	ERRORMAP(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue sv = scriptInstance.popStackValue();
-			if (!sv.isError())
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns an error type as a map. If not an error, this returns null."
+				)
+				.parameter("error", 
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
+					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "A map of {type:STRING, message:STRING, localizedmessage:STRING}.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			ScriptValue temp = CACHEVALUE2.get();
+			try
 			{
-				scriptInstance.pushStackValue(false);
-				return true;
+				scriptInstance.popStackValue(arg1);
+				if (!arg1.isError())
+				{
+					returnValue.set(false);
+					return true;
+				}
+				else
+				{
+					ErrorType error = arg1.asObjectType(ErrorType.class);
+					temp.setEmptyMap();
+					temp.mapSet("type", error.getType());
+					temp.mapSet("message", error.getMessage());
+					temp.mapSet("localizedmessage", error.getLocalizedMessage());
+					returnValue.set(temp);
+					return true;
+				}
 			}
-			
-			ScriptValue out = ScriptValue.createEmptyMap();
-			out.mapExtract(sv.asObjectType(ErrorType.class));
-			scriptInstance.pushStackValue(out);
-			return true;
+			finally
+			{
+				arg1.setNull();
+				temp.setNull();
+			}
 		}
 	},
 
-	/**
-	 * Returns the "length" of a value.
-	 * ARG1: The value. 
-	 * 
-	 * Strings: string length.
-	 * Lists: list length.
-	 * Others: 1
-	 */
 	LENGTH(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			if (value.isString())
-				scriptInstance.pushStackValue(value.asString().length());
-			else
-				scriptInstance.pushStackValue(value.length());
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the \"length\" of a value."
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, 
+						"If value is: STRING, the length in characters. LIST, the length in elements." +
+						"MAP, the amount of keys. OBJECTREF, if Collection, returns size(). Others, 1."
+					)
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(arg1);
+				returnValue.set(arg1.length());
+				return true;
+			}
+			finally
+			{
+				arg1.setNull();
+			}
 		}
 	},
 
-	/**
-	 * Returns if a value is "empty".
-	 * ARG1: The value. 
-	 * 
-	 * Object: is Sizeable and empty, or is a Collection and empty, or null.
-	 * Boolean: is false.
-	 * Numeric: is 0 or NaN
-	 * Strings: length = 0.
-	 * Lists: length = 0.
-	 * Maps: length = 0.
-	 */
 	EMPTY(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(value.empty());
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns if a value is \"empty\"."
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER,
+						"Returns true if: NULL." +
+						"OBJECTREF: is a Collection and isEmpty() returns true. "+
+						"BOOLEAN: is false. "+
+						"INTEGER or FLOAT: is 0 or NaN. "+
+						"STRING: length = 0. "+
+						"LIST: length = 0. "+
+						"MAP: length = 0."
+					)
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(arg1);
+				returnValue.set(arg1.empty());
+				return true;
+			}
+			finally
+			{
+				arg1.setNull();
+			}
 		}
 	},
 
-	/**
-	 * Returns a string in full uppercase.
-	 * ARG1: The value (converted to string, first). 
-	 */
 	STRUPPER(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			scriptInstance.pushStackValue(scriptInstance.popStackValue().asString().toUpperCase());
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a string in full uppercase."
+				)
+				.parameter("string", 
+					ScriptFunctionUsage.type("The string (if not STRING, will be converted).")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The same string converted to uppercase.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(arg1);
+				returnValue.set(arg1.asString().toUpperCase());
+				return true;
+			}
+			finally
+			{
+				arg1.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Returns a string in full lowercase.
-	 * ARG1: The value (converted to string, first). 
-	 */
 	STRLOWER(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			scriptInstance.pushStackValue(scriptInstance.popStackValue().asString().toLowerCase());
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a string in full lowercase."
+				)
+				.parameter("string", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The same string converted to lowercase.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(arg1);
+				returnValue.set(arg1.asString().toLowerCase());
+				return true;
+			}
+			finally
+			{
+				arg1.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Returns a string trimmed of whitespace at both ends.
-	 * ARG1: The value (converted to string, first). 
-	 */
 	STRTRIM(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			scriptInstance.pushStackValue(scriptInstance.popStackValue().asString().trim());
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a string trimmed of whitespace at both ends."
+				)
+				.parameter("string", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The trimmed string.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(arg1);
+				returnValue.set(arg1.asString().trim());
+				return true;
+			}
+			finally
+			{
+				arg1.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Returns a single character from a string.
-	 * If ARG2 is out of bounds, this returns null.
-	 * ARG1: The string value (may be converted). 
-	 * ARG2: The string index. 
-	 */
 	STRCHAR(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			int value = scriptInstance.popStackValue().asInt();
-			String str = scriptInstance.popStackValue().asString();
-			if (value < 0 || value >= str.length())
-				scriptInstance.pushStackValue(null);
-			else
-				scriptInstance.pushStackValue(String.valueOf(str.charAt(value)));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a single character from a string."
+				)
+				.parameter("string", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+				)
+				.parameter("index", 
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index (0-based).")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If the index is out-of-bounds."),
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The character returned.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				int value = temp.asInt();
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				if (value < 0 || value >= str.length())
+					returnValue.setNull();
+				else
+					returnValue.set(String.valueOf(str.charAt(value)));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Returns a substring of another string.
-	 * Returns null if either index out of bounds, or end index is less than the start index.
-	 * ARG1: The string (converted). 
-	 * ARG2: The starting index (inclusive). 
-	 * ARG3: The ending index (exclusive). 
-	 */
 	SUBSTR(3)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			int endIndex = scriptInstance.popStackValue().asInt();
-			int startIndex = scriptInstance.popStackValue().asInt();
-			String str = scriptInstance.popStackValue().asString();
-			int length = str.length();
-			if (startIndex < 0 || startIndex >= length)
-				scriptInstance.pushStackValue(null);
-			else if (endIndex < 0 && endIndex > length)
-				scriptInstance.pushStackValue(null);
-			else if (endIndex < startIndex)
-				scriptInstance.pushStackValue(null);
-			else
-				scriptInstance.pushStackValue(str.substring(startIndex, endIndex));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a substring of another string."
+				)
+				.parameter("string", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+				)
+				.parameter("start", 
+						ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The starting index (0-based), inclusive.")
+				)
+				.parameter("end", 
+						ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The ending index (0-based), exclusive.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If either index is out-of-bounds or the end index is less than the start index."),
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The substring returned.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				int endIndex = temp.asInt();
+				scriptInstance.popStackValue(temp);
+				int startIndex = temp.asInt();
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				int length = str.length();
+				if (startIndex < 0 || startIndex >= length)
+					returnValue.setNull();
+				else if (endIndex < 0 && endIndex > length)
+					returnValue.setNull();
+				else if (endIndex < startIndex)
+					returnValue.setNull();
+				else
+					returnValue.set(str.substring(startIndex, endIndex));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Returns the starting index of a string inside another string.
-	 * If not found, this returns -1.
-	 * ARG1: The string (converted). 
-	 * ARG2: The string to search for (converted). 
-	 */
 	STRINDEX(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			String targetStr = scriptInstance.popStackValue().asString();
-			String str = scriptInstance.popStackValue().asString();
-			scriptInstance.pushStackValue(str.indexOf(targetStr));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the starting index of a string inside another string."
+				)
+				.parameter("string", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+				)
+				.parameter("search", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string to search for (if not STRING, will be converted).")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not found."),
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The starting index.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String targetStr = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				int out;
+				if ((out = str.indexOf(targetStr)) >= 0)
+					returnValue.set(out);
+				else
+					returnValue.setNull();
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Returns the starting index of a string inside another string, searching from the end.
-	 * If not found, this returns -1.
-	 * ARG1: The string (converted). 
-	 * ARG2: The string to search for (converted). 
-	 */
 	STRLASTINDEX(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			String targetStr = scriptInstance.popStackValue().asString();
-			String str = scriptInstance.popStackValue().asString();
-			scriptInstance.pushStackValue(str.lastIndexOf(targetStr));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the starting index of a string inside another string, searching from the end."
+				)
+				.parameter("string", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+				)
+				.parameter("search", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string to search for (if not STRING, will be converted).")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not found."),
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The starting index.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String targetStr = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				
+				int out;
+				if ((out = str.lastIndexOf(targetStr)) >= 0)
+					returnValue.set(out);
+				else
+					returnValue.setNull();
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 	
@@ -325,509 +666,1112 @@ public enum CommonFunctions implements ScriptFunctionType
 	LIST(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			if (value.isList())
-				scriptInstance.pushStackValue(value.copy());
-			else
-				scriptInstance.pushStackValue(new Object[]{value.copy()});
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Creates a new list by copying an existing list into a new " +
+					"reference, or encapsulating a non-list value as a list."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type("The list to copy.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The resultant list.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue newlist = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				if (value.isList())
+				{
+					newlist.setEmptyList(value.length());
+					for (int i = 0; i < value.length(); i++)
+					{
+						value.listGetByIndex(i, temp);
+						newlist.listSetByIndex(i, temp);
+					}
+					returnValue.set(newlist);
+				}
+				else
+				{
+					newlist.setEmptyList(4);
+					newlist.listSetByIndex(0, value);
+					returnValue.set(newlist);
+				}
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				newlist.setNull();
+				temp.setNull();
+			}
 		}
 	}, 
 	
-	/**
-	 * Adds a value to a list. 
-	 * If the "list" argument is not a list or not added, this returns false, else true.
-	 * ARG1: The list to add the item to. 
-	 * ARG2: The item to add.
-	 */
-	LISTADD(2)
+	LISTNEW(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue item = scriptInstance.popStackValue();
-			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.listAdd(item));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Creates a new list of a specific length, optionally with all values initialized to a specified value."
+				)
+				.parameter("length", 
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The new list length.")
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The fill value. Copies are not made for each element.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The resultant new list.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			ScriptValue value = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				scriptInstance.popStackValue(temp);
+				int length = temp.asInt();
+				
+				temp.setEmptyList(length, length);
+				if (!value.isNull()) for (int i = 0; i < length; i++)
+					temp.listSetByIndex(i, value);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+				value.setNull();
+			}
+		}
+	}, 
+	
+	LISTADD(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Adds a value to a list. If the \"list\" argument is not a list or not added, this returns false, else true."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list.")
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value to add.")
+				)
+				.parameter("index", 
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Adds it to the end."),
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index to add the value at (shifts the others).")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if added. False if not a list.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue item = CACHEVALUE1.get();
+			ScriptValue list = CACHEVALUE2.get();
+			ScriptValue index = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(index);
+				scriptInstance.popStackValue(item);
+				scriptInstance.popStackValue(list);
+				if (index.isNull())
+					returnValue.set(list.listAdd(item));
+				else
+					returnValue.set(list.listAddAt(index.asInt(), item));
+				return true;
+			}
+			finally
+			{
+				item.setNull();
+				list.setNull();
+				index.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Adds a value to a list. 
-	 * If the "list" argument is not a list or not added, this returns false, else true.
-	 * ARG1: The list to add the item to. 
-	 * ARG2: The item to add.
-	 * ARG3: The index to add it to.
-	 */
-	LISTADDAT(3)
-	{
-		@Override
-		public boolean execute(ScriptInstance scriptInstance)
-		{
-			int index = scriptInstance.popStackValue().asInt();
-			ScriptValue item = scriptInstance.popStackValue();
-			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.listAddAt(index, item));
-			return true;
-		}
-	},
-	
-	/**
-	 * Removes a value from a list that matches the item. 
-	 * Only removes list-typed items by reference.
-	 * If the "list" argument is not a list or the provided item is not removed, this returns false, else true.
-	 * ARG1: The list to remove the item from. 
-	 * ARG2: The item to remove.
-	 */
 	LISTREMOVE(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue item = scriptInstance.popStackValue();
-			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.listRemove(item));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Removes the first value from a list that matches the item. " +
+					"Finds list/map-typed items by reference and objects by equals()."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list.")
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value to remove.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if removed. False if not found or not a list.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue item = CACHEVALUE1.get();
+			ScriptValue list = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(item);
+				scriptInstance.popStackValue(list);
+				returnValue.set(list.listRemove(item));
+				return true;
+			}
+			finally
+			{
+				item.setNull();
+				list.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Removes a value from a list that matches the item. 
-	 * Only removes list-typed items by reference.
-	 * Returns the removed item, or false if no item removed due to a bad index.
-	 * ARG1: The list to remove the item from. 
-	 * ARG2: The index to remove.
-	 */
 	LISTREMOVEAT(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			int index = scriptInstance.popStackValue().asInt();
-			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.listRemoveAt(index));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Removes the first value from a list at a specific index."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list.")
+				)
+				.parameter("index", 
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index.")
+				)
+				.returns(
+					ScriptFunctionUsage.type("The value removed, NULL if index is out-of-bounds or a list was not provided.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			ScriptValue list = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				int index = temp.asInt();
+				scriptInstance.popStackValue(list);
+				list.listRemoveAt(index, temp);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+				list.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Sorts a list in-place.
-	 * Returns the list that was sorted (NOT a new copy!).
-	 * If this list contains discretely different elements,  
-	 * ARG1: The list to remove the item from. 
-	 */
 	LISTSORT(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue list = scriptInstance.popStackValue();
-			list.sort();
-			scriptInstance.pushStackValue(list);
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sorts a list in place."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list to sort.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list that was sorted (not a new copy).")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				temp.sort();
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Checks if a list contains a specific value.
-	 * Sequential search.
-	 * Return true if it contains the value, false if not.
-	 * ARG1: The list to look in. 
-	 * ARG2: The item to look for.
-	 */
 	LISTCONTAINS(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue item = scriptInstance.popStackValue();
-			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.listContains(item));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a list contains a specific value, sequential search. Finds " +
+					"list/map-typed items by reference and objects by equals()."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list to search.")
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value to search for.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if it contains the value, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue item = CACHEVALUE1.get();
+			ScriptValue list = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(item);
+				scriptInstance.popStackValue(list);
+				returnValue.set(list.listContains(item));
+				return true;
+			}
+			finally
+			{
+				item.setNull();
+				list.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Gets the index of a value in the list. 
-	 * Only finds list-typed items by reference.
-	 * If not found or not a list, this returns -1.
-	 * ARG1: The list to look in. 
-	 * ARG2: The item to look for.
-	 */
 	LISTINDEX(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue item = scriptInstance.popStackValue();
-			ScriptValue list = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(list.listGetIndexOf(item));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets the index of the first occurrence of a value in a list. " +
+					"Finds list/map-typed items by reference and objects by equals()."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list to search.")
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value to search for.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not found."),
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index of the found element.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue item = CACHEVALUE1.get();
+			ScriptValue list = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(item);
+				scriptInstance.popStackValue(list);
+				
+				int out;
+				if ((out = list.listGetIndexOf(item)) >= 0)
+					returnValue.set(out);
+				else
+					returnValue.setNull();
+				return true;
+			}
+			finally
+			{
+				item.setNull();
+				list.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Creates a new set of items from a list, such that 
-	 * the contents of the list are discrete and sorted.
-	 * The object returned is a list, but its contents are now suitable for set operations.
-	 * ARG1: The list or value.
-	 */
+	LISTLASTINDEX(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets the index of the first occurrence of a value in a list. " +
+					"Finds list/map-typed items by reference and objects by equals()."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list to search.")
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value to search for.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not found."),
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index of the found element.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue item = CACHEVALUE1.get();
+			ScriptValue list = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(item);
+				scriptInstance.popStackValue(list);
+				
+				int out;
+				if ((out = list.listGetLastIndexOf(item)) >= 0)
+					returnValue.set(out);
+				else
+					returnValue.setNull();
+				return true;
+			}
+			finally
+			{
+				item.setNull();
+				list.setNull();
+			}
+		}
+	},
+	
 	SET(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			ScriptValue out = ScriptValue.createEmptyList();
-			if (value.isList())
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Creates a new list from another list, such that the contents of the " +
+					"list are discrete and sorted, its contents now suitable for set operations."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list to prepare.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The new list, set-ified.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue newset = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
 			{
-				for (int i = 0; i < value.length(); i++)
-					out.setAdd(value.listGetByIndex(i));
+				scriptInstance.popStackValue(value);
+				newset.setEmptyList();
+				if (value.isList())
+				{
+					for (int i = 0; i < value.length(); i++)
+					{
+						value.listGetByIndex(i, temp);
+						newset.setAdd(temp);
+					}
+				}
+				else
+				{
+					newset.setAdd(value);
+				}
+				
+				returnValue.set(newset);
+				return true;
 			}
-			else
+			finally
 			{
-				out.setAdd(value);
+				value.setNull();
+				newset.setNull();
 			}
-			
-			scriptInstance.pushStackValue(out);
-			return true;
 		}
 	},
 	
-	/**
-	 * Adds a value to a list, expected to be set up like a set.
-	 * Returns true if value was added (and is not already in the list), false otherwise.
-	 * ARG1: The set (list).
-	 * ARG2: The value to add.
-	 */
 	SETADD(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			ScriptValue set = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(set.setAdd(value));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Adds a value to a list, expected to be set up like a set (sorted, discrete)."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The set (list).")
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value to add.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if value was added (and is not already in the list), false otherwise.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue set = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				scriptInstance.popStackValue(set);
+				returnValue.set(set.setAdd(value));
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				set.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Removes a value from a list, expected to be set up like a set.
-	 * Returns true if value was removed, false otherwise.
-	 * ARG1: The set (list).
-	 * ARG2: The value to remove.
-	 */
 	SETREMOVE(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			ScriptValue set = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(set.setRemove(value));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Removes a value from a list, expected to be set up like a set (sorted, discrete)."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The set (list).")
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value to remove.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if the value was removed, false otherwise.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue set = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				scriptInstance.popStackValue(set);
+				returnValue.set(set.setRemove(value));
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				set.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Checks if a value exists in a list, expected to be set up like a set.
-	 * This is more performant than a list - search is binary search.
-	 * Returns true if value was removed, false otherwise.
-	 * ARG1: The set (list).
-	 * ARG2: The value to look for.
-	 */
 	SETCONTAINS(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			ScriptValue set = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(set.setContains(value));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a value exists in a list, expected to be set up like a set (sorted, discrete). " +
+					"This is more performant than a list - search is binary search."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The set (list).")
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value to look for.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if the value was found, false otherwise.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue set = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				scriptInstance.popStackValue(set);
+				returnValue.set(set.setContains(value));
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				set.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Gets the index of a value in a list, expected to be set up like a set.
-	 * This is more performant than a list - search is binary search.
-	 * If not found or not a list, this returns -1.
-	 * ARG1: The set (list).
-	 * ARG2: The value to look for.
-	 */
 	SETSEARCH(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue value = scriptInstance.popStackValue();
-			ScriptValue set = scriptInstance.popStackValue();
-			scriptInstance.pushStackValue(set.setSearch(value));
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets the index of a value in a list, expected to be set up like a set (sorted, discrete). " +
+					"This is more performant than a list - search is binary search."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The set (list).")
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value to look for.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not found."),
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index in the list that it was found.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue set = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(value);
+				scriptInstance.popStackValue(set);
+				returnValue.set(set.setSearch(value));
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				set.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Gets the union of two sets, returning a new set with values in both. 
-	 * Returns a new set.
-	 * ARG1: The first set (list).
-	 * ARG2: The second set (list).
-	 */
 	SETUNION(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue set2 = scriptInstance.popStackValue();
-			ScriptValue set1 = scriptInstance.popStackValue();
-			ScriptValue out = ScriptValue.createEmptyList();
-			
-			ScriptValue union1;
-			ScriptValue union2;
-			
-			if (set1.isList())
-				union1 = set1;
-			else
-				union1 = wrapList(set1);
-			
-			if (set2.isList())
-				union2 = set2;
-			else
-				union2 = wrapList(set2);
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets the union of two sets, returning a new set with values in both."
+				)
+				.parameter("list1", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The first set (list)."),
+					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+				)
+				.parameter("list2", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The second set (list)."),
+					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The new set that is the union of both sets.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue set2 = CACHEVALUE1.get();
+			ScriptValue set1 = CACHEVALUE2.get();
+			ScriptValue out = CACHEVALUE3.get();
+			ScriptValue temp = CACHEVALUE4.get();
+			try
+			{
+				scriptInstance.popStackValue(set2);
+				scriptInstance.popStackValue(set1);
+				out.setEmptyList();
+				
+				if (!set1.isList())
+				{
+					temp.setEmptyList(1);
+					temp.listAdd(set1);
+					set1.set(temp);
+				}
+				
+				if (!set2.isList())
+				{
+					temp.setEmptyList(1);
+					temp.listAdd(set2);
+					set2.set(temp);
+				}
 
-			for (int i = 0; i < union1.length(); i++)
-				out.setAdd(union1.listGetByIndex(i));
-			for (int i = 0; i < union2.length(); i++)
-				out.setAdd(union2.listGetByIndex(i));
-			
-			scriptInstance.pushStackValue(out);
-			return true;
+				for (int i = 0; i < set1.length(); i++)
+				{
+					set1.listGetByIndex(i, temp);
+					out.setAdd(temp);
+				}
+				for (int i = 0; i < set2.length(); i++)
+				{
+					set2.listGetByIndex(i, temp);
+					out.setAdd(temp);
+				}
+				
+				returnValue.set(out);
+				return true;
+			}
+			finally
+			{
+				set2.setNull();
+				set1.setNull();
+				out.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Gets the intersection of two sets, returning a new set with values in both. 
-	 * Returns a new set.
-	 * ARG1: The first set (list).
-	 * ARG2: The second set (list).
-	 */
 	SETINTERSECT(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue set2 = scriptInstance.popStackValue();
-			ScriptValue set1 = scriptInstance.popStackValue();
-			ScriptValue out = ScriptValue.createEmptyList();
-			
-			ScriptValue intersect1;
-			ScriptValue intersect2;
-			
-			if (set1.isList())
-				intersect1 = set1;
-			else
-				intersect1 = wrapList(set1);
-			
-			if (set2.isList())
-				intersect2 = set2;
-			else
-				intersect2 = wrapList(set2);
-
-			ScriptValue smallest = intersect1.length() < intersect2.length() ? intersect1 : intersect2;
-			ScriptValue largest = smallest == intersect1 ? intersect2 : intersect1;
-			
-			for (int i = 0; i < smallest.length(); i++)
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets the intersection of two sets, returning a new set with values in both."
+				)
+				.parameter("list1", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The first set (list)."),
+					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+				)
+				.parameter("list2", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The second set (list)."),
+					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The new set that is the intersection of both sets.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue set2 = CACHEVALUE1.get();
+			ScriptValue set1 = CACHEVALUE2.get();
+			ScriptValue out = CACHEVALUE3.get();
+			ScriptValue temp = CACHEVALUE4.get();
+			try
 			{
-				ScriptValue sv = smallest.listGetByIndex(i);
-				if (largest.setContains(sv))
-					out.setAdd(sv);
+				scriptInstance.popStackValue(set2);
+				scriptInstance.popStackValue(set1);
+				out.setEmptyList();
+				
+				if (!set1.isList())
+				{
+					temp.setEmptyList(1);
+					temp.listAdd(set1);
+					set1.set(temp);
+				}
+				
+				if (!set2.isList())
+				{
+					temp.setEmptyList(1);
+					temp.listAdd(set2);
+					set2.set(temp);
+				}
+
+				ScriptValue smallest = set1.length() < set2.length() ? set1 : set2;
+				ScriptValue largest = smallest == set1 ? set2 : set1;
+				
+				for (int i = 0; i < smallest.length(); i++)
+				{
+					smallest.listGetByIndex(i, temp);
+					if (largest.setContains(temp))
+						out.setAdd(temp);
+				}
+				
+				returnValue.set(out);
+				return true;
 			}
-			
-			scriptInstance.pushStackValue(out);
-			return true;
+			finally
+			{
+				set2.setNull();
+				set1.setNull();
+				out.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Gets the xor of two sets, returning the union of both sets minus the intersection. 
-	 * Returns a new set.
-	 * ARG1: The first set (list).
-	 * ARG2: The second set (list).
-	 */
 	SETXOR(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue set2 = scriptInstance.popStackValue();
-			ScriptValue set1 = scriptInstance.popStackValue();
-
-			ScriptValue xor1;
-			ScriptValue xor2;
-			
-			if (set1.isList())
-				xor1 = set1;
-			else
-				xor1 = wrapList(set1);
-			
-			if (set2.isList())
-				xor2 = set2;
-			else
-				xor2 = wrapList(set2);
-
-			ScriptValue out = xor1.copy();
-			for (int i = 0; i < xor2.length(); i++)
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets the exclusive-or of two sets, returning the union of both sets minus the intersection."
+				)
+				.parameter("list1", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The first set (list)."),
+					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+				)
+				.parameter("list2", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The second set (list)."),
+					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The new set that is the XOr of both sets.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue set2 = CACHEVALUE1.get();
+			ScriptValue set1 = CACHEVALUE2.get();
+			ScriptValue out = CACHEVALUE3.get();
+			ScriptValue temp = CACHEVALUE4.get();
+			try
 			{
-				ScriptValue sv = xor2.listGetByIndex(i);
-				if (out.setContains(sv))
-					out.setRemove(sv);
-				else
-					out.setAdd(sv);
+				scriptInstance.popStackValue(set2);
+				scriptInstance.popStackValue(set1);
+				out.setEmptyList();
+
+				if (!set1.isList())
+				{
+					temp.setEmptyList(1);
+					temp.listAdd(set1);
+					set1.set(temp);
+				}
+				
+				if (!set2.isList())
+				{
+					temp.setEmptyList(1);
+					temp.listAdd(set2);
+					set2.set(temp);
+				}
+
+				for (int i = 0; i < set1.length(); i++)
+				{
+					set1.listGetByIndex(i, temp);
+					out.listAdd(temp);
+				}
+				
+				for (int i = 0; i < set2.length(); i++)
+				{
+					set2.listGetByIndex(i, temp);
+					if (out.setContains(temp))
+						out.setRemove(temp);
+					else
+						out.setAdd(temp);
+				}
+				
+				returnValue.set(out);
+				return true;
 			}
-			
-			scriptInstance.pushStackValue(out);
-			return true;
+			finally
+			{
+				set2.setNull();
+				set1.setNull();
+				out.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Gets a new set that is the first set minus the values in the second set. 
-	 * Returns a new set.
-	 * ARG1: The first set (list).
-	 * ARG2: The second set (list).
-	 */
 	SETDIFF(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue set2 = scriptInstance.popStackValue();
-			ScriptValue set1 = scriptInstance.popStackValue();
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets a new set that is the first set minus the values in the second set."
+				)
+				.parameter("list1", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The first set (list)."),
+					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+				)
+				.parameter("list2", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The second set (list)."),
+					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The new set that is the difference of both sets.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue set2 = CACHEVALUE1.get();
+			ScriptValue set1 = CACHEVALUE2.get();
+			ScriptValue out = CACHEVALUE3.get();
+			ScriptValue temp = CACHEVALUE4.get();
+			try
+			{
+				scriptInstance.popStackValue(set2);
+				scriptInstance.popStackValue(set1);
+				out.setEmptyList();
 
-			ScriptValue diff1;
-			ScriptValue diff2;
-			
-			if (set1.isList())
-				diff1 = set1;
-			else
-				diff1 = wrapList(set1);
-			
-			if (set2.isList())
-				diff2 = set2;
-			else
-				diff2 = wrapList(set2);
+				if (!set1.isList())
+				{
+					temp.setEmptyList(1);
+					temp.listAdd(set1);
+					set1.set(temp);
+				}
+				
+				if (!set2.isList())
+				{
+					temp.setEmptyList(1);
+					temp.listAdd(set2);
+					set2.set(temp);
+				}
 
-			ScriptValue out = diff1.copy();
-			for (int i = 0; i < diff2.length(); i++)
-				out.setRemove(diff2.listGetByIndex(i));
-			
-			scriptInstance.pushStackValue(out);
-			return true;
+				for (int i = 0; i < set1.length(); i++)
+				{
+					set1.listGetByIndex(i, temp);
+					out.listAdd(temp);
+				}
+				
+				for (int i = 0; i < set2.length(); i++)
+				{
+					set2.listGetByIndex(i, temp);
+					out.setRemove(temp);
+				}
+				
+				returnValue.set(out);
+				return true;
+			}
+			finally
+			{
+				set2.setNull();
+				set1.setNull();
+				out.setNull();
+				temp.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Gets a list of all of the keys in a map.
-	 * Returns a new list, or null if not a map.
-	 * The returned list is suitable for set operations.
-	 * ARG1: The map.
-	 */
 	MAPKEYS(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance) 
+		protected Usage usage()
 		{
-			ScriptValue sv = scriptInstance.popStackValue();
-			if (!sv.isMap())
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets a list of all of the keys in a map. The returned list " +
+					"is suitable for set operations (sorted, discrete)."
+				)
+				.parameter("map", 
+					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "The map.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not a map."),
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "[STRING, ...] A new list of the map's keys.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			ScriptValue map = CACHEVALUE1.get();
+			ScriptValue out = CACHEVALUE2.get();
+			try
 			{
-				scriptInstance.pushStackValue(false);
-				return true;
+				scriptInstance.popStackValue(map);
+				if (!map.isMap())
+				{
+					returnValue.setNull();
+					return true;
+				}
+				else
+				{
+					out.setEmptyList();
+					for (Entry e : map.asObjectType(MapType.class))
+						out.setAdd(e.getName());
+					returnValue.set(out);
+					return true;
+				}
 			}
-			
-			ScriptValue out = ScriptValue.createEmptyList();
-			for (Entry e : sv.asObjectType(MapType.class))
-				out.setAdd(e.getName());
-			scriptInstance.pushStackValue(out);
-			return true;
+			finally
+			{
+				map.setNull();
+				out.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Returns a value that corresponds to a key in the map.
-	 * ARG1: The map.
-	 * ARG2: The key.
-	 */
 	MAPVALUE(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance) 
+		protected Usage usage()
 		{
-			ScriptValue keyValue = scriptInstance.popStackValue();
-			ScriptValue sv = scriptInstance.popStackValue();
-			if (!sv.isMap())
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a value that corresponds to a key in the map."
+				)
+				.parameter("map", 
+					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "The map.")
+				)
+				.parameter("key", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The key.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not a map."),
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "[STRING, ...] A new list of the map's keys.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			ScriptValue keyValue = CACHEVALUE1.get();
+			ScriptValue map = CACHEVALUE2.get();
+			ScriptValue out = CACHEVALUE3.get();
+			try 
 			{
-				scriptInstance.pushStackValue(null);
-				return true;
+				scriptInstance.popStackValue(keyValue);
+				scriptInstance.popStackValue(map);
+
+				if (!map.isMap())
+				{
+					returnValue.setNull();
+					return true;
+				}
+				else
+				{
+					map.mapGet(keyValue.asString(), out);
+					returnValue.set(out);
+					return true;
+				}
 			}
-			
-			ScriptValue out = getCache().temp;
-			sv.mapGet(keyValue.asString(), out);
-			scriptInstance.pushStackValue(out);
-			return true;
+			finally
+			{
+				keyValue.setNull();
+				map.setNull();
+				out.setNull();
+			}
 		}
 	},
 	
-	/**
-	 * Gets a map that is the result of taking the first map and adding all
-	 * of the keys of the second, replacing the keys that exist in the first.
-	 * The copies are shallow - references are preserved. 
-	 * Returns a new map. 
-	 * If the first value is not a map, this returns an empty map.
-	 * If the second value is not a map, a shallow copy of the first map is returned. 
-	 * ARG1: The first map.
-	 * ARG2: The second map.
-	 */
 	MAPMERGE(2)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance) 
+		protected Usage usage()
 		{
-			ScriptValue map2 = scriptInstance.popStackValue();
-			ScriptValue map1 = scriptInstance.popStackValue();
-			ScriptValue out = ScriptValue.createEmptyMap();
-			if (!map1.isMap())
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a new map that is the result of taking the first map and adding all " + 
+					"of the keys of the second, replacing the keys that exist in the first. " + 
+					"The copies are shallow - references are preserved."
+				)
+				.parameter("map1", 
+					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "The first map."),
+					ScriptFunctionUsage.type("An empty map.")
+				)
+				.parameter("map2", 
+					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "The second map."),
+					ScriptFunctionUsage.type("An empty map.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "A new map.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			ScriptValue map2 = CACHEVALUE1.get();
+			ScriptValue map1 = CACHEVALUE2.get();
+			ScriptValue out = CACHEVALUE3.get();
+			try
 			{
-				scriptInstance.pushStackValue(out);
-				return true;
-			}
-			
-			for (Entry e : map1.asObjectType(MapType.class))
-				out.mapSet(e.getName(), e.getValue());
-			
-			if (!map2.isMap())
-			{
-				scriptInstance.pushStackValue(out);
-				return true;
-			}
+				scriptInstance.popStackValue(map2);
+				scriptInstance.popStackValue(map1);
+				out.setEmptyMap();
+				
+				if (!map1.isMap())
+				{
+					returnValue.set(out);
+					return true;
+				}
+				
+				for (Entry e : map1.asObjectType(MapType.class))
+					out.mapSet(e.getName(), e.getValue());
+				
+				if (!map2.isMap())
+				{
+					returnValue.set(out);
+					return true;
+				}
 
-			for (Entry e : map2.asObjectType(MapType.class))
-				out.mapSet(e.getName(), e.getValue());
-			
-			scriptInstance.pushStackValue(out);
-			return true;
+				for (Entry e : map2.asObjectType(MapType.class))
+					out.mapSet(e.getName(), e.getValue());
+				
+				returnValue.set(out);
+				return true;
+			}
+			finally
+			{
+				map2.setNull();
+				map1.setNull();
+				out.setNull();
+			}
 		}
 	},
-	
-	
 	;
 	
 	private final int parameterCount;
+	private Usage usage;
 	private CommonFunctions(int parameterCount)
 	{
 		this.parameterCount = parameterCount;
+		this.usage = null;
 	}
 	
 	/**
@@ -847,18 +1791,20 @@ public enum CommonFunctions implements ScriptFunctionType
 	@Override
 	public Usage getUsage()
 	{
-		return null;
+		if (usage == null)
+			usage = usage();
+		return usage;
 	}
 	
 	@Override
-	public abstract boolean execute(ScriptInstance scriptInstance);
+	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue value);
 
-	// wraps a single value into a list.
-	protected ScriptValue wrapList(ScriptValue sv)
-	{
-		ScriptValue out = ScriptValue.createEmptyList();
-		out.listAdd(sv);
-		return out;
-	}
-	
+	protected abstract Usage usage();
+
+	// Threadlocal "stack" values.
+	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> CACHEVALUE3 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> CACHEVALUE4 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+
 }

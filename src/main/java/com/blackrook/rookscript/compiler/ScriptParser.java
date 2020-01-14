@@ -22,7 +22,6 @@ import com.blackrook.rookscript.struct.Lexer;
 /**
  * The parser that parses text for the script reader. 
  * @author Matthew Tropiano
- * TODO: Parse namespaced host function calls.
  */
 public class ScriptParser extends Lexer.Parser
 {

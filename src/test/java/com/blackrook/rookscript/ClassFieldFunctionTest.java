@@ -53,11 +53,14 @@ public class ClassFieldFunctionTest
 			.createInstance();
 		
 		int x = 100;
+		ScriptValue out = ScriptValue.create(null);
 		while (x-- > 0)
 		{
 			long nanos = System.nanoTime();
 			instance.call("main");
-			System.out.println("Script returns: "+instance.popStackValue()+" "+(System.nanoTime()-nanos)+" ns");
+			nanos = System.nanoTime() - nanos;
+			instance.popStackValue(out);
+			System.out.println("Script returns: " + out + " " + nanos + " ns");
 		}
 	}
 }

@@ -21,6 +21,8 @@ import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
  */
 public class ScriptInstance
 {
+	private static final ThreadLocal<ScriptValue> CACHEVALUE = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	
 	/**
 	 * Enumeration of script states.
 	 */
@@ -227,6 +229,7 @@ public class ScriptInstance
 
 	/**
 	 * Initializes the script with an entry point and parameters and calls {@link #update()} to execute it.
+	 * The return value for the entry point should still be on the stack.
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.
 	 * @throws ScriptExecutionException if the provided amount of parameters do not match the amount of parameters that the script requires, 
@@ -243,6 +246,7 @@ public class ScriptInstance
 	/**
 	 * Initializes the script with an entry point and parameters and calls {@link #update()} to execute it,
 	 * then gets the return value off the stack converted to a provided type.
+	 * If the amount of required parameters are less than the expected amount, nulls are pushed until the amount is met.
 	 * @param <T> the return type.
 	 * @param returnType the return type to get from the script.
 	 * @param entryName the entry point name.
@@ -252,16 +256,21 @@ public class ScriptInstance
 	 * 		or the provided entry point does not exist.
 	 * @see #initialize(String, Object...)
 	 * @see #update()
-	 * @see #popStackValue()
+	 * @see #popStackValue(ScriptValue)
 	 */
 	public <T> T callAndReturnAs(Class<T> returnType, String entryName, Object ... parameters)
 	{
 		call(entryName, parameters);
-		return popStackValue().createForType(returnType);
+		ScriptValue sv = CACHEVALUE.get();
+		popStackValue(sv);
+		T out = sv.createForType(returnType);
+		sv.setNull();
+		return out;
 	}
 	
 	/**
 	 * Initializes the script with parameters.
+	 * If the amount of parameters are less than the expected amount, nulls are pushed until the amount is met.
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.
 	 * @throws ScriptExecutionException if the provided amount of parameters do not match the amount of parameters that the script requires, 
@@ -541,23 +550,32 @@ public class ScriptInstance
 
 	/**
 	 * Pops a value off the stack.
-	 * @return the value at the top of the stack, or null if none left.
+	 * @param out the output value.
 	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
 	 */
-	public ScriptValue popStackValue()
+	public void popStackValue(ScriptValue out)
 	{
-		return scriptInstanceStack.popStackValue();
+		scriptInstanceStack.popStackValue(out);
+	}
+
+	/**
+	 * Pops a value off the stack, ignoring output.
+	 * @throws ScriptStackException if there's nothing on the stack when this is called. 
+	 */
+	public void popStackValue()
+	{
+		scriptInstanceStack.popStackValue();
 	}
 
 	/**
 	 * Gets a value on the stack (reference).
 	 * @param depth the depth from the top (0 is top, 1 ... N is N places down).
-	 * @return the value at the top of the stack, or null if none left.
+	 * @param out the output value.
 	 * @throws ScriptStackException if the top minus the depth escapes the active stack bounds. 
 	 */
-	public ScriptValue getStackValue(int depth)
+	public void getStackValue(int depth, ScriptValue out)
 	{
-		return scriptInstanceStack.getStackValue(depth);
+		scriptInstanceStack.getStackValue(depth, out);
 	}
 
 	/**

@@ -16,15 +16,17 @@ entry main()
 	
 	list = [];
 	
+	println(listnew(5));
+	println(listnew(5, "stuff"));
 	println(listadd(list, 5));
 	println(listadd(list, 6));
 	println(listadd(list, 7));
 	println(listadd(list, 5));
 	println(list);
 
-	println(listaddat(list, 1, 0));
-	println(listaddat(list, 10, length(list)));
-	println(listaddat(list, 23, 3));
+	println(listadd(list, 1, 0));
+	println(listadd(list, 10, length(list)));
+	println(listadd(list, 23, 3));
 	println(list);
 
 	println(listremove(list, 6));
@@ -48,6 +50,10 @@ entry main()
 	set2 = set([4,5,6,7,8,9]);
 	println(set1);
 	println(set2);
+	println(setcontains(set1, 1));
+	println(setcontains(set1, 6));
+	println(setcontains(set2, 1));
+	println(setcontains(set2, 6));
 	println(setunion(set1, set2));
 	println(setintersect(set1, set2));
 	println(setxor(set1, set2));

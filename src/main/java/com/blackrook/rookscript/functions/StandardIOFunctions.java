@@ -10,6 +10,7 @@ package com.blackrook.rookscript.functions;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
+import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
 
@@ -19,82 +20,157 @@ import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
  */
 public enum StandardIOFunctions implements ScriptFunctionType
 {
-	/**
-	 * Prints something to STDOUT.
-	 * Returns void.
-	 * ARG: Value to print.
-	 */
 	PRINT(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue arg = scriptInstance.popStackValue();
-			scriptInstance.getEnvironment().print(arg.asString());
-			scriptInstance.pushStackValue(null);
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Prints something to standard out."
+				)
+				.parameter("message", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Returns nothing.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.getEnvironment().print(temp.asString());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 
-	/**
-	 * Prints something to STDERR.
-	 * Returns void.
-	 * ARG: Value to print.
-	 */
 	PRINTERR(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue arg = scriptInstance.popStackValue();
-			scriptInstance.getEnvironment().printErr(arg.asString());
-			scriptInstance.pushStackValue(null);
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Prints something to standard error."
+				)
+				.parameter("message", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Returns nothing.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.getEnvironment().printErr(temp.asString());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 
-	/**
-	 * Prints something to STDOUT, appending a newline.
-	 * Returns void.
-	 * ARG: Value to print.
-	 */
 	PRINTLN(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue arg = scriptInstance.popStackValue();
-			scriptInstance.getEnvironment().print(arg.asString());
-			scriptInstance.getEnvironment().print('\n');
-			scriptInstance.pushStackValue(null);
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Prints something to standard out, appending a newline."
+				)
+				.parameter("message", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Returns nothing.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.getEnvironment().print(temp.asString());
+				scriptInstance.getEnvironment().print('\n');
+				scriptInstance.pushStackValue(null);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 
-	/**
-	 * Prints something to STDERR, appending a newline.
-	 * Returns void.
-	 * ARG: Value to print.
-	 */
 	PRINTLNERR(1)
 	{
 		@Override
-		public boolean execute(ScriptInstance scriptInstance)
+		protected Usage usage()
 		{
-			ScriptValue arg = scriptInstance.popStackValue();
-			scriptInstance.getEnvironment().printErr(arg.asString());
-			scriptInstance.getEnvironment().printErr('\n');
-			scriptInstance.pushStackValue(null);
-			return true;
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Prints something to standard error, appending a newline."
+				)
+				.parameter("message", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Returns nothing.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.getEnvironment().printErr(temp.asString());
+				scriptInstance.getEnvironment().printErr('\n');
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
 		}
 	},
 
 	;
 	
 	private final int parameterCount;
+	private Usage usage;
 	private StandardIOFunctions(int parameterCount)
 	{
 		this.parameterCount = parameterCount;
+		this.usage = null;
 	}
 	
 	/**
@@ -114,18 +190,17 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	@Override
 	public Usage getUsage()
 	{
-		return null;
+		if (usage == null)
+			usage = usage();
+		return usage;
 	}
 	
 	@Override
-	public abstract boolean execute(ScriptInstance scriptInstance);
+	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
 
-	// wraps a single value into a list.
-	protected ScriptValue wrapList(ScriptValue sv)
-	{
-		ScriptValue out = ScriptValue.createEmptyList();
-		out.listAdd(sv);
-		return out;
-	}
-	
+	protected abstract Usage usage();
+
+	// Threadlocal "stack" values.
+	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+
 }
