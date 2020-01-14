@@ -9,6 +9,8 @@ package com.blackrook.rookscript.resolvers.hostfunction;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import com.blackrook.rookscript.annotations.ScriptIgnore;
@@ -23,6 +25,7 @@ import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 public class EnumFunctionResolver implements ScriptFunctionResolver
 {
 	private Map<String, ScriptFunctionType> map;
+	private ScriptFunctionType[] list;
 	
 	/**
 	 * Creates a new resolver using a list of enum values.
@@ -32,6 +35,7 @@ public class EnumFunctionResolver implements ScriptFunctionResolver
 	public EnumFunctionResolver(Enum<? extends ScriptFunctionType> ... en)
 	{
 		this.map = new HashMap<>(10, 1f);
+		List<ScriptFunctionType> funcs = new LinkedList<ScriptFunctionType>();
 		for (Enum<? extends ScriptFunctionType> e : en)
 		{
 			Field enumField;
@@ -52,7 +56,10 @@ public class EnumFunctionResolver implements ScriptFunctionResolver
 				name = e.name();
 				
 			map.put(name.toLowerCase(), (ScriptFunctionType)e);
+			funcs.add((ScriptFunctionType)e);
 		}
+		this.list = new ScriptFunctionType[funcs.size()];
+		funcs.toArray(this.list);
 	}
 	
 	@Override
@@ -70,11 +77,7 @@ public class EnumFunctionResolver implements ScriptFunctionResolver
 	@Override
 	public ScriptFunctionType[] getFunctions()
 	{
-		ScriptFunctionType[] out = new ScriptFunctionType[map.size()];
-		int i = 0;
-		for (Map.Entry<String, ScriptFunctionType> type : map.entrySet())
-			out[i++] = type.getValue();
-		return out;
+		return list;
 	}
 
 }

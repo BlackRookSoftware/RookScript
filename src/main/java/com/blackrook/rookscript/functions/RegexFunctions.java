@@ -32,8 +32,10 @@ public enum RegexFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Checks if a string is a valid RegEx pattern.")
-				.parameter("message", 
+				.instructions(
+					"Checks if a string is a valid RegEx pattern."
+				)
+				.parameter("pattern", 
 					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string to test.")
 				)
 				.returns(
@@ -74,9 +76,14 @@ public enum RegexFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Splits a string by a RegEx pattern.")
+				.instructions(
+					"Splits a string by a RegEx pattern."
+				)
 				.parameter("string", 
 					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string to split.")
+				)
+				.parameter("pattern", 
+					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The RegEx pattern to use.")
 				)
 				.returns(
 					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "A list of strings."), 
@@ -131,7 +138,7 @@ public enum RegexFunctions implements ScriptFunctionType
 	 */
 	public static final ScriptFunctionResolver createResolver()
 	{
-		return new EnumFunctionResolver(MathFunctions.values());
+		return new EnumFunctionResolver(RegexFunctions.values());
 	}
 
 	@Override

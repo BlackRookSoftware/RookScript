@@ -794,6 +794,31 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 
 	/**
+	 * Gets the last index that a value is found at, if it is a list.
+	 * @param value the value to look for.
+	 * @return the index found, or -1 if not found or not a list.
+	 * @see #isList()
+	 */
+	public int listGetLastIndexOf(Object value)
+	{
+		if (!isList())
+			return -1;
+	
+		ListType list = (ListType)ref;
+		ScriptValue temp = CACHEVALUE1.get();
+		try
+		{
+			temp.set(value);
+			int out = list.lastIndexOf(temp);
+			return out;
+		}
+		finally
+		{
+			temp.setNull();
+		}
+	}
+
+	/**
 	 * Gets if this list contains an object, if it is a list.
 	 * @param value the value to look for.
 	 * @return true if found, false if not or not a list.
@@ -2502,6 +2527,19 @@ public class ScriptValue implements Comparable<ScriptValue>
 		public int indexOf(ScriptValue value)
 		{
 			for (int i = 0; i < size; i++)
+				if (value.equals(data[i]))
+					return i;
+			return -1;
+		}
+		
+		/**
+		 * Finds a script value sequentially, in reverse (strict equals).
+		 * @param value the values.
+		 * @return the index of the found value or -1 if not found.
+		 */
+		public int lastIndexOf(ScriptValue value)
+		{
+			for (int i = size - 1; i >= 0; i--)
 				if (value.equals(data[i]))
 					return i;
 			return -1;

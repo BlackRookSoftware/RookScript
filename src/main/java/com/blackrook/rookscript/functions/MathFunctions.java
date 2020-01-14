@@ -27,7 +27,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Returns the minimum of two values.")
+				.instructions(
+					"Returns the minimum of two values."
+				)
 				.parameter("value1", 
 					ScriptFunctionUsage.type("The first value.")
 				)
@@ -69,7 +71,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Returns the maximum of two values.")
+				.instructions(
+					"Returns the maximum of two values."
+				)
 				.parameter("value1", 
 					ScriptFunctionUsage.type("The first value.")
 				)
@@ -111,7 +115,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Raises a number to another mathematical power.")
+				.instructions(
+					"Raises a number to another mathematical power."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The first value.")
 				)
@@ -150,7 +156,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Rounds a number to the nearest whole number.")
+				.instructions(
+					"Rounds a number to the nearest whole number."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value to round.")
 				)
@@ -183,7 +191,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Returns the mathematical floor of a number.")
+				.instructions(
+					"Returns the mathematical floor of a number."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
 				)
@@ -216,7 +226,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Returns the mathematical ceiling of a number.")
+				.instructions(
+					"Returns the mathematical ceiling of a number."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
 				)
@@ -249,7 +261,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Rounds a number to the nearest arbitrary digit place. The \"place\" is a power of 10. FIX(n, 0) = ROUND(n)")
+				.instructions(
+					"Rounds a number to the nearest arbitrary digit place. The \"place\" is a power of 10. FIX(n, 0) = ROUND(n)"
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
 				)
@@ -289,7 +303,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Returns Euler's constant.")
+				.instructions(
+					"Returns Euler's constant."
+				)
 				.returns(
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, String.valueOf(Math.E))
 				)
@@ -310,7 +326,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Returns the Natural Log (base e) of a value.")
+				.instructions(
+					"Returns the Natural Log (base e) of a value."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
 				)
@@ -343,7 +361,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Returns the Base 10 Log of a value.")
+				.instructions(
+					"Returns the Base 10 Log of a value."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
 				)
@@ -376,7 +396,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Returns the square root of a value.")
+				.instructions(
+					"Returns the square root of a value."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
 				)
@@ -409,7 +431,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Returns Pi.")
+				.instructions(
+					"Returns Pi."
+				)
 				.returns(
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, String.valueOf(Math.PI))
 				)
@@ -430,7 +454,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Converts degrees to radians.")
+				.instructions(
+					"Converts degrees to radians."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in degrees.")
 				)
@@ -463,7 +489,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Converts radians to degrees.")
+				.instructions(
+					"Converts radians to degrees."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
 				)
@@ -496,7 +524,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Mathematical sine.")
+				.instructions(
+					"Mathematical sine."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
 				)
@@ -529,7 +559,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Mathematical cosine.")
+				.instructions(
+					"Mathematical cosine."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
 				)
@@ -562,7 +594,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Mathematical tangent.")
+				.instructions(
+					"Mathematical tangent."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
 				)
@@ -595,7 +629,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Mathematical arc sine.")
+				.instructions(
+					"Mathematical arc sine."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
 				)
@@ -628,7 +664,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Mathematical arc cosine.")
+				.instructions(
+					"Mathematical arc cosine."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
 				)
@@ -661,7 +699,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Mathematical arc tangent.")
+				.instructions(
+					"Mathematical arc tangent."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
 				)
@@ -694,7 +734,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Clamps a value between two values.")
+				.instructions(
+					"Clamps a value between two values."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
 				)
@@ -738,7 +780,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Wraps a value around a value range. The higher bound is never returned.")
+				.instructions(
+					"Wraps a value around a value range. The higher bound is never returned."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
 				)
@@ -782,11 +826,12 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Linearly interpolates from the first value to the second.")
+				.instructions(
+					"Linearly interpolates from the first value to the second."
+				)
 				.parameter("scalar", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, 
-						"The unit scalar between the first and second value. 0 is first, 1 is the second. " +
-						"Beyond the range will return a value outside the range."
+						"The unit scalar between the first and second value. 0.0 is first, 1.0 is the second."
 					)
 				)
 				.parameter("value1", 
@@ -796,7 +841,10 @@ public enum MathFunctions implements ScriptFunctionType
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The second value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value wrapped around the provided range.")
+					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, 
+						"A value scaled between the provided range. If the scalar is beyond the range of 0.0 to 1.0, " +
+						"this will return a value outside the range."
+					)
 				)
 			;
 		}
@@ -829,7 +877,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Converts a value to its boolean value.")
+				.instructions(
+					"Converts a value to its boolean value."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type("The value to convert.")
 				)
@@ -862,7 +912,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Converts a value to an integer value.")
+				.instructions(
+					"Converts a value to an integer value."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type("The value to convert.")
 				)
@@ -895,7 +947,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Converts a value to a float value.")
+				.instructions(
+					"Converts a value to a float value."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type("The value to convert.")
 				)
@@ -928,7 +982,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Converts a value to a string value.")
+				.instructions(
+					"Converts a value to a string value."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type("The value to convert.")
 				)
@@ -961,7 +1017,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Parses a string to an integer with an optional radix.")
+				.instructions(
+					"Parses a string to an integer with an optional radix."
+				)
 				.parameter("value", 
 					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The value to parse.")
 				)
@@ -1007,7 +1065,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Converts color (byte, 0 to 255) components to an ARGB integer.")
+				.instructions(
+					"Converts color (byte, 0 to 255) components to an ARGB integer."
+				)
 				.parameter("red", 
 					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "Red component byte.")
 				)
@@ -1057,7 +1117,9 @@ public enum MathFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Converts color (float, 0.0 to 1.0) components to an ARGB integer.")
+				.instructions(
+					"Converts color (float, 0.0 to 1.0) components to an ARGB integer."
+				)
 				.parameter("red", 
 					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "Red component float.")
 				)

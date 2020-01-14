@@ -26,7 +26,9 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Prints something to standard out.")
+				.instructions(
+					"Prints something to standard out."
+				)
 				.parameter("message", 
 					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
 				)
@@ -59,7 +61,9 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Prints something to standard error.")
+				.instructions(
+					"Prints something to standard error."
+				)
 				.parameter("message", 
 					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
 				)
@@ -92,7 +96,9 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Prints something to standard out, appending a newline.")
+				.instructions(
+					"Prints something to standard out, appending a newline."
+				)
 				.parameter("message", 
 					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
 				)
@@ -127,7 +133,9 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
-				.instructions("Prints something to standard error, appending a newline.")
+				.instructions(
+					"Prints something to standard error, appending a newline."
+				)
 				.parameter("message", 
 					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
 				)
