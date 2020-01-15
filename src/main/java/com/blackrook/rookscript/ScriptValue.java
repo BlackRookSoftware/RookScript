@@ -258,7 +258,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * If null, this is set to the null value.
 	 * @param value the source error to use.
 	 */
-	public void set(ErrorType value)
+	public void setError(ErrorType value)
 	{
 		if (value == null)
 			setNull();
@@ -275,7 +275,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 * If null, this is set to the null value.
 	 * @param value the source error to use.
 	 */
-	public void set(Throwable value)
+	public void setError(Throwable value)
 	{
 		if (value == null)
 			setNull();
@@ -2465,7 +2465,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	{
 		private int position;
 		private byte[] data;
-		private ByteOrder byteOrder;
+		private ByteOrder order;
 		
 		private BufferType(int size, ByteOrder byteOrder)
 		{
@@ -2518,7 +2518,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		 */
 		public void setByteOrder(ByteOrder byteOrder)
 		{
-			this.byteOrder = byteOrder;
+			this.order = byteOrder;
 		}
 		
 		/**
@@ -2527,7 +2527,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		 */
 		public ByteOrder getByteOrder()
 		{
-			return byteOrder;
+			return order;
 		}
 		
 		/**
@@ -2674,7 +2674,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		public void putShort(Integer index, short value)
 		{
 			int i = index != null ? index : position;
-			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
 				data[i + 0] = (byte)((value & 0x000ff) >> 0);
 				data[i + 1] = (byte)((value & 0x0ff00) >> 8);
@@ -2700,7 +2700,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		{
 			int i = index != null ? index : position;
 			short out = 0;
-			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
 				out |= (data[i + 0] & 0x0ff) << 0;
 				out |= (data[i + 1] & 0x0ff) << 8;
@@ -2726,7 +2726,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		public void putUnsignedShort(Integer index, int value)
 		{
 			int i = index != null ? index : position;
-			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
 				data[i + 0] = (byte)((value & 0x000ff) >> 0);
 				data[i + 1] = (byte)((value & 0x0ff00) >> 8);
@@ -2752,7 +2752,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		{
 			int i = index != null ? index : position;
 			int out = 0;
-			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
 				out |= (data[i + 0] & 0x0ff) << 0;
 				out |= (data[i + 1] & 0x0ff) << 8;
@@ -2778,7 +2778,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		public void putInteger(Integer index, int value)
 		{
 			int i = index != null ? index : position;
-			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
 				data[i + 0] = (byte)((value & 0x000000ff) >> 0);
 				data[i + 1] = (byte)((value & 0x0000ff00) >> 8);
@@ -2808,7 +2808,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		{
 			int i = index != null ? index : position;
 			int out = 0;
-			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
 				out |= (data[i + 0] & 0x0ff) << 0;
 				out |= (data[i + 1] & 0x0ff) << 8;
@@ -2838,7 +2838,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		public void putUnsignedInteger(Integer index, long value)
 		{
 			int i = index != null ? index : position;
-			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
 				data[i + 0] = (byte)((value & 0x0000000ffL) >> 0);
 				data[i + 1] = (byte)((value & 0x00000ff00L) >> 8);
@@ -2868,7 +2868,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		{
 			int i = index != null ? index : position;
 			long out = 0L;
-			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
 				out |= (data[i + 0] & 0x0ff) << 0;
 				out |= (data[i + 1] & 0x0ff) << 8;
@@ -2924,7 +2924,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		public void putLong(Integer index, long value)
 		{
 			int i = index != null ? index : position;
-			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
 				data[i + 0] = (byte)((value & 0x00000000000000ffL) >> 0);
 				data[i + 1] = (byte)((value & 0x000000000000ff00L) >> 8);
@@ -2962,7 +2962,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		{
 			int i = index != null ? index : position;
 			long out = 0;
-			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
 				out |= (data[i + 0] & 0x0ffL) << 0;
 				out |= (data[i + 1] & 0x0ffL) << 8;
@@ -3054,7 +3054,22 @@ public class ScriptValue implements Comparable<ScriptValue>
 		{
 			return data.length;
 		}
-		
+	
+		@Override
+		public String toString() 
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.append(data.length).append(',').append(order == ByteOrder.BIG_ENDIAN ? "BE" : "LE").append(',').append('@').append(position);
+			sb.append('[');
+			for (int i = 0; i < data.length; i++)
+			{
+				sb.append(data[i]);
+				if (i < data.length - 1)
+					sb.append(", ");
+			}
+			sb.append(']');
+			return sb.toString();
+		}
 	}
 	
 	/**

@@ -7,8 +7,11 @@
  ******************************************************************************/
 package com.blackrook.rookscript.functions;
 
+import java.nio.ByteOrder;
+
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.ScriptValue.BufferType;
 import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.ScriptValue.MapType;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
@@ -52,6 +55,88 @@ public enum CommonFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(arg1);
 				returnValue.set(arg1.getTypeName());
+				return true;
+			}
+			finally
+			{
+				arg1.setNull();
+			}
+		}
+	},
+
+	LENGTH(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the \"length\" of a value."
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, 
+						"If value is: STRING, the length in characters. LIST, the length in elements." +
+						"MAP, the amount of keys. BUFFER, the size in bytes. OBJECTREF, if Collection, returns size(). Others, 1."
+					)
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(arg1);
+				returnValue.set(arg1.length());
+				return true;
+			}
+			finally
+			{
+				arg1.setNull();
+			}
+		}
+	},
+
+	EMPTY(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns if a value is \"empty\"."
+				)
+				.parameter("value", 
+					ScriptFunctionUsage.type("The value.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER,
+						"Returns true if: NULL." +
+						"OBJECTREF: is a Collection and isEmpty() returns true. "+
+						"BOOLEAN: is false. "+
+						"INTEGER or FLOAT: is 0 or NaN. "+
+						"STRING: length = 0. "+
+						"BUFFER: length = 0. "+
+						"LIST: length = 0. "+
+						"MAP: length = 0."
+					)
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(arg1);
+				returnValue.set(arg1.empty());
 				return true;
 			}
 			finally
@@ -275,87 +360,6 @@ public enum CommonFunctions implements ScriptFunctionType
 			{
 				arg1.setNull();
 				temp.setNull();
-			}
-		}
-	},
-
-	LENGTH(1)
-	{
-		@Override
-		protected Usage usage()
-		{
-			return ScriptFunctionUsage.create()
-				.instructions(
-					"Returns the \"length\" of a value."
-				)
-				.parameter("value", 
-					ScriptFunctionUsage.type("The value.")
-				)
-				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, 
-						"If value is: STRING, the length in characters. LIST, the length in elements." +
-						"MAP, the amount of keys. OBJECTREF, if Collection, returns size(). Others, 1."
-					)
-				)
-			;
-		}
-		
-		@Override
-		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
-		{
-			ScriptValue arg1 = CACHEVALUE1.get();
-			try
-			{
-				scriptInstance.popStackValue(arg1);
-				returnValue.set(arg1.length());
-				return true;
-			}
-			finally
-			{
-				arg1.setNull();
-			}
-		}
-	},
-
-	EMPTY(1)
-	{
-		@Override
-		protected Usage usage()
-		{
-			return ScriptFunctionUsage.create()
-				.instructions(
-					"Returns if a value is \"empty\"."
-				)
-				.parameter("value", 
-					ScriptFunctionUsage.type("The value.")
-				)
-				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER,
-						"Returns true if: NULL." +
-						"OBJECTREF: is a Collection and isEmpty() returns true. "+
-						"BOOLEAN: is false. "+
-						"INTEGER or FLOAT: is 0 or NaN. "+
-						"STRING: length = 0. "+
-						"LIST: length = 0. "+
-						"MAP: length = 0."
-					)
-				)
-			;
-		}
-		
-		@Override
-		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
-		{
-			ScriptValue arg1 = CACHEVALUE1.get();
-			try
-			{
-				scriptInstance.popStackValue(arg1);
-				returnValue.set(arg1.empty());
-				return true;
-			}
-			finally
-			{
-				arg1.setNull();
 			}
 		}
 	},
@@ -1764,6 +1768,135 @@ public enum CommonFunctions implements ScriptFunctionType
 			}
 		}
 	},
+	
+	
+	BUFNEW(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Create a new, blank buffer."
+				)
+				.parameter("size", 
+					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The size of the buffer.")
+				)
+				.parameter("endian", 
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Use native endian."),
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True = big, false = little.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BUFFER, "A new allocated buffer of [size] bytes."),
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "If not allocated or size is < 0.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				ByteOrder order = null;
+				scriptInstance.popStackValue(temp);
+				if (temp.isNull())
+					order = ByteOrder.nativeOrder();
+				else
+					order = temp.asBoolean() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+
+				scriptInstance.popStackValue(temp);
+				int size = temp.asInt();
+
+				try {
+					returnValue.setEmptyBuffer(size, order);
+				} catch (Exception e) {
+					returnValue.setError(e);
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFWRAP(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Wraps a list as a buffer."
+				)
+				.parameter("list", 
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "[INTEGER, ...]", "The list of values to interpret as (clamped) byte values.")
+				)
+				.parameter("endian", 
+					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Use native endian."),
+					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True = big, false = little.")
+				)
+				.returns(
+					ScriptFunctionUsage.type(ScriptValue.Type.BUFFER, "A new allocated buffer of [length(list)] bytes."),
+					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "If not allocated.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			ScriptValue list = CACHEVALUE1.get();
+			ScriptValue temp = CACHEVALUE2.get();
+			ScriptValue out = CACHEVALUE3.get();
+			try
+			{
+				ByteOrder order = null;
+				scriptInstance.popStackValue(temp);
+				if (temp.isNull())
+					order = ByteOrder.nativeOrder();
+				else
+					order = temp.asBoolean() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+
+				scriptInstance.popStackValue(list);
+				if (!list.isList())
+				{
+					temp.setEmptyList(1);
+					temp.listAdd(list);
+					list.set(temp);
+				}
+				
+				try {
+					out.setEmptyBuffer(list.length(), order);
+				} catch (Exception e) {
+					returnValue.setError(e);
+					return true;
+				}
+				
+				for (int i = 0; i < list.length(); i++)
+				{
+					list.listGetByIndex(i, temp);
+					out.asObjectType(BufferType.class).putByte(i, temp.asByte());
+				}
+
+				returnValue.set(out);
+				return true;
+			}
+			finally
+			{
+				list.setNull();
+				temp.setNull();
+				out.setNull();
+			}
+		}
+	},
+	
+	
+	// TODO: Finish buffers.
+	
 	;
 	
 	private final int parameterCount;
@@ -1796,10 +1929,10 @@ public enum CommonFunctions implements ScriptFunctionType
 		return usage;
 	}
 	
-	@Override
-	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue value);
-
 	protected abstract Usage usage();
+
+	@Override
+	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
