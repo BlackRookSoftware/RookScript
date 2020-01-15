@@ -147,7 +147,7 @@ public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
 		}
 
 		@Override
-		public String getObjectRefType() 
+		public String getSubType() 
 		{
 			return objectRefType;
 		}

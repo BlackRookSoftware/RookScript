@@ -12,7 +12,6 @@ import java.util.List;
 
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.RegexFunctions;
-import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
@@ -60,28 +59,26 @@ public class ScriptFunctionDescriptorTest
 		out.append("    ").println(usage.getInstructions());
 		if (!pul.isEmpty())
 		{
-			out.append("    ").println("Parameters:");
 			for (ParameterUsage pu : pul)
 			{
-				out.append("        ").append(pu.getParameterName()).println(":");
+				out.append("    ").append(pu.getParameterName()).println(":");
 				for (TypeUsage tu : pu.getTypes())
 				{
-					out.append("            ").println(tu.getType() != null 
-						? (tu.getType().name() + (tu.getType() == Type.OBJECTREF ? ":" + tu.getObjectRefType() : "")) 
+					out.append("        (").append(tu.getType() != null 
+						? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
 						: "ANY"
-					);
-					out.append("                ").println(tu.getDescription());
+					).append(") ").println(tu.getDescription());
 				}
 			}
 		}
 		out.append("    ").println("Returns:");
 		for (TypeUsage tu : usage.getReturnTypes())
 		{
-			out.append("        ").println(tu.getType() != null 
-				? (tu.getType().name() + (tu.getType() == Type.OBJECTREF ? ":" + tu.getObjectRefType() : "")) 
+			out.append("        (").append(tu.getType() != null 
+				? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
 				: "ANY"
-			);
-			out.append("            ").println(tu.getDescription());
+			).append(") ").println(tu.getDescription());
+			
 		}
 	}
 	
@@ -91,7 +88,7 @@ public class ScriptFunctionDescriptorTest
 		printUsages(System.out, CommonFunctions.createResolver());
 		printHeader(System.out, "Math");
 		printUsages(System.out, MathFunctions.createResolver());
-		printHeader(System.out, "I/O");
+		printHeader(System.out, "Standard I/O");
 		printUsages(System.out, StandardIOFunctions.createResolver());
 		printHeader(System.out, "RegEx");
 		printUsages(System.out, RegexFunctions.createResolver());

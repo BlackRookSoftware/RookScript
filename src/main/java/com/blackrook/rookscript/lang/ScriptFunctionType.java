@@ -101,9 +101,9 @@ public interface ScriptFunctionType
 			ScriptValue.Type getType();
 			
 			/**
-			 * @return the object ref type. Can return null.
+			 * @return the subtype. Usually a class name if OBJECTREF or the contents of a list/map. Can return null for no subtype.
 			 */
-			String getObjectRefType();
+			String getSubType();
 			
 			/**
 			 * @return the description.

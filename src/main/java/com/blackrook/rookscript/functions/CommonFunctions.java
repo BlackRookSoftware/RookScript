@@ -1609,7 +1609,7 @@ public enum CommonFunctions implements ScriptFunctionType
 				)
 				.returns(
 					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not a map."),
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "[STRING, ...] A new list of the map's keys.")
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "[STRING, ...]", "A new list of the map's keys.")
 				)
 			;
 		}
@@ -1661,7 +1661,7 @@ public enum CommonFunctions implements ScriptFunctionType
 				)
 				.returns(
 					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not a map."),
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "[STRING, ...] A new list of the map's keys.")
+					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "[STRING, ...]", "A new list of the map's keys.")
 				)
 			;
 		}

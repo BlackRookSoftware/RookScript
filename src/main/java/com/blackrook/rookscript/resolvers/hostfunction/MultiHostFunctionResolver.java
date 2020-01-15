@@ -8,9 +8,7 @@
 package com.blackrook.rookscript.resolvers.hostfunction;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
 
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
@@ -24,7 +22,7 @@ import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
 {
 	/** Resolvers in the global namespace. */
-	private Queue<ScriptFunctionResolver> globalResolvers;
+	private MultiFunctionResolver globalResolver;
 	/** Resolvers in the named namespaces. */
 	private Map<String, ScriptFunctionResolver> namedResolvers;
 
@@ -33,7 +31,7 @@ public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
 	 */
 	public MultiHostFunctionResolver()
 	{
-		this.globalResolvers = new LinkedList<>();
+		this.globalResolver = new MultiFunctionResolver();
 		this.namedResolvers = new HashMap<>();
 	}
 	
@@ -45,8 +43,7 @@ public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
 	 */
 	public MultiHostFunctionResolver addResolver(ScriptFunctionResolver resolver)
 	{
-		if (!globalResolvers.contains(resolver))
-			globalResolvers.add(resolver);
+		globalResolver.addResolver(resolver);
 		return this;
 	}
 	
@@ -69,7 +66,7 @@ public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
 	 */
 	public MultiHostFunctionResolver clear()
 	{
-		globalResolvers.clear();
+		globalResolver.clear();
 		namedResolvers.clear();
 		return this;
 	}
@@ -79,12 +76,7 @@ public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
 	{
 		ScriptFunctionResolver resolver;
 		if (namespace == null)
-		{
-			for (ScriptFunctionResolver r : globalResolvers)
-				if (r.containsFunction(name))
-					return true;
-			return false;
-		}
+			return globalResolver.containsFunction(name);
 		else if ((resolver = namedResolvers.get(namespace.toLowerCase())) != null)
 			return resolver.containsFunction(name);
 		else
@@ -96,12 +88,7 @@ public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
 	{
 		ScriptFunctionResolver resolver;
 		if (namespace == null)
-		{
-			for (ScriptFunctionResolver r : globalResolvers)
-				if (r.containsFunction(name))
-					return r.getFunction(name);
-			return null;
-		}
+			return globalResolver.getFunction(name);
 		else if ((resolver = namedResolvers.get(namespace.toLowerCase())) != null)
 			return resolver.getFunction(name);
 		else

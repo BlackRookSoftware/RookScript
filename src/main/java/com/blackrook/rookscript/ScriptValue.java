@@ -9,8 +9,10 @@ package com.blackrook.rookscript;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Array;
 import java.nio.ByteOrder;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -2461,15 +2463,55 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static class BufferType
 	{
+		private int position;
 		private byte[] data;
 		private ByteOrder byteOrder;
 		
 		private BufferType(int size, ByteOrder byteOrder)
 		{
-			this.data = new byte[size];
-			this.byteOrder = byteOrder;
+			setPosition(0);
+			setSize(size);
+			setByteOrder(byteOrder);
 		}
 
+		/**
+		 * Sets the buffer's current cursor position.
+		 * @param position the new position.
+		 */
+		public void setPosition(int position)
+		{
+			this.position = position;
+		}
+
+		/**
+		 * @return the buffer's current cursor position.
+		 */
+		public int getPosition() 
+		{
+			return position;
+		}
+		
+		/**
+		 * Sets the size of this buffer in bytes.
+		 * If this is resized, the buffer's data is kept.
+		 * @param size the new buffer size.
+		 */
+		public void setSize(int size)
+		{
+			byte[] newdata = new byte[size];
+			if (data != null)
+				System.arraycopy(data, 0, newdata, 0, Math.min(data.length, newdata.length));
+			data = newdata;
+		}
+		
+		/**
+		 * @return the size of this buffer in bytes.
+		 */
+		public int getSize()
+		{
+			return data.length;
+		}
+		
 		/**
 		 * Sets the byte order of this buffer.
 		 * @param byteOrder the new byte order.
@@ -2490,37 +2532,73 @@ public class ScriptValue implements Comparable<ScriptValue>
 		
 		/**
 		 * Reads bytes from an input stream into this buffer.
-		 * @param index the destination index.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by the length.
+		 * @param index the destination index (or null for current position).
 		 * @param in the input stream to read from.
 		 * @param length the amount of bytes to read.
-		 * @return the amount of bytes actually read (see {@link InputStream#read(byte[], int, int)}).
+		 * @return the amount of bytes actually read. May be less than length (see {@link InputStream#read(byte[], int, int)}).
 		 * @throws IOException if a read error occurs.
 		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds the buffer length. 
 		 */
-		public int readBytes(int index, InputStream in, int length) throws IOException
+		public int readBytes(Integer index, InputStream in, int length) throws IOException
 		{
-			return in.read(data, index, length);
+			int out = in.read(data, index != null ? index : position, length);
+			if (index == null)
+				position += out;
+			return out;
 		}
 
 		/**
-		 * Reads bytes from another buffer into this one.
-		 * @param index the destination index.
-		 * @param buffer the source buffer.
-		 * @param offset the offset into the provided buffer to start the read from.
+		 * Reads bytes from an open file handle into this buffer.
+		 * This relies on the file's position to be set to where the read should occur.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by the length.
+		 * @param index the destination index (or null for current position).
+		 * @param file the source buffer.
 		 * @param length the amount of bytes to read.
-		 * @return the amount of bytes read (length).
-		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds this buffer's length 
-		 * 		or <code>index + length</code> exceeds the length of the provided buffer. 
+		 * @return the amount of bytes actually read. May be less than length (see {@link RandomAccessFile#read(byte[], int, int)}).
+		 * @throws IOException if a read error occurs.
+		 * @throws IndexOutOfBoundsException if <code>index</code> exceeds this buffer's length. 
 		 */
-		public int readBytes(int index, BufferType buffer, int offset, int length)
+		public int readBytes(Integer index, RandomAccessFile file, int length) throws IOException
 		{
-			readBytes(index, buffer.data, offset, length);
-			return length;
+			int out = file.read(data, index != null ? index : position, length);
+			if (index == null)
+				position += out;
+			return out;
+		}
+		
+		/**
+		 * Reads bytes from another buffer into this one.
+		 * This relies on the other buffer's position to be set to where the read should occur.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by the length.
+		 * @param index the destination index (or null for current position).
+		 * @param buffer the source buffer.
+		 * @param length the amount of bytes to read.
+		 * @return the amount of bytes actually read.
+		 * @throws IndexOutOfBoundsException if <code>index</code> exceeds this buffer's length. 
+		 */
+		public int readBytes(Integer index, BufferType buffer, int length)
+		{
+			int out = 0;
+			if (index == null) while (position < data.length && length > 0)
+			{
+				putByte(null, buffer.getByte(null));
+				length--;
+				out++;
+			}
+			else while (index < data.length && length > 0)
+			{
+				putByte(index++, buffer.getByte(null));
+				length--;
+				out++;
+			}
+			return out;
 		}
 		
 		/**
 		 * Reads bytes from a byte array into this buffer.
-		 * @param index the destination index.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by the length.
+		 * @param index the destination index (or null for current position).
 		 * @param bytes the source array.
 		 * @param offset the offset into the provided array to start the read from.
 		 * @param length the amount of bytes to read.
@@ -2528,14 +2606,447 @@ public class ScriptValue implements Comparable<ScriptValue>
 		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds this buffer's length 
 		 * 		or <code>index + length</code> exceeds the length of the provided buffer. 
 		 */
-		public int readBytes(int index, byte[] bytes, int offset, int length)
+		public int readBytes(Integer index, byte[] bytes, int offset, int length)
 		{
-			System.arraycopy(bytes, offset, data, index, length);
+			System.arraycopy(bytes, offset, data, index != null ? index : position, length);
+			if (index == null)
+				position += length;
 			return length;
 		}
+
+		/**
+		 * Fills bytes using a value.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by the length.
+		 * @param index the destination index (or null for current position).
+		 * @param value the fill value.
+		 * @param offset the offset into the provided array to start the read from.
+		 * @param length the amount of bytes to read.
+		 * @return the amount of bytes read (length).
+		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds this buffer's length 
+		 * 		or <code>index + length</code> exceeds the length of the provided buffer. 
+		 */
+		public int putBytes(Integer index, byte value, int offset, int length)
+		{
+			int i = index != null ? index : position;
+			Arrays.fill(data, i, i + length, value);
+			if (index == null)
+				position += length;
+			return length;
+		}
+
+		/**
+		 * Sets a byte value.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 1.
+		 * @param index the destination index (or null for current position).
+		 * @param value the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public void putByte(Integer index, byte value)
+		{
+			data[index != null ? index : position] = value;
+			if (index == null)
+				position++;
+		}
 		
-		// TODO: Finish this.
+		/**
+		 * Gets a byte value.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 1.
+		 * @param index the source index (or null for current position).
+		 * @return the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public byte getByte(Integer index)
+		{
+			byte out = data[index != null ? index : position];
+			if (index == null)
+				position++;
+			return out;
+		}
 		
+		/**
+		 * Sets a short value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 2.
+		 * @param index the destination index (or null for current position).
+		 * @param value the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public void putShort(Integer index, short value)
+		{
+			int i = index != null ? index : position;
+			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			{
+				data[i + 0] = (byte)((value & 0x000ff) >> 0);
+				data[i + 1] = (byte)((value & 0x0ff00) >> 8);
+			}
+			else // BIG_ENDIAN
+			{
+				data[i + 0] = (byte)((value & 0x0ff00) >> 8);
+				data[i + 1] = (byte)((value & 0x000ff) >> 0);
+			}
+			if (index == null)
+				position += 2;
+		}
+		
+		/**
+		 * Gets a short value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 2.
+		 * @param index the source index (or null for current position).
+		 * @return the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public short getShort(Integer index)
+		{
+			int i = index != null ? index : position;
+			short out = 0;
+			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			{
+				out |= (data[i + 0] & 0x0ff) << 0;
+				out |= (data[i + 1] & 0x0ff) << 8;
+			}
+			else // BIG_ENDIAN
+			{
+				out |= (data[i + 0] & 0x0ff) << 8;
+				out |= (data[i + 1] & 0x0ff) << 0;
+			}
+			if (index == null)
+				position += 2;
+			return out;
+		}
+		
+		/**
+		 * Sets an unsigned short value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 2.
+		 * @param index the destination index (or null for current position).
+		 * @param value the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public void putUnsignedShort(Integer index, int value)
+		{
+			int i = index != null ? index : position;
+			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			{
+				data[i + 0] = (byte)((value & 0x000ff) >> 0);
+				data[i + 1] = (byte)((value & 0x0ff00) >> 8);
+			}
+			else // BIG_ENDIAN
+			{
+				data[i + 0] = (byte)((value & 0x0ff00) >> 8);
+				data[i + 1] = (byte)((value & 0x000ff) >> 0);
+			}
+			if (index == null)
+				position += 2;
+		}
+		
+		/**
+		 * Gets an unsigned short value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 2.
+		 * @param index the source index (or null for current position).
+		 * @return the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public int getUnsignedShort(Integer index)
+		{
+			int i = index != null ? index : position;
+			int out = 0;
+			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			{
+				out |= (data[i + 0] & 0x0ff) << 0;
+				out |= (data[i + 1] & 0x0ff) << 8;
+			}
+			else // BIG_ENDIAN
+			{
+				out |= (data[i + 0] & 0x0ff) << 8;
+				out |= (data[i + 1] & 0x0ff) << 0;
+			}
+			if (index == null)
+				position += 2;
+			return out;
+		}
+		
+		/**
+		 * Sets an integer value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 4.
+		 * @param index the destination index (or null for current position).
+		 * @param value the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public void putInteger(Integer index, int value)
+		{
+			int i = index != null ? index : position;
+			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			{
+				data[i + 0] = (byte)((value & 0x000000ff) >> 0);
+				data[i + 1] = (byte)((value & 0x0000ff00) >> 8);
+				data[i + 2] = (byte)((value & 0x00ff0000) >> 16);
+				data[i + 3] = (byte)((value & 0xff000000) >> 24);
+			}
+			else // BIG_ENDIAN
+			{
+				data[i + 0] = (byte)((value & 0xff000000) >> 24);
+				data[i + 1] = (byte)((value & 0x00ff0000) >> 16);
+				data[i + 2] = (byte)((value & 0x0000ff00) >> 8);
+				data[i + 3] = (byte)((value & 0x000000ff) >> 0);
+			}
+			if (index == null)
+				position += 4;
+		}
+		
+		/**
+		 * Gets an integer value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 4.
+		 * @param index the source index (or null for current position).
+		 * @return the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public int getInteger(Integer index)
+		{
+			int i = index != null ? index : position;
+			int out = 0;
+			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			{
+				out |= (data[i + 0] & 0x0ff) << 0;
+				out |= (data[i + 1] & 0x0ff) << 8;
+				out |= (data[i + 2] & 0x0ff) << 16;
+				out |= (data[i + 3] & 0x0ff) << 24;
+			}
+			else // BIG_ENDIAN
+			{
+				out |= (data[i + 0] & 0x0ff) << 24;
+				out |= (data[i + 1] & 0x0ff) << 16;
+				out |= (data[i + 2] & 0x0ff) << 8;
+				out |= (data[i + 3] & 0x0ff) << 0;
+			}
+			if (index == null)
+				position += 4;
+			return out;
+		}
+		
+		/**
+		 * Sets an unsigned integer value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 4.
+		 * @param index the destination index (or null for current position).
+		 * @param value the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public void putUnsignedInteger(Integer index, long value)
+		{
+			int i = index != null ? index : position;
+			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			{
+				data[i + 0] = (byte)((value & 0x0000000ffL) >> 0);
+				data[i + 1] = (byte)((value & 0x00000ff00L) >> 8);
+				data[i + 2] = (byte)((value & 0x000ff0000L) >> 16);
+				data[i + 3] = (byte)((value & 0x0ff000000L) >> 24);
+			}
+			else // BIG_ENDIAN
+			{
+				data[i + 0] = (byte)((value & 0x0ff000000L) >> 24);
+				data[i + 1] = (byte)((value & 0x000ff0000L) >> 16);
+				data[i + 2] = (byte)((value & 0x00000ff00L) >> 8);
+				data[i + 3] = (byte)((value & 0x0000000ffL) >> 0);
+			}
+			if (index == null)
+				position += 4;
+		}
+		
+		/**
+		 * Gets an unsigned integer value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 4.
+		 * @param index the source index (or null for current position).
+		 * @return the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public long getUnsignedInteger(Integer index)
+		{
+			int i = index != null ? index : position;
+			long out = 0L;
+			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			{
+				out |= (data[i + 0] & 0x0ff) << 0;
+				out |= (data[i + 1] & 0x0ff) << 8;
+				out |= (data[i + 2] & 0x0ff) << 16;
+				out |= (data[i + 3] & 0x0ff) << 24;
+			}
+			else // BIG_ENDIAN
+			{
+				out |= (data[i + 0] & 0x0ff) << 24;
+				out |= (data[i + 1] & 0x0ff) << 16;
+				out |= (data[i + 2] & 0x0ff) << 8;
+				out |= (data[i + 3] & 0x0ff) << 0;
+			}
+			if (index == null)
+				position += 4;
+			return out;
+		}
+		
+		/**
+		 * Sets a float value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 4.
+		 * @param index the destination index (or null for current position).
+		 * @param value the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public void putFloat(Integer index, float value)
+		{
+			putInteger(index, Float.floatToRawIntBits(value));
+		}
+		
+		/**
+		 * Gets a float value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 4.
+		 * @param index the source index (or null for current position).
+		 * @return the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public float getFloat(Integer index)
+		{
+			return Float.intBitsToFloat(getInteger(index));
+		}
+		
+		/**
+		 * Sets a long value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 8.
+		 * @param index the destination index (or null for current position).
+		 * @param value the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public void putLong(Integer index, long value)
+		{
+			int i = index != null ? index : position;
+			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			{
+				data[i + 0] = (byte)((value & 0x00000000000000ffL) >> 0);
+				data[i + 1] = (byte)((value & 0x000000000000ff00L) >> 8);
+				data[i + 2] = (byte)((value & 0x0000000000ff0000L) >> 16);
+				data[i + 3] = (byte)((value & 0x00000000ff000000L) >> 24);
+				data[i + 4] = (byte)((value & 0x000000ff00000000L) >> 32);
+				data[i + 5] = (byte)((value & 0x0000ff0000000000L) >> 40);
+				data[i + 6] = (byte)((value & 0x00ff000000000000L) >> 48);
+				data[i + 7] = (byte)((value & 0xff00000000000000L) >> 56);
+			}
+			else // BIG_ENDIAN
+			{
+				data[i + 0] = (byte)((value & 0xff00000000000000L) >> 56);
+				data[i + 1] = (byte)((value & 0x00ff000000000000L) >> 48);
+				data[i + 2] = (byte)((value & 0x0000ff0000000000L) >> 40);
+				data[i + 3] = (byte)((value & 0x000000ff00000000L) >> 32);
+				data[i + 4] = (byte)((value & 0x00000000ff000000L) >> 24);
+				data[i + 5] = (byte)((value & 0x0000000000ff0000L) >> 16);
+				data[i + 6] = (byte)((value & 0x000000000000ff00L) >> 8);
+				data[i + 7] = (byte)((value & 0x00000000000000ffL) >> 0);
+			}
+			if (index == null)
+				position += 8;
+		}
+		
+		/**
+		 * Gets a long value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 8.
+		 * @param index the source index (or null for current position).
+		 * @return the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public long getLong(Integer index)
+		{
+			int i = index != null ? index : position;
+			long out = 0;
+			if (byteOrder == ByteOrder.LITTLE_ENDIAN)
+			{
+				out |= (data[i + 0] & 0x0ffL) << 0;
+				out |= (data[i + 1] & 0x0ffL) << 8;
+				out |= (data[i + 2] & 0x0ffL) << 16;
+				out |= (data[i + 3] & 0x0ffL) << 24;
+				out |= (data[i + 4] & 0x0ffL) << 32;
+				out |= (data[i + 5] & 0x0ffL) << 40;
+				out |= (data[i + 6] & 0x0ffL) << 48;
+				out |= (data[i + 7] & 0x0ffL) << 56;
+			}
+			else // BIG_ENDIAN
+			{
+				out |= (data[i + 0] & 0x0ffL) << 56;
+				out |= (data[i + 1] & 0x0ffL) << 48;
+				out |= (data[i + 2] & 0x0ffL) << 40;
+				out |= (data[i + 3] & 0x0ffL) << 32;
+				out |= (data[i + 4] & 0x0ffL) << 24;
+				out |= (data[i + 5] & 0x0ffL) << 16;
+				out |= (data[i + 6] & 0x0ffL) << 8;
+				out |= (data[i + 7] & 0x0ffL) << 0;
+			}
+			if (index == null)
+				position += 8;
+			return out;
+		}
+		
+		/**
+		 * Sets a double value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 8.
+		 * @param index the destination index (or null for current position).
+		 * @param value the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public void putDouble(Integer index, double value)
+		{
+			putLong(index, Double.doubleToRawLongBits(value));
+		}
+		
+		/**
+		 * Gets a double value.
+		 * Pays attention to current byte order.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by 8.
+		 * @param index the source index (or null for current position).
+		 * @return the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public double getDouble(Integer index)
+		{
+			return Double.longBitsToDouble(getLong(index));
+		}
+
+		/**
+		 * Sets a string value.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by the amount of bytes written.
+		 * @param index the destination index (or null for current position).
+		 * @param charset the encoding charset.
+		 * @param value the value.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public void putString(Integer index, Charset charset, String value)
+		{
+			byte[] bytes = value.getBytes(charset);
+			readBytes(index, bytes, 0, bytes.length);
+		}
+		
+		/**
+		 * Sets a string value.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by the length.
+		 * @param index the destination index (or null for current position).
+		 * @param charset the encoding charset.
+		 * @param length the amount of bytes to use to create a string.
+		 * @return the decoded string.
+		 * @throws ArrayIndexOutOfBoundsException if the index is out-of-bounds. 
+		 */
+		public String getString(Integer index, Charset charset, int length)
+		{
+			int i = index != null ? index : position;
+			String out = new String(data, i, length, charset);
+			if (index == null)
+				position += length;
+			return out;
+		}
+
 		/**
 		 * @return the size of this buffer in bytes. 
 		 */
