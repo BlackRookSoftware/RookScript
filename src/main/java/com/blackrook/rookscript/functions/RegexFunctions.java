@@ -12,12 +12,15 @@ import java.util.regex.PatternSyntaxException;
 
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
 import com.blackrook.rookscript.struct.PatternUtils;
+
+import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
 
 /**
  * A set of RegEx functions.
@@ -36,10 +39,10 @@ public enum RegexFunctions implements ScriptFunctionType
 					"Checks if a string is a valid RegEx pattern."
 				)
 				.parameter("pattern", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string to test.")
+					type(Type.STRING, "The string to test.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if the pattern is malformed, false otherwise.")
+					type(Type.BOOLEAN, "True if the pattern is malformed, false otherwise.")
 				)
 			;
 		}
@@ -80,14 +83,14 @@ public enum RegexFunctions implements ScriptFunctionType
 					"Splits a string by a RegEx pattern."
 				)
 				.parameter("string", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string to split.")
+					type(Type.STRING, "The string to split.")
 				)
 				.parameter("pattern", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The RegEx pattern to use.")
+					type(Type.STRING, "The RegEx pattern to use.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "A list of strings."), 
-					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "If the pattern is malformed.")
+					type(Type.LIST, "A list of strings."), 
+					type(Type.ERROR, "If the pattern is malformed.")
 				)
 			;
 		}

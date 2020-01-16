@@ -90,7 +90,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			else
 				name = simpleName;
 			
-			resolver.addConstructor(name, (Constructor<C>)cons, valueType, null);
+			resolver.addConstructor(name, (Constructor<C>)cons, valueType, errorHandling, null);
 		}
 
 		for (Map.Entry<String, FieldInfo> entry : profile.getPublicFieldsByName().entrySet())
@@ -107,8 +107,8 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			if ((typeAnno = info.getField().getAnnotation(ScriptValueType.class)) != null)
 				valueType = typeAnno.value();
 			
-			resolver.addGetterField(getterPrefix + name, info.getField(), valueType, null);
-			resolver.addSetterField(setterPrefix + name, info.getField(), chained, null);
+			resolver.addGetterField(getterPrefix + name, info.getField(), valueType, errorHandling, null);
+			resolver.addSetterField(setterPrefix + name, info.getField(), chained, errorHandling, null);
 		}
 		
 		for (Map.Entry<String, MethodInfo> entry : profile.getGetterMethodsByName().entrySet())
@@ -125,7 +125,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			if ((typeAnno = info.getMethod().getAnnotation(ScriptValueType.class)) != null)
 				valueType = typeAnno.value();
 
-			resolver.addMethod(getterPrefix + name, info.getMethod(), valueType, false, false, null);
+			resolver.addMethod(getterPrefix + name, info.getMethod(), valueType, false, errorHandling, null);
 		}
 
 		for (Map.Entry<String, MethodInfo> entry : profile.getSetterMethodsByName().entrySet())
@@ -137,7 +137,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 			else
 				name = entry.getKey();
 			
-			resolver.addMethod(setterPrefix + name, info.getMethod(), null, chained, false, null);
+			resolver.addMethod(setterPrefix + name, info.getMethod(), null, chained, errorHandling, null);
 		}
 		
 		for (Map.Entry<String, MethodInfo> entry : profile.getMethodsByName().entrySet())
@@ -177,11 +177,12 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * <p>NOTE: This ignores annotations that may affect naming or ignoring this constructor.
 	 * @param functionName the script function name.
 	 * @param constructor the constructor method to wrap.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @return this function resolver.
 	 */
-	public ClassMemberFunctionResolver<C> addConstructor(String functionName, Constructor<C> constructor)
+	public ClassMemberFunctionResolver<C> addConstructor(String functionName, Constructor<C> constructor, boolean errorHandling)
 	{
-		return addConstructor(functionName, constructor, null, null);
+		return addConstructor(functionName, constructor, null, errorHandling, null);
 	}
 	
 	/**
@@ -191,11 +192,12 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param functionName the script function name.
 	 * @param constructor the constructor method to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @return this function resolver.
 	 */
-	public ClassMemberFunctionResolver<C> addConstructor(String functionName, Constructor<C> constructor, Type type)
+	public ClassMemberFunctionResolver<C> addConstructor(String functionName, Constructor<C> constructor, Type type, boolean errorHandling)
 	{
-		return addConstructor(functionName, constructor, type, null);
+		return addConstructor(functionName, constructor, type, errorHandling, null);
 	}
 	
 	/**
@@ -205,13 +207,14 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param functionName the script function name.
 	 * @param constructor the constructor method to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @param usage function usage docs.
 	 * @return this function resolver.
 	 */
-	public ClassMemberFunctionResolver<C> addConstructor(String functionName, Constructor<C> constructor, Type type, Usage usage)
+	public ClassMemberFunctionResolver<C> addConstructor(String functionName, Constructor<C> constructor, Type type, boolean errorHandling, Usage usage)
 	{
 		String name = functionName.toLowerCase();
-		map.put(name, new ConstructorInvoker(name, constructor, type, usage));
+		map.put(name, new ConstructorInvoker(name, constructor, type, errorHandling, usage));
 		return this;
 	}
 	
@@ -222,13 +225,14 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param functionName the script function name.
 	 * @param fieldName the name of the class's field to wrap.
 	 * @param chained if true, this will return the object affected (for command chaining), else null.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @return this function resolver.
 	 * @throws IllegalArgumentException if the field could not be found.
 	 */
-	public ClassMemberFunctionResolver<C> addSetterField(String functionName, String fieldName, boolean chained)
+	public ClassMemberFunctionResolver<C> addSetterField(String functionName, String fieldName, boolean chained, boolean errorHandling)
 	{
 		try {
-			return addSetterField(functionName, validType.getField(fieldName), chained, null);
+			return addSetterField(functionName, validType.getField(fieldName), chained, errorHandling, null);
 		} catch (NoSuchFieldException | SecurityException e) {
 			throw new IllegalArgumentException("Could not find field: " + fieldName, e);
 		}
@@ -241,14 +245,15 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param functionName the script function name.
 	 * @param fieldName the name of the class's field to wrap.
 	 * @param chained if true, this will return the object affected (for command chaining), else null.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @param usage function usage docs.
 	 * @return this function resolver.
 	 * @throws IllegalArgumentException if the field could not be found.
 	 */
-	public ClassMemberFunctionResolver<C> addSetterField(String functionName, String fieldName, boolean chained, Usage usage)
+	public ClassMemberFunctionResolver<C> addSetterField(String functionName, String fieldName, boolean chained, boolean errorHandling, Usage usage)
 	{
 		try {
-			return addSetterField(functionName, validType.getField(fieldName), chained, usage);
+			return addSetterField(functionName, validType.getField(fieldName), chained, errorHandling, usage);
 		} catch (NoSuchFieldException | SecurityException e) {
 			throw new IllegalArgumentException("Could not find field: " + fieldName, e);
 		}
@@ -261,13 +266,14 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param functionName the script function name.
 	 * @param field the field to wrap.
 	 * @param chained if true, this will return the object affected (for command chaining), else null.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @param usage function usage docs.
 	 * @return this function resolver.
 	 */
-	public ClassMemberFunctionResolver<C> addSetterField(String functionName, Field field, boolean chained, Usage usage)
+	public ClassMemberFunctionResolver<C> addSetterField(String functionName, Field field, boolean chained, boolean errorHandling, Usage usage)
 	{
 		String name = functionName.toLowerCase();
-		map.put(name, new SetterFieldInvoker(name, field, usage, chained));
+		map.put(name, new SetterFieldInvoker(name, field, chained, errorHandling, usage));
 		return this;
 	}
 	
@@ -278,13 +284,14 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param functionName the script function name.
 	 * @param fieldName the name of the class's field to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @return this function resolver.
 	 * @throws IllegalArgumentException if the field could not be found.
 	 */
-	public ClassMemberFunctionResolver<C> addGetterField(String functionName, String fieldName, Type type)
+	public ClassMemberFunctionResolver<C> addGetterField(String functionName, String fieldName, Type type, boolean errorHandling)
 	{
 		try {
-			return addGetterField(functionName, validType.getField(fieldName), type, null);
+			return addGetterField(functionName, validType.getField(fieldName), type, errorHandling, null);
 		} catch (NoSuchFieldException | SecurityException e) {
 			throw new IllegalArgumentException("Could not find field: " + fieldName, e);
 		}
@@ -297,14 +304,15 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param functionName the script function name.
 	 * @param fieldName the name of the class's field to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @param usage function usage docs.
 	 * @return this function resolver.
 	 * @throws IllegalArgumentException if the field could not be found.
 	 */
-	public ClassMemberFunctionResolver<C> addGetterField(String functionName, String fieldName, Type type, Usage usage)
+	public ClassMemberFunctionResolver<C> addGetterField(String functionName, String fieldName, Type type, boolean errorHandling, Usage usage)
 	{
 		try {
-			return addGetterField(functionName, validType.getField(fieldName), type, usage);
+			return addGetterField(functionName, validType.getField(fieldName), type, errorHandling, usage);
 		} catch (NoSuchFieldException | SecurityException e) {
 			throw new IllegalArgumentException("Could not find field: " + fieldName, e);
 		}
@@ -317,13 +325,14 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param functionName the script function name.
 	 * @param field the field to wrap.
 	 * @param type the target script value type on conversion. Can be null for automatic.
+	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @param usage function usage docs.
 	 * @return this function resolver.
 	 */
-	public ClassMemberFunctionResolver<C> addGetterField(String functionName, Field field, Type type, Usage usage)
+	public ClassMemberFunctionResolver<C> addGetterField(String functionName, Field field, Type type, boolean errorHandling, Usage usage)
 	{
 		String name = functionName.toLowerCase();
-		map.put(name, new GetterFieldInvoker(name, field, type, usage));
+		map.put(name, new GetterFieldInvoker(name, field, type, errorHandling, usage));
 		return this;
 	}
 	
@@ -336,7 +345,6 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param chained if true, this will return the object affected (for command chaining), overriding any return type.
 	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @return this function resolver.
-	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
 	 * @throws IllegalArgumentException if the method could not be found.
 	 */
 	public ClassMemberFunctionResolver<C> addMethod(String functionName, String methodName, boolean chained, boolean errorHandling)
@@ -354,7 +362,6 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @param usage function usage docs.
 	 * @return this function resolver.
-	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
 	 * @throws IllegalArgumentException if the method could not be found.
 	 */
 	public ClassMemberFunctionResolver<C> addMethod(String functionName, String methodName, boolean chained, boolean errorHandling, Usage usage)
@@ -396,7 +403,6 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	 * @param errorHandling if true, this will return thrown errors as an Error type, instead of throwing it as a ScriptExecutionException.
 	 * @param usage function usage docs.
 	 * @return this function resolver.
-	 * @throws ScriptExecutionException if the invoked method throws an exception, or the object passed in is not the correct type.
 	 */
 	public ClassMemberFunctionResolver<C> addMethod(String functionName, Method method, Type type, boolean chained, boolean errorHandling, Usage usage)
 	{
@@ -435,14 +441,16 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		private String name;
 		private Usage usage;
 		private Type type;
+		private boolean errorHandling;
 		private Constructor<C> constructor;
 		private Class<?>[] paramTypes;
 		
-		private ConstructorInvoker(String name, Constructor<C> constructor, Type type, Usage usage)
+		private ConstructorInvoker(String name, Constructor<C> constructor, Type type, boolean errorHandling, Usage usage)
 		{
 			this.name = name;
 			this.usage = usage;
 			this.type = type;
+			this.errorHandling = errorHandling;
 			this.constructor = constructor;
 			this.paramTypes = constructor.getParameterTypes();
 		}
@@ -482,6 +490,16 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 				returnValue.set(value);
 				return true;
 			}
+			catch (Exception e)
+			{
+				if (errorHandling)
+				{
+					returnValue.set(e);
+					return true;
+				}
+				else
+					throw e; 
+			}
 			finally
 			{
 				value.setNull();
@@ -507,13 +525,15 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		private Field field;
 		private Class<?> type;
 		private boolean chained;
-	
-		private SetterFieldInvoker(String name, Field field, Usage usage, boolean chained)
+		private boolean errorHandling;
+
+		private SetterFieldInvoker(String name, Field field, boolean chained, boolean errorHandling, Usage usage)
 		{
 			this.name = name;
 			this.field = field;
 			this.usage = usage;
 			this.type = field.getType();
+			this.errorHandling = errorHandling;
 			this.chained = chained;
 		}
 	
@@ -548,7 +568,16 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 				Object object = instance.asObject();
 				
 				if (!validType.isAssignableFrom(object.getClass()))
-					throw new ScriptExecutionException("First parameter is not the correct type.");
+				{
+					String message = "First parameter is not " + object.getClass().getSimpleName() + ".";
+					if (errorHandling)
+					{
+						returnValue.setError("BadParameter", message);
+						return true;
+					}
+					else
+						throw new ScriptExecutionException(message); 
+				}
 				
 				Utils.setFieldValue(object, field, value.createForType(type));
 				returnValue.set(chained ? object : null);
@@ -577,13 +606,15 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 		private String name;
 		private Field field;
 		private Type type;
+		private boolean errorHandling;
 		private Usage usage;
 		
-		private GetterFieldInvoker(String name, Field field, Type type, Usage usage)
+		private GetterFieldInvoker(String name, Field field, Type type, boolean errorHandling, Usage usage)
 		{
 			this.name = name;
 			this.field = field;
 			this.type = type;
+			this.errorHandling = errorHandling;
 			this.usage = usage;
 		}
 	
@@ -616,7 +647,16 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 				Object object = temp.asObject();
 				
 				if (!validType.isAssignableFrom(object.getClass()))
-					throw new ScriptExecutionException("First parameter is not the correct type.");
+				{
+					String message = "First parameter is not " + object.getClass().getSimpleName() + ".";
+					if (errorHandling)
+					{
+						returnValue.setError("BadParameter", message);
+						return true;
+					}
+					else
+						throw new ScriptExecutionException(message); 
+				}
 				
 				temp.set(type, Utils.getFieldValue(object, field));
 				returnValue.set(temp);
@@ -702,11 +742,14 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 					
 					if (!validType.isAssignableFrom(object.getClass()))
 					{
-						ScriptExecutionException see = new ScriptExecutionException("First parameter is not the correct type.");
+						String message = "First parameter is not " + object.getClass().getSimpleName() + ".";
 						if (errorHandling)
-							returnValue.set(see);
+						{
+							returnValue.setError("BadParameter", message);
+							return true;
+						}
 						else
-							throw see; 
+							throw new ScriptExecutionException(message); 
 					}
 				}
 				

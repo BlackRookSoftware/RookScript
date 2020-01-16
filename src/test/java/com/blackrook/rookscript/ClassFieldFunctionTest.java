@@ -21,7 +21,7 @@ public class ClassFieldFunctionTest
 	public static void main(String[] args) throws Exception
 	{
 		ClassMemberFunctionResolver<File> fileResolver = (new ClassMemberFunctionResolver<>(File.class))
-			.addConstructor("file", File.class.getConstructor(String.class))
+			.addConstructor("file", File.class.getConstructor(String.class), false)
 			.addMethod("fpath", "getPath", false, false)
 			.addMethod("fparent", "getParent", false, false)
 			.addMethod("fabsolute", "isAbsolute", false, false)

@@ -2,6 +2,19 @@
 
 entry main()
 {
-	println(bufnew(64));
-	println(bufwrap([1,2,3,4,5,6,7,8]));
+	println(bufnew(32));
+	b = bufwrap([1,2,3,4,5,6,7,8]);
+	println(b);
+	b = bufunwrap(b);
+	println(b);
+	b = bufwrap([1,2,3,4,5,6,7,8]);
+	c = b;
+	println(b == c);
+	println(bufslice(b, 4, 4));
+	println(bufslice(b) == b);
+	
+	println(bufsetpos(b, 2));
+	println(bufgetpos(b));
+	
+	
 }

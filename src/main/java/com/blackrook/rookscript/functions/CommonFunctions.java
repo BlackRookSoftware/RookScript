@@ -11,6 +11,7 @@ import java.nio.ByteOrder;
 
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.ScriptValue.BufferType;
 import com.blackrook.rookscript.ScriptValue.ErrorType;
 import com.blackrook.rookscript.ScriptValue.MapType;
@@ -19,6 +20,8 @@ import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
+
+import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
 
 /**
  * Script common functions that work for all scripts.
@@ -36,10 +39,10 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns the type name of a value."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The provided value.")
+					type("The provided value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, 
+					type(Type.STRING, 
 						"The type name. Can be \"null\", \"boolean\", \"integer\", " +
 						"\"float\", \"string\", \"list\", \"map\", \"error\", or an \"objectref\" string."
 					)
@@ -74,10 +77,10 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns the \"length\" of a value."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value.")
+					type("The value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, 
+					type(Type.INTEGER, 
 						"If value is: STRING, the length in characters. LIST, the length in elements." +
 						"MAP, the amount of keys. BUFFER, the size in bytes. OBJECTREF, if Collection, returns size(). Others, 1."
 					)
@@ -112,10 +115,10 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns if a value is \"empty\"."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value.")
+					type("The value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER,
+					type(Type.INTEGER,
 						"Returns true if: NULL." +
 						"OBJECTREF: is a Collection and isEmpty() returns true. "+
 						"BOOLEAN: is false. "+
@@ -156,10 +159,10 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Checks if the provided value is an error type."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The provided value.")
+					type("The provided value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if so, false if not.")
+					type(Type.BOOLEAN, "True if so, false if not.")
 				)
 			;
 		}
@@ -181,6 +184,57 @@ public enum CommonFunctions implements ScriptFunctionType
 		}
 	},
 	
+	ERROR(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Creates an error type."
+				)
+				.parameter("type", 
+					type(Type.STRING, "The error type.")
+				)
+				.parameter("message", 
+					type(Type.STRING, "The error message.")
+				)
+				.parameter("messageLocalized", 
+					type(Type.NULL, "Use the error message."),
+					type(Type.STRING, "The error localized message.")
+				)
+				.returns(
+					type(Type.ERROR, "The created error.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String messageLocalized = temp.isNull() ? null : temp.asString();
+				scriptInstance.popStackValue(temp);
+				String message = temp.isNull() ? null : temp.asString();
+				scriptInstance.popStackValue(temp);
+				String type = temp.isNull() ? null : temp.asString();
+				
+				if (messageLocalized == null)
+					returnValue.setError(type, message);
+				else
+					returnValue.setError(type, message, messageLocalized);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
 	ERRORTYPE(1)
 	{
 		@Override
@@ -191,11 +245,11 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns the error type. If not an error, this returns null."
 				)
 				.parameter("error", 
-					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+					type(Type.ERROR, "The error.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The error type.")
+					type(Type.NULL, "If not an error."),
+					type(Type.STRING, "The error type.")
 				)
 			;
 		}
@@ -235,11 +289,11 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns the error message. If not an error, this returns null."
 				)
 				.parameter("error", 
-					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+					type(Type.ERROR, "The error.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The error message.")
+					type(Type.NULL, "If not an error."),
+					type(Type.STRING, "The error message.")
 				)
 			;
 		}
@@ -279,11 +333,11 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns the localized error message. If not an error, this returns null."
 				)
 				.parameter("error", 
-					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+					type(Type.ERROR, "The error.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The localized error message.")
+					type(Type.NULL, "If not an error."),
+					type(Type.STRING, "The localized error message.")
 				)
 			;
 		}
@@ -323,11 +377,11 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns an error type as a map. If not an error, this returns null."
 				)
 				.parameter("error", 
-					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "The error.")
+					type(Type.ERROR, "The error.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not an error."),
-					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "A map of {type:STRING, message:STRING, localizedmessage:STRING}.")
+					type(Type.NULL, "If not an error."),
+					type(Type.MAP, "A map of {type:STRING, message:STRING, localizedmessage:STRING}.")
 				)
 			;
 		}
@@ -374,10 +428,10 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns a string in full uppercase."
 				)
 				.parameter("string", 
-					ScriptFunctionUsage.type("The string (if not STRING, will be converted).")
+					type("The string (if not STRING, will be converted).")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The same string converted to uppercase.")
+					type(Type.STRING, "The same string converted to uppercase.")
 				)
 			;
 		}
@@ -409,10 +463,10 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns a string in full lowercase."
 				)
 				.parameter("string", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+					type(Type.STRING, "The string (if not STRING, will be converted).")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The same string converted to lowercase.")
+					type(Type.STRING, "The same string converted to lowercase.")
 				)
 			;
 		}
@@ -444,10 +498,10 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns a string trimmed of whitespace at both ends."
 				)
 				.parameter("string", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+					type(Type.STRING, "The string (if not STRING, will be converted).")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The trimmed string.")
+					type(Type.STRING, "The trimmed string.")
 				)
 			;
 		}
@@ -479,14 +533,14 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns a single character from a string."
 				)
 				.parameter("string", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+					type(Type.STRING, "The string (if not STRING, will be converted).")
 				)
 				.parameter("index", 
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index (0-based).")
+					type(Type.INTEGER, "The index (0-based).")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If the index is out-of-bounds."),
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The character returned.")
+					type(Type.NULL, "If the index is out-of-bounds."),
+					type(Type.STRING, "The character returned.")
 				)
 			;
 		}
@@ -524,17 +578,17 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns a substring of another string."
 				)
 				.parameter("string", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+					type(Type.STRING, "The string (if not STRING, will be converted).")
 				)
 				.parameter("start", 
-						ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The starting index (0-based), inclusive.")
+						type(Type.INTEGER, "The starting index (0-based), inclusive.")
 				)
 				.parameter("end", 
-						ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The ending index (0-based), exclusive.")
+						type(Type.INTEGER, "The ending index (0-based), exclusive.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If either index is out-of-bounds or the end index is less than the start index."),
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The substring returned.")
+					type(Type.NULL, "If either index is out-of-bounds or the end index is less than the start index."),
+					type(Type.STRING, "The substring returned.")
 				)
 			;
 		}
@@ -579,14 +633,14 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns the starting index of a string inside another string."
 				)
 				.parameter("string", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+					type(Type.STRING, "The string (if not STRING, will be converted).")
 				)
 				.parameter("search", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string to search for (if not STRING, will be converted).")
+					type(Type.STRING, "The string to search for (if not STRING, will be converted).")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not found."),
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The starting index.")
+					type(Type.NULL, "If not found."),
+					type(Type.INTEGER, "The starting index.")
 				)
 			;
 		}
@@ -625,14 +679,14 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns the starting index of a string inside another string, searching from the end."
 				)
 				.parameter("string", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string (if not STRING, will be converted).")
+					type(Type.STRING, "The string (if not STRING, will be converted).")
 				)
 				.parameter("search", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The string to search for (if not STRING, will be converted).")
+					type(Type.STRING, "The string to search for (if not STRING, will be converted).")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not found."),
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The starting index.")
+					type(Type.NULL, "If not found."),
+					type(Type.INTEGER, "The starting index.")
 				)
 			;
 		}
@@ -678,10 +732,10 @@ public enum CommonFunctions implements ScriptFunctionType
 					"reference, or encapsulating a non-list value as a list."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type("The list to copy.")
+					type("The list to copy.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The resultant list.")
+					type(Type.LIST, "The resultant list.")
 				)
 			;
 		}
@@ -732,13 +786,13 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Creates a new list of a specific length, optionally with all values initialized to a specified value."
 				)
 				.parameter("length", 
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The new list length.")
+					type(Type.INTEGER, "The new list length.")
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The fill value. Copies are not made for each element.")
+					type("The fill value. Copies are not made for each element.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The resultant new list.")
+					type(Type.LIST, "The resultant new list.")
 				)
 			;
 		}
@@ -778,17 +832,17 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Adds a value to a list. If the \"list\" argument is not a list or not added, this returns false, else true."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list.")
+					type(Type.LIST, "The list.")
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to add.")
+					type("The value to add.")
 				)
 				.parameter("index", 
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Adds it to the end."),
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index to add the value at (shifts the others).")
+					type(Type.NULL, "Adds it to the end."),
+					type(Type.INTEGER, "The index to add the value at (shifts the others).")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if added. False if not a list.")
+					type(Type.BOOLEAN, "True if added. False if not a list.")
 				)
 			;
 		}
@@ -830,13 +884,13 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Finds list/map-typed items by reference and objects by equals()."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list.")
+					type(Type.LIST, "The list.")
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to remove.")
+					type("The value to remove.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if removed. False if not found or not a list.")
+					type(Type.BOOLEAN, "True if removed. False if not found or not a list.")
 				)
 			;
 		}
@@ -871,13 +925,13 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Removes the first value from a list at a specific index."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list.")
+					type(Type.LIST, "The list.")
 				)
 				.parameter("index", 
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index.")
+					type(Type.INTEGER, "The index.")
 				)
 				.returns(
-					ScriptFunctionUsage.type("The value removed, NULL if index is out-of-bounds or a list was not provided.")
+					type("The value removed, NULL if index is out-of-bounds or a list was not provided.")
 				)
 			;
 		}
@@ -914,10 +968,10 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Sorts a list in place."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list to sort.")
+					type(Type.LIST, "The list to sort.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list that was sorted (not a new copy).")
+					type(Type.LIST, "The list that was sorted (not a new copy).")
 				)
 			;
 		}
@@ -951,13 +1005,13 @@ public enum CommonFunctions implements ScriptFunctionType
 					"list/map-typed items by reference and objects by equals()."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list to search.")
+					type(Type.LIST, "The list to search.")
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to search for.")
+					type("The value to search for.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if it contains the value, false if not.")
+					type(Type.BOOLEAN, "True if it contains the value, false if not.")
 				)
 			;
 		}
@@ -993,14 +1047,14 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Finds list/map-typed items by reference and objects by equals()."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list to search.")
+					type(Type.LIST, "The list to search.")
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to search for.")
+					type("The value to search for.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not found."),
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index of the found element.")
+					type(Type.NULL, "If not found."),
+					type(Type.INTEGER, "The index of the found element.")
 				)
 			;
 		}
@@ -1041,14 +1095,14 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Finds list/map-typed items by reference and objects by equals()."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list to search.")
+					type(Type.LIST, "The list to search.")
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to search for.")
+					type("The value to search for.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not found."),
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index of the found element.")
+					type(Type.NULL, "If not found."),
+					type(Type.INTEGER, "The index of the found element.")
 				)
 			;
 		}
@@ -1089,10 +1143,10 @@ public enum CommonFunctions implements ScriptFunctionType
 					"list are discrete and sorted, its contents now suitable for set operations."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The list to prepare.")
+					type(Type.LIST, "The list to prepare.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The new list, set-ified.")
+					type(Type.LIST, "The new list, set-ified.")
 				)
 			;
 		}
@@ -1141,13 +1195,13 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Adds a value to a list, expected to be set up like a set (sorted, discrete)."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The set (list).")
+					type(Type.LIST, "The set (list).")
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to add.")
+					type("The value to add.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if value was added (and is not already in the list), false otherwise.")
+					type(Type.BOOLEAN, "True if value was added (and is not already in the list), false otherwise.")
 				)
 			;
 		}
@@ -1182,13 +1236,13 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Removes a value from a list, expected to be set up like a set (sorted, discrete)."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The set (list).")
+					type(Type.LIST, "The set (list).")
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to remove.")
+					type("The value to remove.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if the value was removed, false otherwise.")
+					type(Type.BOOLEAN, "True if the value was removed, false otherwise.")
 				)
 			;
 		}
@@ -1224,13 +1278,13 @@ public enum CommonFunctions implements ScriptFunctionType
 					"This is more performant than a list - search is binary search."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The set (list).")
+					type(Type.LIST, "The set (list).")
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to look for.")
+					type("The value to look for.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True if the value was found, false otherwise.")
+					type(Type.BOOLEAN, "True if the value was found, false otherwise.")
 				)
 			;
 		}
@@ -1266,14 +1320,14 @@ public enum CommonFunctions implements ScriptFunctionType
 					"This is more performant than a list - search is binary search."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The set (list).")
+					type(Type.LIST, "The set (list).")
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to look for.")
+					type("The value to look for.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not found."),
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The index in the list that it was found.")
+					type(Type.NULL, "If not found."),
+					type(Type.INTEGER, "The index in the list that it was found.")
 				)
 			;
 		}
@@ -1308,15 +1362,15 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Gets the union of two sets, returning a new set with values in both."
 				)
 				.parameter("list1", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The first set (list)."),
-					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+					type(Type.LIST, "The first set (list)."),
+					type("A value to encapsulate into a set.")
 				)
 				.parameter("list2", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The second set (list)."),
-					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+					type(Type.LIST, "The second set (list)."),
+					type("A value to encapsulate into a set.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The new set that is the union of both sets.")
+					type(Type.LIST, "The new set that is the union of both sets.")
 				)
 			;
 		}
@@ -1382,15 +1436,15 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Gets the intersection of two sets, returning a new set with values in both."
 				)
 				.parameter("list1", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The first set (list)."),
-					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+					type(Type.LIST, "The first set (list)."),
+					type("A value to encapsulate into a set.")
 				)
 				.parameter("list2", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The second set (list)."),
-					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+					type(Type.LIST, "The second set (list)."),
+					type("A value to encapsulate into a set.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The new set that is the intersection of both sets.")
+					type(Type.LIST, "The new set that is the intersection of both sets.")
 				)
 			;
 		}
@@ -1455,15 +1509,15 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Gets the exclusive-or of two sets, returning the union of both sets minus the intersection."
 				)
 				.parameter("list1", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The first set (list)."),
-					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+					type(Type.LIST, "The first set (list)."),
+					type("A value to encapsulate into a set.")
 				)
 				.parameter("list2", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The second set (list)."),
-					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+					type(Type.LIST, "The second set (list)."),
+					type("A value to encapsulate into a set.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The new set that is the XOr of both sets.")
+					type(Type.LIST, "The new set that is the XOr of both sets.")
 				)
 			;
 		}
@@ -1533,15 +1587,15 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Gets a new set that is the first set minus the values in the second set."
 				)
 				.parameter("list1", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The first set (list)."),
-					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+					type(Type.LIST, "The first set (list)."),
+					type("A value to encapsulate into a set.")
 				)
 				.parameter("list2", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The second set (list)."),
-					ScriptFunctionUsage.type("A value to encapsulate into a set.")
+					type(Type.LIST, "The second set (list)."),
+					type("A value to encapsulate into a set.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "The new set that is the difference of both sets.")
+					type(Type.LIST, "The new set that is the difference of both sets.")
 				)
 			;
 		}
@@ -1609,11 +1663,11 @@ public enum CommonFunctions implements ScriptFunctionType
 					"is suitable for set operations (sorted, discrete)."
 				)
 				.parameter("map", 
-					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "The map.")
+					type(Type.MAP, "The map.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not a map."),
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "[STRING, ...]", "A new list of the map's keys.")
+					type(Type.NULL, "If not a map."),
+					type(Type.LIST, "[STRING, ...]", "A new list of the map's keys.")
 				)
 			;
 		}
@@ -1658,14 +1712,14 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Returns a value that corresponds to a key in the map."
 				)
 				.parameter("map", 
-					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "The map.")
+					type(Type.MAP, "The map.")
 				)
 				.parameter("key", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The key.")
+					type(Type.STRING, "The key.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "If not a map."),
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "[STRING, ...]", "A new list of the map's keys.")
+					type(Type.NULL, "If not a map."),
+					type(Type.LIST, "[STRING, ...]", "A new list of the map's keys.")
 				)
 			;
 		}
@@ -1714,15 +1768,15 @@ public enum CommonFunctions implements ScriptFunctionType
 					"The copies are shallow - references are preserved."
 				)
 				.parameter("map1", 
-					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "The first map."),
-					ScriptFunctionUsage.type("An empty map.")
+					type(Type.MAP, "The first map."),
+					type("An empty map.")
 				)
 				.parameter("map2", 
-					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "The second map."),
-					ScriptFunctionUsage.type("An empty map.")
+					type(Type.MAP, "The second map."),
+					type("An empty map.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.MAP, "A new map.")
+					type(Type.MAP, "A new map.")
 				)
 			;
 		}
@@ -1769,7 +1823,6 @@ public enum CommonFunctions implements ScriptFunctionType
 		}
 	},
 	
-	
 	BUFNEW(2)
 	{
 		@Override
@@ -1777,18 +1830,19 @@ public enum CommonFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Create a new, blank buffer."
+					"Creates a new, blank buffer."
 				)
 				.parameter("size", 
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The size of the buffer.")
+					type(Type.INTEGER, "The size of the buffer.")
 				)
 				.parameter("endian", 
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Use native endian."),
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True = big, false = little.")
+					type(Type.NULL, "Use native endian."),
+					type(Type.BOOLEAN, "True = big, false = little.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BUFFER, "A new allocated buffer of [size] bytes."),
-					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "If not allocated or size is < 0.")
+					type(Type.BUFFER, "A new allocated buffer of [size] bytes."),
+					type(Type.ERROR, "BadParameter", "Size is < 0."),
+					type(Type.ERROR, "OutOfMemory", "If not allocated.")
 				)
 			;
 		}
@@ -1808,6 +1862,10 @@ public enum CommonFunctions implements ScriptFunctionType
 
 				scriptInstance.popStackValue(temp);
 				int size = temp.asInt();
+				if (size < 0)
+				{
+					
+				}
 
 				try {
 					returnValue.setEmptyBuffer(size, order);
@@ -1833,15 +1891,15 @@ public enum CommonFunctions implements ScriptFunctionType
 					"Wraps a list as a buffer."
 				)
 				.parameter("list", 
-					ScriptFunctionUsage.type(ScriptValue.Type.LIST, "[INTEGER, ...]", "The list of values to interpret as (clamped) byte values.")
+					type(Type.LIST, "[INTEGER, ...]", "The list of values to interpret as (clamped) byte values.")
 				)
 				.parameter("endian", 
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Use native endian."),
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "True = big, false = little.")
+					type(Type.NULL, "Use native endian."),
+					type(Type.BOOLEAN, "True = big, false = little.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BUFFER, "A new allocated buffer of [length(list)] bytes."),
-					ScriptFunctionUsage.type(ScriptValue.Type.ERROR, "If not allocated.")
+					type(Type.BUFFER, "A new allocated buffer of [length(list)] bytes."),
+					type(Type.ERROR, "OutOfMemory", "If not allocated.")
 				)
 			;
 		}
@@ -1876,10 +1934,11 @@ public enum CommonFunctions implements ScriptFunctionType
 					return true;
 				}
 				
+				BufferType buf = out.asObjectType(BufferType.class);
 				for (int i = 0; i < list.length(); i++)
 				{
 					list.listGetByIndex(i, temp);
-					out.asObjectType(BufferType.class).putByte(i, temp.asByte());
+					buf.putByte(i, temp.asByte());
 				}
 
 				returnValue.set(out);
@@ -1894,6 +1953,234 @@ public enum CommonFunctions implements ScriptFunctionType
 		}
 	},
 	
+	BUFUNWRAP(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Unwraps a buffer into a list."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to unwrap.")
+				)
+				.returns(
+					type(Type.LIST, "A new list where each element is a value from 0 to 255, representing all of the values in the buffer in order."),
+					type(Type.ERROR, "BadParameter", "If not a buffer.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			ScriptValue out = CACHEVALUE1.get();
+			ScriptValue temp = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buffer = temp.asObjectType(BufferType.class);
+				int len = buffer.size();
+				out.setEmptyList(len);
+				for (int i = 0; i < len; i++)
+				{
+					temp.set(buffer.getByte(i));
+					out.listAdd(temp);
+				}
+				
+				returnValue.set(out);
+				return true;
+			}
+			finally
+			{
+				out.setNull();
+				temp.setNull();
+			}
+		}
+		
+	},
+	
+	BUFSLICE(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Creates a sub-buffer from another buffer."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The source buffer to use.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use 0."),
+					type(Type.INTEGER, "The starting index.")
+				)
+				.parameter("length", 
+					type(Type.NULL, "Use length(buffer) - index."),
+					type(Type.INTEGER, "The amount of bytes to copy to the new buffer.")
+				)
+				.returns(
+					type(Type.BUFFER, "New allocated buffer of [length] bytes, copied from source (same byte order)."),
+					type(Type.ERROR, "BadParameter", "If not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If index or index + length is out of bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue buffer = CACHEVALUE1.get();
+			ScriptValue out = CACHEVALUE2.get();
+			ScriptValue temp = CACHEVALUE3.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer length = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				int index = temp.isNull() ? 0 : temp.asInt();
+
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+
+				BufferType src = temp.asObjectType(BufferType.class);
+				if (length == null)
+					length = src.size() - index;
+				
+				if (index < 0)
+				{
+					returnValue.setError("OutOfBounds", "Index < 0");
+					return true;
+				}
+				else if (index + length > src.size())
+				{
+					returnValue.setError("OutOfBounds", "Index + length = " + (index + length));
+					return true;
+				}
+				
+				temp.setEmptyBuffer(length, src.getByteOrder());
+				temp.asObjectType(BufferType.class).readBytes(0, src, index, length);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				buffer.setNull();
+				out.setNull();
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFSETPOS(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets the current cursor position for a buffer."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("position", 
+					type(Type.INTEGER, "The new current buffer cursor position.")
+				)
+				.returns(
+					type(Type.BUFFER, "buffer."),
+					type(Type.ERROR, "BadParameter", "If not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If the position is out of bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				int position = temp.asInt();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				if (position < 0 || position > buf.size())
+				{
+					returnValue.setError("OutOfBounds", "Position is out of bounds. size: " + buf.size() +", pos: " + position);
+					return true;
+				}
+				
+				buf.setPosition(position);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFGETPOS(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets the current cursor position for a buffer."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.returns(
+					type(Type.INTEGER, "The buffer's current cursor position."),
+					type(Type.ERROR, "BadParameter", "If not a buffer.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				returnValue.set(temp.asObjectType(BufferType.class).getPosition());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
 	
 	// TODO: Finish buffers.
 	

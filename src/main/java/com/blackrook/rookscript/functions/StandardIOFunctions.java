@@ -9,10 +9,13 @@ package com.blackrook.rookscript.functions;
 
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
+
+import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
 
 /**
  * Script common functions for standard input/output.
@@ -30,10 +33,10 @@ public enum StandardIOFunctions implements ScriptFunctionType
 					"Prints something to standard out."
 				)
 				.parameter("message", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
+					type(Type.STRING, "Value to print.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Returns nothing.")
+					type(Type.NULL, "Returns nothing.")
 				)
 			;
 		}
@@ -65,10 +68,10 @@ public enum StandardIOFunctions implements ScriptFunctionType
 					"Prints something to standard error."
 				)
 				.parameter("message", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
+					type(Type.STRING, "Value to print.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Returns nothing.")
+					type(Type.NULL, "Returns nothing.")
 				)
 			;
 		}
@@ -100,10 +103,10 @@ public enum StandardIOFunctions implements ScriptFunctionType
 					"Prints something to standard out, appending a newline."
 				)
 				.parameter("message", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
+					type(Type.STRING, "Value to print.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Returns nothing.")
+					type(Type.NULL, "Returns nothing.")
 				)
 			;
 		}
@@ -137,10 +140,10 @@ public enum StandardIOFunctions implements ScriptFunctionType
 					"Prints something to standard error, appending a newline."
 				)
 				.parameter("message", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "Value to print.")
+					type(Type.STRING, "Value to print.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Returns nothing.")
+					type(Type.NULL, "Returns nothing.")
 				)
 			;
 		}

@@ -9,11 +9,14 @@ package com.blackrook.rookscript.functions;
 
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
 import com.blackrook.rookscript.struct.Utils;
+
+import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
 
 /**
  * Script common functions for mathematic functions.
@@ -31,13 +34,13 @@ public enum MathFunctions implements ScriptFunctionType
 					"Returns the minimum of two values."
 				)
 				.parameter("value1", 
-					ScriptFunctionUsage.type("The first value.")
+					type("The first value.")
 				)
 				.parameter("value2", 
-					ScriptFunctionUsage.type("The second value.")
+					type("The second value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type("The value that is less than the other value.")
+					type("The value that is less than the other value.")
 				)
 			;
 		}
@@ -75,13 +78,13 @@ public enum MathFunctions implements ScriptFunctionType
 					"Returns the maximum of two values."
 				)
 				.parameter("value1", 
-					ScriptFunctionUsage.type("The first value.")
+					type("The first value.")
 				)
 				.parameter("value2", 
-					ScriptFunctionUsage.type("The second value.")
+					type("The second value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type("The value that is greater than the other value.")
+					type("The value that is greater than the other value.")
 				)
 			;
 		}
@@ -119,13 +122,13 @@ public enum MathFunctions implements ScriptFunctionType
 					"Raises a number to another mathematical power."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The first value.")
+					type(Type.FLOAT, "The first value.")
 				)
 				.parameter("power", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The second value.")
+					type(Type.FLOAT, "The second value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value raised to the provided power.")
+					type(Type.FLOAT, "The value raised to the provided power.")
 				)
 			;
 		}
@@ -160,10 +163,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Rounds a number to the nearest whole number."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value to round.")
+					type(Type.FLOAT, "The value to round.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The value rounded to the nearest integer value.")
+					type(Type.INTEGER, "The value rounded to the nearest integer value.")
 				)
 			;
 		}
@@ -195,10 +198,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Returns the mathematical floor of a number."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
+					type(Type.FLOAT, "The value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The floor of the provided value.")
+					type(Type.FLOAT, "The floor of the provided value.")
 				)
 			;
 		}
@@ -230,10 +233,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Returns the mathematical ceiling of a number."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
+					type(Type.FLOAT, "The value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The ceiling of the provided value.")
+					type(Type.FLOAT, "The ceiling of the provided value.")
 				)
 			;
 		}
@@ -265,13 +268,13 @@ public enum MathFunctions implements ScriptFunctionType
 					"Rounds a number to the nearest arbitrary digit place. The \"place\" is a power of 10. FIX(n, 0) = ROUND(n)"
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
+					type(Type.FLOAT, "The value.")
 				)
 				.parameter("place", 
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The place.")
+					type(Type.INTEGER, "The place.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The rounded value.")
+					type(Type.FLOAT, "The rounded value.")
 				)
 			;
 		}
@@ -307,7 +310,7 @@ public enum MathFunctions implements ScriptFunctionType
 					"Returns Euler's constant."
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, String.valueOf(Math.E))
+					type(Type.FLOAT, String.valueOf(Math.E))
 				)
 			;
 		}
@@ -330,10 +333,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Returns the Natural Log (base e) of a value."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
+					type(Type.FLOAT, "The value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "Log (base e) of the provided value.")
+					type(Type.FLOAT, "Log (base e) of the provided value.")
 				)
 			;
 		}
@@ -365,10 +368,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Returns the Base 10 Log of a value."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
+					type(Type.FLOAT, "The value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "Base 10 Log of the provided value.")
+					type(Type.FLOAT, "Base 10 Log of the provided value.")
 				)
 			;
 		}
@@ -400,10 +403,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Returns the square root of a value."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
+					type(Type.FLOAT, "The value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The square root of the provided value.")
+					type(Type.FLOAT, "The square root of the provided value.")
 				)
 			;
 		}
@@ -435,7 +438,7 @@ public enum MathFunctions implements ScriptFunctionType
 					"Returns Pi."
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, String.valueOf(Math.PI))
+					type(Type.FLOAT, String.valueOf(Math.PI))
 				)
 			;
 		}
@@ -458,10 +461,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Converts degrees to radians."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in degrees.")
+					type(Type.FLOAT, "The value in degrees.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
+					type(Type.FLOAT, "The value in radians.")
 				)
 			;
 		}
@@ -493,10 +496,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Converts radians to degrees."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
+					type(Type.FLOAT, "The value in radians.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in degrees.")
+					type(Type.FLOAT, "The value in degrees.")
 				)
 			;
 		}
@@ -528,10 +531,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Mathematical sine."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
+					type(Type.FLOAT, "The value in radians.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "SIN(value)")
+					type(Type.FLOAT, "SIN(value)")
 				)
 			;
 		}
@@ -563,10 +566,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Mathematical cosine."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
+					type(Type.FLOAT, "The value in radians.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "COS(value)")
+					type(Type.FLOAT, "COS(value)")
 				)
 			;
 		}
@@ -598,10 +601,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Mathematical tangent."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
+					type(Type.FLOAT, "The value in radians.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "TAN(value)")
+					type(Type.FLOAT, "TAN(value)")
 				)
 			;
 		}
@@ -633,10 +636,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Mathematical arc sine."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
+					type(Type.FLOAT, "The value in radians.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "ASIN(value)")
+					type(Type.FLOAT, "ASIN(value)")
 				)
 			;
 		}
@@ -668,10 +671,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Mathematical arc cosine."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
+					type(Type.FLOAT, "The value in radians.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "ACOS(value)")
+					type(Type.FLOAT, "ACOS(value)")
 				)
 			;
 		}
@@ -703,10 +706,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Mathematical arc tangent."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value in radians.")
+					type(Type.FLOAT, "The value in radians.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "ATAN(value)")
+					type(Type.FLOAT, "ATAN(value)")
 				)
 			;
 		}
@@ -738,16 +741,16 @@ public enum MathFunctions implements ScriptFunctionType
 					"Clamps a value between two values."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
+					type(Type.FLOAT, "The value.")
 				)
 				.parameter("lo", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The lower bound.")
+					type(Type.FLOAT, "The lower bound.")
 				)
 				.parameter("hi", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The higher bound.")
+					type(Type.FLOAT, "The higher bound.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value clamped to the provided range.")
+					type(Type.FLOAT, "The value clamped to the provided range.")
 				)
 			;
 		}
@@ -784,16 +787,16 @@ public enum MathFunctions implements ScriptFunctionType
 					"Wraps a value around a value range. The higher bound is never returned."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value.")
+					type(Type.FLOAT, "The value.")
 				)
 				.parameter("lo", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The lower bound.")
+					type(Type.FLOAT, "The lower bound.")
 				)
 				.parameter("hi", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The higher bound.")
+					type(Type.FLOAT, "The higher bound.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The value wrapped around the provided range.")
+					type(Type.FLOAT, "The value wrapped around the provided range.")
 				)
 			;
 		}
@@ -830,18 +833,18 @@ public enum MathFunctions implements ScriptFunctionType
 					"Linearly interpolates from the first value to the second."
 				)
 				.parameter("scalar", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, 
+					type(Type.FLOAT, 
 						"The unit scalar between the first and second value. 0.0 is first, 1.0 is the second."
 					)
 				)
 				.parameter("value1", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The first value.")
+					type(Type.FLOAT, "The first value.")
 				)
 				.parameter("value2", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The second value.")
+					type(Type.FLOAT, "The second value.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, 
+					type(Type.FLOAT, 
 						"A value scaled between the provided range. If the scalar is beyond the range of 0.0 to 1.0, " +
 						"this will return a value outside the range."
 					)
@@ -881,10 +884,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Converts a value to its boolean value."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to convert.")
+					type("The value to convert.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.BOOLEAN, "The boolean-equivalent value.")
+					type(Type.BOOLEAN, "The boolean-equivalent value.")
 				)
 			;
 		}
@@ -916,10 +919,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Converts a value to an integer value."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to convert.")
+					type("The value to convert.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The integer-equivalent value.")
+					type(Type.INTEGER, "The integer-equivalent value.")
 				)
 			;
 		}
@@ -951,10 +954,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Converts a value to a float value."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to convert.")
+					type("The value to convert.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The float-equivalent value.")
+					type(Type.FLOAT, "The float-equivalent value.")
 				)
 			;
 		}
@@ -986,10 +989,10 @@ public enum MathFunctions implements ScriptFunctionType
 					"Converts a value to a string value."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type("The value to convert.")
+					type("The value to convert.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "The string-equivalent value.")
+					type(Type.FLOAT, "The string-equivalent value.")
 				)
 			;
 		}
@@ -1021,15 +1024,15 @@ public enum MathFunctions implements ScriptFunctionType
 					"Parses a string to an integer with an optional radix."
 				)
 				.parameter("value", 
-					ScriptFunctionUsage.type(ScriptValue.Type.STRING, "The value to parse.")
+					type(Type.STRING, "The value to parse.")
 				)
 				.parameter("radix", 
-					ScriptFunctionUsage.type(ScriptValue.Type.NULL, "Radix 10."),
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "An optional radix.")
+					type(Type.NULL, "Radix 10."),
+					type(Type.INTEGER, "An optional radix.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The parsed value."),
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "NaN, if not parsable.")
+					type(Type.INTEGER, "The parsed value."),
+					type(Type.FLOAT, "NaN, if not parsable.")
 				)
 			;
 		}
@@ -1069,19 +1072,19 @@ public enum MathFunctions implements ScriptFunctionType
 					"Converts color (byte, 0 to 255) components to an ARGB integer."
 				)
 				.parameter("red", 
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "Red component byte.")
+					type(Type.INTEGER, "Red component byte.")
 				)
 				.parameter("green", 
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "Green component byte.")
+					type(Type.INTEGER, "Green component byte.")
 				)
 				.parameter("blue", 
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "Blue component byte.")
+					type(Type.INTEGER, "Blue component byte.")
 				)
 				.parameter("alpha", 
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "Alpha component byte.")
+					type(Type.INTEGER, "Alpha component byte.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The output ARGB color value.")
+					type(Type.INTEGER, "The output ARGB color value.")
 				)
 			;
 		}
@@ -1121,19 +1124,19 @@ public enum MathFunctions implements ScriptFunctionType
 					"Converts color (float, 0.0 to 1.0) components to an ARGB integer."
 				)
 				.parameter("red", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "Red component float.")
+					type(Type.FLOAT, "Red component float.")
 				)
 				.parameter("green", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "Green component float.")
+					type(Type.FLOAT, "Green component float.")
 				)
 				.parameter("blue", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "Blue component float.")
+					type(Type.FLOAT, "Blue component float.")
 				)
 				.parameter("alpha", 
-					ScriptFunctionUsage.type(ScriptValue.Type.FLOAT, "Alpha component float.")
+					type(Type.FLOAT, "Alpha component float.")
 				)
 				.returns(
-					ScriptFunctionUsage.type(ScriptValue.Type.INTEGER, "The output ARGB color value.")
+					type(Type.INTEGER, "The output ARGB color value.")
 				)
 			;
 		}

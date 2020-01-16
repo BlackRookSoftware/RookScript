@@ -162,7 +162,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	public static ScriptValue createError(String type, String message, String localizedMessage)
 	{
 		ScriptValue sv = new ScriptValue();
-		sv.set(ErrorType.create(type, message, localizedMessage));
+		sv.setError(type, message, localizedMessage);
 		return sv;
 	}
 	
@@ -255,19 +255,25 @@ public class ScriptValue implements Comparable<ScriptValue>
 	
 	/**
 	 * Sets this value as an error.
-	 * If null, this is set to the null value.
-	 * @param value the source error to use.
+	 * @param type the error type.
+	 * @param message the error message.
 	 */
-	public void setError(ErrorType value)
+	public void setError(String type, String message)
 	{
-		if (value == null)
-			setNull();
-		else
-		{
-			this.type = Type.ERROR;
-			this.ref = value;
-			this.rawbits = 0L;
-		}
+		setError(type, message, message);
+	}
+	
+	/**
+	 * Sets this value as an error.
+	 * @param type the error type.
+	 * @param message the error message.
+	 * @param localizedMessage a localized version of the error message.
+	 */
+	public void setError(String type, String message, String localizedMessage)
+	{
+		this.type = Type.ERROR;
+		this.ref = ErrorType.create(type, message, localizedMessage);
+		this.rawbits = 0L;
 	}
 	
 	/**
@@ -1244,6 +1250,14 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 
 	/**
+	 * @return true if this value is a buffer type.
+	 */
+	public boolean isBuffer()
+	{
+		return type == Type.BUFFER;
+	}
+
+	/**
 	 * @return true if this value is a list type.
 	 */
 	public boolean isList()
@@ -1763,22 +1777,16 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return o.type != Type.NULL ? -1 : 0;
 		else if (o.type == Type.NULL)
 			return 1;
-		else if (type == Type.OBJECTREF || o.type == Type.OBJECTREF)
-		{
-			return ref.equals(o.ref) ? 0 : -1;
-		}
-		else if (type == Type.MAP || o.type == Type.MAP)
-			return ref == o.ref ? 0 : -1;
-		else if (type == Type.LIST || o.type == Type.LIST)
-			return ref == o.ref ? 0 : -1;
-		else if (type == Type.STRING || o.type == Type.STRING)
-			return asString().compareTo(o.asString());
-		else
+		else if (isNumeric() && o.isNumeric())
 		{
 			double d1 = asDouble();
 			double d2 = o.asDouble();
 			return d1 == d2 ? 0 : (d1 < d2 ? -1 : 1);
 		}
+		else if (type == Type.STRING || o.type == Type.STRING)
+			return asString().compareTo(o.asString());
+		else
+			return ref == o.ref ? 0 : -1;
 	}
 
 	@Override
@@ -2505,14 +2513,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 		}
 		
 		/**
-		 * @return the size of this buffer in bytes.
-		 */
-		public int getSize()
-		{
-			return data.length;
-		}
-		
-		/**
 		 * Sets the byte order of this buffer.
 		 * @param byteOrder the new byte order.
 		 */
@@ -2593,6 +2593,26 @@ public class ScriptValue implements Comparable<ScriptValue>
 				out++;
 			}
 			return out;
+		}
+		
+		/**
+		 * Reads bytes from another buffer into this one.
+		 * This relies on the other buffer's position to be set to where the read should occur.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by the length.
+		 * @param index the destination index (or null for current position).
+		 * @param buffer the source buffer.
+		 * @param offset the offset into the source buffer.
+		 * @param length the amount of bytes to read.
+		 * @return the amount of bytes actually read.
+		 * @throws IndexOutOfBoundsException if <code>index</code> exceeds this buffer's length. 
+		 */
+		public int readBytes(Integer index, BufferType buffer, int offset, int length)
+		{
+			int i = index != null ? index : position;
+			System.arraycopy(buffer.data, offset, data, i, length);
+			if (index == null)
+				position += length;
+			return length;
 		}
 		
 		/**
@@ -3443,6 +3463,17 @@ public class ScriptValue implements Comparable<ScriptValue>
 		private String type;
 		private String message;
 		private String localizedMessage;
+		
+		/**
+		 * Creates an error value.
+		 * @param type the error type.
+		 * @param message the error message.
+		 * @return a new ErrorType.
+		 */
+		public static ErrorType create(String type, String message)
+		{
+			return create(type, message, message);
+		}
 		
 		/**
 		 * Creates an error value.
