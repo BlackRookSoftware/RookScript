@@ -2471,6 +2471,8 @@ public class ScriptValue implements Comparable<ScriptValue>
 	 */
 	public static class BufferType
 	{
+		static final String BYTEALPHABET = "0123456789abcdef";
+		
 		private int position;
 		private byte[] data;
 		private ByteOrder order;
@@ -2603,7 +2605,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		 * @param buffer the source buffer.
 		 * @param offset the offset into the source buffer.
 		 * @param length the amount of bytes to read.
-		 * @return the amount of bytes actually read.
+		 * @return the amount of bytes actually read (length).
 		 * @throws IndexOutOfBoundsException if <code>index</code> exceeds this buffer's length. 
 		 */
 		public int readBytes(Integer index, BufferType buffer, int offset, int length)
@@ -2639,13 +2641,12 @@ public class ScriptValue implements Comparable<ScriptValue>
 		 * If null is passed in as the index, the buffer's cursor position is advanced by the length.
 		 * @param index the destination index (or null for current position).
 		 * @param value the fill value.
-		 * @param offset the offset into the provided array to start the read from.
-		 * @param length the amount of bytes to read.
+		 * @param length the amount of bytes to add.
 		 * @return the amount of bytes read (length).
-		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds this buffer's length 
+		 * @throws ArrayIndexOutOfBoundsException if <code>index + length</code> exceeds this buffer's length 
 		 * 		or <code>index + length</code> exceeds the length of the provided buffer. 
 		 */
-		public int putBytes(Integer index, byte value, int offset, int length)
+		public int putBytes(Integer index, byte value, int length)
 		{
 			int i = index != null ? index : position;
 			Arrays.fill(data, i, i + length, value);
@@ -3079,13 +3080,15 @@ public class ScriptValue implements Comparable<ScriptValue>
 		public String toString() 
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.append(data.length).append(',').append(order == ByteOrder.BIG_ENDIAN ? "BE" : "LE").append(',').append('@').append(position);
+			sb.append(order == ByteOrder.BIG_ENDIAN ? "BE" : "LE").append(':').append('@').append(position).append(':');
 			sb.append('[');
 			for (int i = 0; i < data.length; i++)
 			{
-				sb.append(data[i]);
+				byte b = data[i];
+				sb.append(BYTEALPHABET.charAt((b & 0x0f0) >> 4));
+				sb.append(BYTEALPHABET.charAt(b & 0x00f));
 				if (i < data.length - 1)
-					sb.append(", ");
+					sb.append(' ');
 			}
 			sb.append(']');
 			return sb.toString();

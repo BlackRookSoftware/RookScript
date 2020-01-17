@@ -2,19 +2,47 @@
 
 entry main()
 {
-	println(bufnew(32));
+	b = bufnew(32);
+	println(b);
+
+	println(bufsetsize(b, 16));
+
 	b = bufwrap([1,2,3,4,5,6,7,8]);
 	println(b);
-	b = bufunwrap(b);
-	println(b);
+	println(bufsetsize(b, 4));
+	println(bufsetsize(b, 8));
+	
+	println(bufunwrap(b));
+	
 	b = bufwrap([1,2,3,4,5,6,7,8]);
 	c = b;
 	println(b == c);
+	println(b);
 	println(bufslice(b, 4, 4));
+	println(b->bufsetpos(2)->bufslice(2));
 	println(bufslice(b) == b);
 	
-	println(bufsetpos(b, 2));
-	println(bufgetpos(b));
-	
+	d = bufnew(64);
+	println(bufcopy(d, 0, b, 0));
+
+	println(buffill(d));
+	println(d->bufsetpos(0)->buffill(4));
+	println(d->bufsetpos(0)->buffill(32, 32));
+	println(d->bufsetpos(0)->buffill(39, 32, 16));
+	println(d->bufsetpos(0)->buffill(99, 32, 60)); // should make error
+	println(d);
+	println(bufgetpos(d));
+
+	bufsetsize(d, 16);
+	println(d->bufsetpos(0)->buffill(d)->bufsetpos(0));
+	println(bufputbyte(d, 255));
+	println(bufputbyte(d, 128, 3));
+	println(bufputbyte(d));
+	println(bufsetpos(d, length(d)));
+	println(bufputbyte(d)); // should make error
+	bufsetpos(d, 0);
+	println(bufgetbyte(d));
+	println(bufgetbyte(d, 3));
+	println(bufgetbyte(d, -1)); // should make error
 	
 }
