@@ -1835,9 +1835,9 @@ public enum CommonFunctions implements ScriptFunctionType
 				.parameter("size", 
 					type(Type.INTEGER, "The size of the buffer.")
 				)
-				.parameter("endian", 
-					type(Type.NULL, "Use native endian."),
-					type(Type.BOOLEAN, "True = big, false = little.")
+				.parameter("order", 
+					type(Type.NULL, "Use native byte order/endian mode."),
+					type(Type.BOOLEAN, "True = big endian, false = little endian.")
 				)
 				.returns(
 					type(Type.BUFFER, "A new allocated buffer of [size] bytes."),
@@ -2246,6 +2246,104 @@ public enum CommonFunctions implements ScriptFunctionType
 		}
 	},
 	
+	BUFSETORDER(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets the current cursor position for a buffer."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("order", 
+					type(Type.NULL, "Use native byte order/endian mode."),
+					type(Type.BOOLEAN, "True = big endian, false = little endian.")
+				)
+				.returns(
+					type(Type.BUFFER, "buffer."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If the position is out of bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				ByteOrder order;
+				if (temp.isNull())
+					order = ByteOrder.nativeOrder();
+				else
+					order = temp.asBoolean() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				buf.setByteOrder(order);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFGETORDER(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets the current byte order for a buffer."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "The buffer's current byte order - true if big endian, false if little endian."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				returnValue.set(temp.asObjectType(BufferType.class).getByteOrder() == ByteOrder.BIG_ENDIAN);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	BUFSLICE(3)
 	{
 		@Override
@@ -2409,8 +2507,8 @@ public enum CommonFunctions implements ScriptFunctionType
 					type(Type.INTEGER, "The byte value to set (0 - 255)")
 				)
 				.parameter("index", 
-					type(Type.NULL, "Use the current position (cursor position will be advanced). "),
-					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced). ")
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
 				)
 				.returns(
 					type(Type.BUFFER, "buffer."),
@@ -2469,8 +2567,8 @@ public enum CommonFunctions implements ScriptFunctionType
 					type(Type.BUFFER, "The buffer to use.")
 				)
 				.parameter("index", 
-					type(Type.NULL, "Use the current position (cursor position will be advanced). "),
-					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced). ")
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
 				)
 				.returns(
 					type(Type.INTEGER, "The value at the index (0 - 255)."),
@@ -2513,7 +2611,944 @@ public enum CommonFunctions implements ScriptFunctionType
 		}
 	},
 	
-	// TODO: Finish buffers.
+	BUFPUTSHORT(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets a short value in a buffer (16-bit, signed). Buffer byte order affects how the bytes are written."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("value", 
+					type(Type.INTEGER, "The short value to set (-32768 - 32767)")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.BUFFER, "buffer."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+2) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				short value = temp.isNull() ? 0 : temp.asShort();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 2 >= buf.size())
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 2 will be out of bounds.");
+					return true;
+				}
+	
+				buf.putShort(index, value);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFGETSHORT(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets a short in a buffer (16-bit, signed). Buffer byte order affects how the bytes are read."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.INTEGER, "The value at the index (-32768 - 32767)."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+2) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 2 >= buf.size() || i < 0)
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 2 will be out of bounds.");
+					return true;
+				}
+	
+				returnValue.set(buf.getShort(index));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFPUTUSHORT(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets a short value in a buffer (16-bit, unsigned). Buffer byte order affects how the bytes are written."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("value", 
+					type(Type.INTEGER, "The short value to set (0 - 65535)")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.BUFFER, "buffer."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+2) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				int value = temp.isNull() ? 0 : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 2 >= buf.size())
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 2 will be out of bounds.");
+					return true;
+				}
+	
+				buf.putUnsignedShort(index, value);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFGETUSHORT(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets a short in a buffer (16-bit, unsigned). Buffer byte order affects how the bytes are read."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.INTEGER, "The value at the index (0 - 65535)."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+2) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 2 >= buf.size() || i < 0)
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 2 will be out of bounds.");
+					return true;
+				}
+	
+				returnValue.set(buf.getUnsignedShort(index));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFPUTINT(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets an integer value in a buffer (32-bit, signed). Buffer byte order affects how the bytes are written."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("value", 
+					type(Type.INTEGER, "The integer value to set (-2^31 - 2^31-1)")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.BUFFER, "buffer."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+4) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				int value = temp.isNull() ? 0 : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size())
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
+					return true;
+				}
+	
+				buf.putInteger(index, value);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFGETINT(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets an integer in a buffer (32-bit, signed). Buffer byte order affects how the bytes are read."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.INTEGER, "The value at the index (-2^31 - 2^31-1)."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+4) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size() || i < 0)
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
+					return true;
+				}
+	
+				returnValue.set(buf.getInteger(index));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFPUTUINT(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets an integer value in a buffer (32-bit, unsigned). Buffer byte order affects how the bytes are written."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("value", 
+					type(Type.INTEGER, "The integer value to set (0 - 2^32-1)")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.BUFFER, "buffer."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+4) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				long value = temp.isNull() ? 0 : temp.asLong();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size())
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
+					return true;
+				}
+	
+				buf.putUnsignedInteger(index, value);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFGETUINT(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets an integer in a buffer (32-bit, unsigned). Buffer byte order affects how the bytes are read."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.INTEGER, "The value at the index (0 - 2^32-1)."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+4) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size() || i < 0)
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
+					return true;
+				}
+	
+				returnValue.set(buf.getUnsignedInteger(index));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFPUTFLOAT(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets a floating-point value in a buffer (32-bit). Buffer byte order affects how the bytes are written. " +
+					"NOTE: Floating-point values are stored in memory as double-precision - some precision may be lost on write!"
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("value", 
+					type(Type.INTEGER, "The float value to set.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.BUFFER, "buffer."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+4) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				float value = temp.isNull() ? 0f : temp.asFloat();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size())
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
+					return true;
+				}
+	
+				buf.putFloat(index, value);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFGETFLOAT(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets a float in a buffer (32-bit). Buffer byte order affects how the bytes are read." +
+					"NOTE: Floating-point values are stored in memory as double-precision - some data may be extrapolated on read!"
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.FLOAT, "The value at the index."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+4) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size() || i < 0)
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
+					return true;
+				}
+	
+				returnValue.set(buf.getFloat(index));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFPUTLONG(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets a long integer value in a buffer (64-bit, signed). Buffer byte order affects how the bytes are written."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("value", 
+					type(Type.INTEGER, "The integer value to set (-2^63 - 2^63-1)")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.BUFFER, "buffer."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+8) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				long value = temp.isNull() ? 0 : temp.asLong();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 8 >= buf.size())
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 8 will be out of bounds.");
+					return true;
+				}
+	
+				buf.putLong(index, value);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFGETLONG(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets a long integer in a buffer (64-bit, signed). Buffer byte order affects how the bytes are read."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.INTEGER, "The value at the index (-2^63 - 2^63-1)."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+8) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 8 >= buf.size() || i < 0)
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 8 will be out of bounds.");
+					return true;
+				}
+	
+				returnValue.set(buf.getLong(index));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFPUTDOUBLE(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets a double-precision floating-point value in a buffer (64-bit). " +
+					"Buffer byte order affects how the bytes are written. "
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("value", 
+					type(Type.INTEGER, "The float value to set.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.BUFFER, "buffer."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+8) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				float value = temp.isNull() ? 0f : temp.asFloat();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 8 >= buf.size())
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 8 will be out of bounds.");
+					return true;
+				}
+	
+				buf.putDouble(index, value);
+				returnValue.set(temp);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFGETDOUBLE(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets a double-precision float in a buffer (64-bit). " +
+					"Buffer byte order affects how the bytes are read."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.FLOAT, "The value at the index."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+8) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer index = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "First parameter is not a buffer.");
+					return true;
+				}
+				
+				BufferType buf = temp.asObjectType(BufferType.class);
+				int i;
+				if ((i = index == null ? buf.getPosition() : index) + 8 >= buf.size() || i < 0)
+				{
+					returnValue.setError("OutOfBounds", "Index " + i + " + 8 will be out of bounds.");
+					return true;
+				}
+	
+				returnValue.set(buf.getDouble(index));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFPUTSTR(4)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets a string in a chosen encoding."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("value", 
+					type(Type.STRING, "The string to write.")
+				)
+				.parameter("encoding", 
+					type(Type.NULL, "Use UTF-8."),
+					type(Type.STRING, "A charset name.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.BUFFER, "buffer."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "BadEncoding", "If [encoding] is not known."),
+					type(Type.ERROR, "OutOfBounds", "If not enough bytes in the buffer for the string.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				// TODO: Finish!
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	BUFGETSTR(4)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Gets a string in a chosen encoding."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.parameter("length", 
+					type(Type.INTEGER, "The amount of total bytes to read for string decoding.")
+				)
+				.parameter("encoding", 
+					type(Type.NULL, "Use UTF-8."),
+					type(Type.STRING, "A charset name.")
+				)
+				.parameter("index", 
+					type(Type.NULL, "Use the current position (cursor position will be advanced)."),
+					type(Type.INTEGER, "The index into the buffer (cursor position will NOT be advanced).")
+				)
+				.returns(
+					type(Type.FLOAT, "The value at the index."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is not a buffer."),
+					type(Type.ERROR, "OutOfBounds", "If [index, index+8) is out of the buffer's bounds.")
+				)
+			;
+		}
+
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				// TODO: Finish!
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
 	
 	;
 	

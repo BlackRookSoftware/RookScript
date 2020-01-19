@@ -2891,17 +2891,17 @@ public class ScriptValue implements Comparable<ScriptValue>
 			long out = 0L;
 			if (order == ByteOrder.LITTLE_ENDIAN)
 			{
-				out |= (data[i + 0] & 0x0ff) << 0;
-				out |= (data[i + 1] & 0x0ff) << 8;
-				out |= (data[i + 2] & 0x0ff) << 16;
-				out |= (data[i + 3] & 0x0ff) << 24;
+				out |= (data[i + 0] & 0x0ffL) << 0;
+				out |= (data[i + 1] & 0x0ffL) << 8;
+				out |= (data[i + 2] & 0x0ffL) << 16;
+				out |= (data[i + 3] & 0x0ffL) << 24;
 			}
 			else // BIG_ENDIAN
 			{
-				out |= (data[i + 0] & 0x0ff) << 24;
-				out |= (data[i + 1] & 0x0ff) << 16;
-				out |= (data[i + 2] & 0x0ff) << 8;
-				out |= (data[i + 3] & 0x0ff) << 0;
+				out |= (data[i + 0] & 0x0ffL) << 24;
+				out |= (data[i + 1] & 0x0ffL) << 16;
+				out |= (data[i + 2] & 0x0ffL) << 8;
+				out |= (data[i + 3] & 0x0ffL) << 0;
 			}
 			if (index == null)
 				position += 4;

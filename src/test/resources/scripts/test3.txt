@@ -34,6 +34,7 @@ entry main()
 	println(bufgetpos(d));
 
 	bufsetsize(d, 16);
+
 	println(d->bufsetpos(0)->buffill(d)->bufsetpos(0));
 	println(bufputbyte(d, 255));
 	println(bufputbyte(d, 128, 3));
@@ -44,5 +45,114 @@ entry main()
 	println(bufgetbyte(d));
 	println(bufgetbyte(d, 3));
 	println(bufgetbyte(d, -1)); // should make error
+
+	println(d->bufsetpos(0)->buffill(d)->bufsetpos(0)->bufsetorder(false));
+	println(bufputshort(d, 0xeeff));
+	println(bufputshort(d, 0xeeff, 4));
+	bufsetorder(d, true);
+	println(bufputshort(d, 0xeeff));
+	println(bufputshort(d, 0xeeff, 6));
+	println(bufputshort(d, 0xeeff, 15));
+	bufsetorder(d, false)->bufsetpos(0);
+	println(bufgetshort(d));
+	println(bufgetshort(d, 4));
+	bufsetorder(d, true);
+	println(bufgetshort(d));
+	println(bufgetshort(d, 6));
+	println(bufgetshort(d, 15));
+	
+	println(d->bufsetpos(0)->buffill(d)->bufsetpos(0)->bufsetorder(false));
+	println(bufputushort(d, 0xeeff));
+	println(bufputushort(d, 0xeeff, 4));
+	bufsetorder(d, true);
+	println(bufputushort(d, 0xeeff));
+	println(bufputushort(d, 0xeeff, 6));
+	println(bufputushort(d, 0xeeff, 15));
+	bufsetorder(d, false)->bufsetpos(0);
+	println(bufgetushort(d));
+	println(bufgetushort(d, 4));
+	bufsetorder(d, true);
+	println(bufgetushort(d));
+	println(bufgetushort(d, 6));
+	println(bufgetushort(d, 15));
+	
+	bufsetsize(d, 32);
+	
+	println(d->bufsetpos(0)->buffill(d)->bufsetpos(0)->bufsetorder(false));
+	println(bufputint(d, 0xffeeddcc));
+	println(bufputint(d, 0xffeeddcc, 8));
+	bufsetorder(d, true);
+	println(bufputint(d, 0xffeeddcc));
+	println(bufputint(d, 0xffeeddcc, 12));
+	println(bufputint(d, 0xffeeddcc, 29));
+	bufsetorder(d, false)->bufsetpos(0);
+	println(bufgetint(d));
+	println(bufgetint(d, 8));
+	bufsetorder(d, true);
+	println(bufgetint(d));
+	println(bufgetint(d, 12));
+	println(bufgetint(d, 29));
+	
+	println(d->bufsetpos(0)->buffill(d)->bufsetpos(0)->bufsetorder(false));
+	println(bufputuint(d, 0xffeeddcc));
+	println(bufputuint(d, 0xffeeddcc, 8));
+	bufsetorder(d, true);
+	println(bufputuint(d, 0xffeeddcc));
+	println(bufputuint(d, 0xffeeddcc, 12));
+	println(bufputuint(d, 0xffeeddcc, 29));
+	bufsetorder(d, false)->bufsetpos(0);
+	println(bufgetuint(d));
+	println(bufgetuint(d, 8));
+	bufsetorder(d, true);
+	println(bufgetuint(d));
+	println(bufgetuint(d, 12));
+	println(bufgetuint(d, 29));
+	
+	println(d->bufsetpos(0)->buffill(d)->bufsetpos(0)->bufsetorder(false));
+	println(bufputfloat(d, 34.0));
+	println(bufputfloat(d, -239.234, 8));
+	bufsetorder(d, true);
+	println(bufputfloat(d, NaN));
+	println(bufputfloat(d, Infinity, 12));
+	println(bufputfloat(d, -Infinity, 29));
+	bufsetorder(d, false)->bufsetpos(0);
+	println(bufgetfloat(d));
+	println(bufgetfloat(d, 8));
+	bufsetorder(d, true);
+	println(bufgetfloat(d));
+	println(bufgetfloat(d, 12));
+	println(bufgetfloat(d, 29));
+	
+	bufsetsize(d, 64);
+	
+	println(d->bufsetpos(0)->buffill(d)->bufsetpos(0)->bufsetorder(false));
+	println(bufputlong(d, 0xffeeddccbbaa9988));
+	println(bufputlong(d, 0xffeeddccbbaa9988, 16));
+	bufsetorder(d, true);
+	println(bufputlong(d, 0xffeeddccbbaa9988));
+	println(bufputlong(d, 0xffeeddccbbaa9988, 24));
+	println(bufputlong(d, 0xffeeddccbbaa9988, 57));
+	bufsetorder(d, false)->bufsetpos(0);
+	println(bufgetlong(d));
+	println(bufgetlong(d, 16));
+	bufsetorder(d, true);
+	println(bufgetlong(d));
+	println(bufgetlong(d, 24));
+	println(bufgetlong(d, 57));
+	
+	println(d->bufsetpos(0)->buffill(d)->bufsetpos(0)->bufsetorder(false));
+	println(bufputdouble(d, 34.0));
+	println(bufputdouble(d, -239.234, 16));
+	bufsetorder(d, true);
+	println(bufputdouble(d, NaN));
+	println(bufputdouble(d, Infinity, 24));
+	println(bufputdouble(d, -Infinity, 57));
+	bufsetorder(d, false)->bufsetpos(0);
+	println(bufgetdouble(d));
+	println(bufgetdouble(d, 16));
+	bufsetorder(d, true);
+	println(bufgetdouble(d));
+	println(bufgetdouble(d, 24));
+	println(bufgetdouble(d, 57));
 	
 }

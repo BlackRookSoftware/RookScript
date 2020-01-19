@@ -7,6 +7,7 @@
  ******************************************************************************/
 package com.blackrook.rookscript.compiler;
 
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -1792,20 +1793,46 @@ public class ScriptParser extends Lexer.Parser
 		else if (currentType(ScriptKernel.TYPE_NUMBER))
 		{
 			String lexeme = currentToken().getLexeme();
-			nextToken();
 			if (lexeme.startsWith("0X") || lexeme.startsWith("0x"))
 			{
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, Long.parseLong(lexeme.substring(2), 16)));
+				long v;
+				try {
+					v = parseUnsignedHexLong(lexeme.substring(2));
+				} catch (NumberFormatException e) {
+					addErrorMessage("Could not parse " + lexeme + " as a hexadecimal integer value. Possible range exceeded.");
+					return false;
+				}
+				
+				nextToken();
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, v));
 				return true;
 			}
 			else if (lexeme.contains("."))
 			{
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, Double.parseDouble(lexeme)));
+				double v;
+				try {
+					v = Double.parseDouble(lexeme);
+				} catch (NumberFormatException e) {
+					addErrorMessage("Could not parse " + lexeme + " as a double value. Possible range exceeded.");
+					return false;
+				}
+
+				nextToken();
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, v));
 				return true;
 			}
 			else
 			{
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, Long.parseLong(lexeme)));
+				long v;
+				try {
+					v = Long.parseLong(lexeme);
+				} catch (NumberFormatException e) {
+					addErrorMessage("Could not parse " + lexeme + " as an integer value. Possible range exceeded.");
+					return false;
+				}
+
+				nextToken();
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH, v));
 				return true;
 			}
 		}
@@ -1823,6 +1850,23 @@ public class ScriptParser extends Lexer.Parser
 		}
 	}
 
+	private static final char[] HEXALPHABET = "0123456789abcdef".toCharArray();
+	
+	// parses an unsigned hex string.
+	private Long parseUnsignedHexLong(String hexString)
+	{
+		Long out = 0L;
+		for (int i = hexString.length() - 1, x = 0; i >= 0; i--, x++)
+		{
+			char c = Character.toLowerCase(hexString.charAt(i));
+			long n = Arrays.binarySearch(HEXALPHABET, c);
+			if (n < 0)
+				throw new NumberFormatException(hexString + " could not be parsed.");
+			out |= (n << (4 * x));
+		}
+		return out;
+	}
+	
 	// Operator reduce.
 	private boolean operatorReduce(Script currentScript, Deque<Integer> operatorStack, int[] expressionValueCounter, int nextOperator) 
 	{
