@@ -2601,19 +2601,23 @@ public class ScriptValue implements Comparable<ScriptValue>
 		 * Reads bytes from another buffer into this one.
 		 * This relies on the other buffer's position to be set to where the read should occur.
 		 * If null is passed in as the index, the buffer's cursor position is advanced by the length.
+		 * If null is passed in as the offset, the source buffer's cursor position is advanced by the length.
 		 * @param index the destination index (or null for current position).
 		 * @param buffer the source buffer.
-		 * @param offset the offset into the source buffer.
+		 * @param offset the offset into the source buffer (or null for its current position).
 		 * @param length the amount of bytes to read.
 		 * @return the amount of bytes actually read (length).
-		 * @throws IndexOutOfBoundsException if <code>index</code> exceeds this buffer's length. 
+		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds this buffer's length. 
 		 */
-		public int readBytes(Integer index, BufferType buffer, int offset, int length)
+		public int readBytes(Integer index, BufferType buffer, Integer offset, int length)
 		{
 			int i = index != null ? index : position;
-			System.arraycopy(buffer.data, offset, data, i, length);
+			int o = offset != null ? offset : buffer.position;
+			System.arraycopy(buffer.data, o, data, i, length);
 			if (index == null)
 				position += length;
+			if (offset == null)
+				buffer.position += length;
 			return length;
 		}
 		

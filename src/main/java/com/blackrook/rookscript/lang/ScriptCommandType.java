@@ -90,7 +90,7 @@ public enum ScriptCommandType
 			ScriptHostFunctionResolver resolver = scriptInstance.getHostFunctionResolver();
 			ScriptFunctionType functionType = resolver.getNamespacedFunction(null, name);
 			if (functionType == null)
-				throw new ScriptExecutionException("host function "+name+" could not be resolved");
+				throw new ScriptExecutionException("host function \""+name+"\" could not be resolved");
 			
 			ScriptValue ret = RETURNVALUE.get();
 			ret.setNull();
@@ -101,7 +101,7 @@ public enum ScriptCommandType
 			} catch (ScriptExecutionException e) {
 				throw e;
 			} catch (Throwable t) {
-				throw new ScriptExecutionException("host function "+name+" threw an exception.", t);
+				throw new ScriptExecutionException("host function \""+name+"\" threw an exception.", t);
 			} finally {
 				ret.setNull();
 			}
@@ -123,7 +123,7 @@ public enum ScriptCommandType
 			ScriptHostFunctionResolver resolver = scriptInstance.getHostFunctionResolver();
 			ScriptFunctionType functionType = resolver.getNamespacedFunction(namespace, name);
 			if (functionType == null)
-				throw new ScriptExecutionException("host function "+namespace+"::"+name+" could not be resolved");
+				throw new ScriptExecutionException("host function \""+namespace+"::"+name+"\" could not be resolved");
 
 			ScriptValue ret = RETURNVALUE.get();
 			ret.setNull();
@@ -134,7 +134,7 @@ public enum ScriptCommandType
 			} catch (ScriptExecutionException e) {
 				throw e;
 			} catch (Throwable t) {
-				throw new ScriptExecutionException("host function "+namespace+"::"+name+" threw an exception.", t);
+				throw new ScriptExecutionException("host function \""+namespace+"::"+name+"\" threw an exception.", t);
 			} finally {
 				ret.setNull();
 			}

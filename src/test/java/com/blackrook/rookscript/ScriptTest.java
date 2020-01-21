@@ -15,6 +15,7 @@ import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
+import com.blackrook.rookscript.functions.common.BufferFunctions;
 import com.blackrook.rookscript.resolvers.variable.DefaultVariableResolver;
 import com.blackrook.rookscript.struct.Utils;
 
@@ -63,8 +64,9 @@ public class ScriptTest
 		
 		ScriptInstance instance = ScriptInstance.createBuilder()
 			.withSource(fileName, Utils.openResource(fileName))
-			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
+			.withEnvironment(ScriptEnvironment.create())
 			.withFunctionResolver(CommonFunctions.createResolver())
+				.andFunctionResolver(BufferFunctions.createResolver())
 				.andFunctionResolver(StandardIOFunctions.createResolver())
 				.andFunctionResolver(MathFunctions.createResolver())
 			.withScriptStack(16, 512)
@@ -72,7 +74,7 @@ public class ScriptTest
 			.createInstance();
 		
 		//doDisassemble(instance);
-		doStress(instance, 1);
+		doStress(instance, 10000);
 	}
 	
 }

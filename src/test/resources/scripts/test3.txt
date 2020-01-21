@@ -22,9 +22,10 @@ entry main()
 	println(b->bufsetpos(2)->bufslice(2));
 	println(bufslice(b) == b);
 	
+	bufsetpos(b);
 	d = bufnew(64);
-	println(bufcopy(d, 0, b, 0));
-
+	println(bufread(d, b));
+	println(d);
 	println(buffill(d));
 	println(d->bufsetpos(0)->buffill(4));
 	println(d->bufsetpos(0)->buffill(32, 32));
@@ -155,4 +156,19 @@ entry main()
 	println(bufgetdouble(d, 24));
 	println(bufgetdouble(d, 57));
 	
+	println(d->bufsetorder(false)->bufsetpos(0)->buffill(d)->bufsetpos(0));
+	lens = [0, 0, 0, 0];
+	lens[0] = bufputstr(d, "apple")->bufgetpos();
+	lens[1] = bufputstr(d, "banana")->bufgetpos() - lens[0];
+	lens[2] = bufputstr(d, "crap and stüff")->bufgetpos() - (lens[0] + lens[1]);
+	lens[3] = bufputstr(d, "There's even more junk!")->bufgetpos() - (lens[0] + lens[1] + lens[2]);
+	println(d);
+	println(lens);
+	bufsetpos(d);
+	println(d);
+	for (i = 0; i < length(lens); i += 1)
+	{
+		println(bufgetstr(d, lens[i]));
+		println(d);
+	}
 }

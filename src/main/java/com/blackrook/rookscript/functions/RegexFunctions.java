@@ -82,11 +82,11 @@ public enum RegexFunctions implements ScriptFunctionType
 				.instructions(
 					"Splits a string by a RegEx pattern."
 				)
-				.parameter("string", 
-					type(Type.STRING, "The string to split.")
-				)
 				.parameter("pattern", 
 					type(Type.STRING, "The RegEx pattern to use.")
+				)
+				.parameter("string", 
+					type(Type.STRING, "The string to split.")
 				)
 				.returns(
 					type(Type.LIST, "A list of strings."), 
@@ -102,9 +102,9 @@ public enum RegexFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				String regex = temp.asString();
-				scriptInstance.popStackValue(temp);
 				String str = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String regex = temp.asString();
 
 				Pattern p = null;
 				try {
@@ -115,6 +115,108 @@ public enum RegexFunctions implements ScriptFunctionType
 				}
 				
 				returnValue.set(p.split(str));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	REGEXCONTAINS(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a string contains a set of characters that matches the provided RegEx."
+				)
+				.parameter("pattern", 
+					type(Type.STRING, "The RegEx pattern to use.")
+				)
+				.parameter("string", 
+					type(Type.STRING, "The string to inspect.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if so, false if not."), 
+					type(Type.ERROR, "If the pattern is malformed.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String regex = temp.asString();
+
+				Pattern p = null;
+				try {
+					p = PatternUtils.get(regex);
+				} catch (PatternSyntaxException e) {
+					returnValue.set(ErrorType.create(e));
+					return true;
+				}
+				
+				returnValue.set(p.matcher(str).find());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	REGEXMATCHES(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a string completely matches a set of characters using the provided RegEx."
+				)
+				.parameter("pattern", 
+					type(Type.STRING, "The RegEx pattern to use.")
+				)
+				.parameter("string", 
+					type(Type.STRING, "The string to inspect.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if so, false if not."), 
+					type(Type.ERROR, "If the pattern is malformed.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String regex = temp.asString();
+
+				Pattern p = null;
+				try {
+					p = PatternUtils.get(regex);
+				} catch (PatternSyntaxException e) {
+					returnValue.set(ErrorType.create(e));
+					return true;
+				}
+				
+				returnValue.set(p.matcher(str).matches());
 				return true;
 			}
 			finally
