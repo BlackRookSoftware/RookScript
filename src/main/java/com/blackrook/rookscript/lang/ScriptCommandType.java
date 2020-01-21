@@ -9,6 +9,8 @@ package com.blackrook.rookscript.lang;
 
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.ScriptValue.IteratorPair;
+import com.blackrook.rookscript.ScriptValue.IteratorType;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
@@ -238,8 +240,7 @@ public enum ScriptCommandType
 			try 
 			{
 				scriptInstance.popStackValue(sv);
-				boolean b = sv.asBoolean();
-				if (!b)
+				if (!sv.asBoolean())
 				{
 					String labelName =  String.valueOf(operand1);
 					int index = scriptInstance.getCommandIndex(labelName);
@@ -270,8 +271,7 @@ public enum ScriptCommandType
 			try 
 			{
 				scriptInstance.getStackValue(0, sv);
-				boolean b = sv.asBoolean();
-				if (!b)
+				if (!sv.asBoolean())
 					scriptInstance.popStackValue();
 				else
 				{
@@ -304,11 +304,59 @@ public enum ScriptCommandType
 			try 
 			{
 				scriptInstance.getStackValue(0, sv);
-				boolean b = sv.isNull();
-				if (b)
+				if (sv.isNull())
 					scriptInstance.popStackValue();
 				else
 				{
+					String labelName =  String.valueOf(operand1);
+					int index = scriptInstance.getCommandIndex(labelName);
+					if (index < 0)
+						throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
+					scriptInstance.setCurrentCommandIndex(index);
+				}
+				return true;
+			} 
+			finally 
+			{
+				sv.setNull();
+			}
+		}
+	},
+	
+	/**
+	 * Performs a single iteration, expecting an OBJECTREF:IteratorType 
+	 * on the stack top when this is executed.
+	 * 
+	 * If stack top is not OBJECTREF:IteratorType, Exception - script was compiled badly.
+	 * If stack top's IteratorType.hasNext() is null, POP, then JUMP to [label].
+	 * Else, call IteratorType.next(), then push value, then key.
+	 *  
+	 * Operand is label.
+	 * Sets a new command index and one POP, or 2 PUSHes.
+	 */
+	ITERATE
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue sv = CACHEVALUE1.get();
+			try 
+			{
+				scriptInstance.getStackValue(0, sv);
+				
+				if (!sv.isObjectRef(IteratorType.class))
+					throw new ScriptExecutionException("Called ITERATE with stack top that isn't an IteratorType!");
+				
+				IteratorType iter = sv.asObjectType(IteratorType.class);
+				if (iter.hasNext())
+				{
+					IteratorPair pair = iter.next();
+					scriptInstance.pushStackValue(pair.getValue());
+					scriptInstance.pushStackValue(pair.getKey());
+				}
+				else
+				{
+					scriptInstance.popStackValue();
 					String labelName =  String.valueOf(operand1);
 					int index = scriptInstance.getCommandIndex(labelName);
 					if (index < 0)
@@ -717,6 +765,31 @@ public enum ScriptCommandType
 				temp.setNull();
 				keyValue.setNull();
 				mapValue.setNull();
+			}
+		}
+	},
+	
+	/**
+	 * Pops a variable and pushes an iterator for it onto the stack.
+	 * Pops one value.
+	 * Pushes one value onto stack.
+	 * No operands.
+	 */
+	PUSH_ITERATOR
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.pushStackValue(temp.iterator());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
 			}
 		}
 	},

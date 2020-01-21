@@ -10,12 +10,12 @@ package com.blackrook.rookscript.functions.common;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.Type;
+import com.blackrook.rookscript.ScriptValue.IteratorPair;
 import com.blackrook.rookscript.ScriptValue.MapType;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
-import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
 
 import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
 
@@ -61,8 +61,8 @@ public enum MapFunctions implements ScriptFunctionType
 				else
 				{
 					out.setEmptyList();
-					for (Entry e : map.asObjectType(MapType.class))
-						out.setAdd(e.getName());
+					for (IteratorPair e : map.asObjectType(MapType.class))
+						out.setAdd(e.getKey());
 					returnValue.set(out);
 					return true;
 				}
@@ -172,8 +172,8 @@ public enum MapFunctions implements ScriptFunctionType
 					return true;
 				}
 				
-				for (Entry e : map1.asObjectType(MapType.class))
-					out.mapSet(e.getName(), e.getValue());
+				for (IteratorPair e : map1.asObjectType(MapType.class))
+					out.mapSet(String.valueOf(e.getKey()), e.getValue());
 				
 				if (!map2.isMap())
 				{
@@ -181,8 +181,8 @@ public enum MapFunctions implements ScriptFunctionType
 					return true;
 				}
 
-				for (Entry e : map2.asObjectType(MapType.class))
-					out.mapSet(e.getName(), e.getValue());
+				for (IteratorPair e : map2.asObjectType(MapType.class))
+					out.mapSet(String.valueOf(e.getKey()), e.getValue());
 				
 				returnValue.set(out);
 				return true;

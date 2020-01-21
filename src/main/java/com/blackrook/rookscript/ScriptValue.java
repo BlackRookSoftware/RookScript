@@ -20,7 +20,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver;
-import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver.Entry;
 import com.blackrook.rookscript.struct.Utils;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.FieldInfo;
@@ -30,7 +29,7 @@ import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
  * Script value encapsulation.
  * @author Matthew Tropiano
  */
-public class ScriptValue implements Comparable<ScriptValue>
+public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValue.IteratorPair>
 {
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
@@ -1155,11 +1154,10 @@ public class ScriptValue implements Comparable<ScriptValue>
 		Profile<T> profile = Utils.getProfile((Class<T>)object.getClass());
 		MapType map = (MapType)ref;
 		
-		for (Entry entry : map)
+		for (IteratorPair entry : map)
 		{
-			String name = entry.getName().toLowerCase();
-			ScriptValue value = entry.getValue();
-
+			String name = String.valueOf(entry.key).toLowerCase();
+			ScriptValue value = entry.value;
 
 			FieldInfo fi;
 			MethodInfo mi;
@@ -1177,7 +1175,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 				Utils.invokeBlind(mi.getMethod(), object, vbuf);
 				Arrays.fill(vbuf, null); // arrays are shared - purge refs after use.
 			}
-
 		}
 		
 		return true;
@@ -1289,6 +1286,57 @@ public class ScriptValue implements Comparable<ScriptValue>
 		return type == Type.OBJECTREF;
 	}
 	
+	/**
+	 * @param targetType the target type.
+	 * @return true if this value is an object reference type and it can be cast to the provided type.
+	 */
+	public boolean isObjectRef(Class<?> targetType)
+	{
+		return type == Type.OBJECTREF && targetType.isAssignableFrom(ref.getClass());
+	}
+	
+	/**
+	 * Checks if this script value can be cast to the target type.
+	 * If this is null (see {@link #isNull()}), this returns <code>false</code>. 
+	 * @param targetType the type to test.
+	 * @return if the underlying object can be cast to the target type.
+	 */
+	public boolean isObjectType(Class<?> targetType)
+	{
+		if (isNull())
+			return false;
+		switch (type)
+		{
+			default:
+				return targetType.isAssignableFrom(ref.getClass());
+			case BOOLEAN:
+				return targetType.isAssignableFrom(Boolean.class);
+			case INTEGER:
+				return targetType.isAssignableFrom(Long.class);
+			case FLOAT:
+				return targetType.isAssignableFrom(Double.class);
+		}
+	}
+
+	/**
+	 * Checks if this script value is both an array and a particular type.
+	 * @param targetType the type to test.
+	 * @return if the underlying object can be cast to an array of the target type.
+	 */
+	public boolean isObjectArrayType(Class<?> targetType)
+	{
+		switch (type)
+		{
+			case OBJECTREF:
+			{
+				Class<?> clazz = ref.getClass();
+				return Utils.isArray(clazz) && targetType.isAssignableFrom(Utils.getArrayType(clazz));
+			}
+			default:
+				return false;
+		}
+	}
+
 	/**
 	 * Gets this value as a boolean.
 	 * @return true if the value is nonzero and not NaN, false otherwise.
@@ -1497,48 +1545,6 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 	
 	/**
-	 * Checks if this script value can be cast to the target type.
-	 * If this is null (see {@link #isNull()}), this returns <code>false</code>. 
-	 * @param targetType the type to test.
-	 * @return if the underlying object can be cast to the target type.
-	 */
-	public boolean isObjectType(Class<?> targetType)
-	{
-		if (isNull())
-			return false;
-		switch (type)
-		{
-			default:
-				return targetType.isAssignableFrom(ref.getClass());
-			case BOOLEAN:
-				return targetType.isAssignableFrom(Boolean.class);
-			case INTEGER:
-				return targetType.isAssignableFrom(Long.class);
-			case FLOAT:
-				return targetType.isAssignableFrom(Double.class);
-		}
-	}
-
-	/**
-	 * Checks if this script value is both an array and a particular type.
-	 * @param targetType the type to test.
-	 * @return if the underlying object can be cast to an array of the target type.
-	 */
-	public boolean isObjectArrayType(Class<?> targetType)
-	{
-		switch (type)
-		{
-			case OBJECTREF:
-			{
-				Class<?> clazz = ref.getClass();
-				return Utils.isArray(clazz) && targetType.isAssignableFrom(Utils.getArrayType(clazz));
-			}
-			default:
-				return false;
-		}
-	}
-	
-	/**
 	 * Gets the type name of this value.
 	 * @return the type name.
 	 */
@@ -1725,15 +1731,23 @@ public class ScriptValue implements Comparable<ScriptValue>
 				return Utils.createForType(asObject(), targetType);
 		}
 	}
-	
-	/**
-	 * @return an iterator of the list, or null if not a list.
-	 */
-	public Iterator<ScriptValue> listIterator()
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public IteratorType iterator()
 	{
-		if (!isList())
-			return null;
-		return ((ListType)ref).iterator();
+		if (isBuffer())
+			return ((BufferType)ref).iterator();
+		else if (isList())
+			return ((ListType)ref).iterator();
+		else if (isMap())
+			return ((MapType)ref).iterator();
+		else if (isObjectRef(Map.class))
+			return new WrappedMapIterator(((Map<Object, Object>)ref).entrySet().iterator());
+		else if (isObjectRef(Iterable.class))
+			return new WrappedGenericIterator(((Iterable<Object>)ref).iterator());
+		else
+			return new ValueIterator(this);
 	}
 	
 	@Override
@@ -2467,9 +2481,134 @@ public class ScriptValue implements Comparable<ScriptValue>
 	}
 
 	/**
+	 * The interator pair.
+	 */
+	public static class IteratorPair
+	{
+		private ScriptValue key = ScriptValue.create(null);
+		private ScriptValue value = ScriptValue.create(null);
+		
+		public void set(Object key, Object value)
+		{
+			this.key.set(key);
+			this.value.set(value);
+		}
+		
+		public Object getKey() 
+		{
+			return key;
+		}
+		
+		public ScriptValue getValue() 
+		{
+			return value;
+		}
+	}
+
+	/**
+	 * Describes a type that iterates over ScriptValues, generically. 
+	 * The returned {@link IteratorPair}s are RE-USED, and each piece meant to be pushed onto a stack. 
+	 */
+	public interface IteratorType extends Iterator<IteratorPair>
+	{
+		// Nothing - this is for type detection by internal opcodes.
+	}
+
+	/**
+	 * Iterator Type for single values (returns just one element - the value itself with no key).
+	 */
+	private static class ValueIterator implements IteratorType
+	{
+		private ScriptValue value;
+		private boolean calledNext;
+		private IteratorPair pair;
+
+		private ValueIterator(ScriptValue value)
+		{
+			this.value = value;
+			this.calledNext = false;
+			this.pair = new IteratorPair();
+		}
+		
+		@Override
+		public boolean hasNext()
+		{
+			return !calledNext;
+		}
+
+		@Override
+		public IteratorPair next()
+		{
+			calledNext = true;
+			pair.set(null, value);
+			return null;
+		}
+	}
+	
+	/**
+	 * Iterator Type for OBJECTREFs that return their own iterators.
+	 * This is specifically for other {@link Map} types.
+	 */
+	private static class WrappedMapIterator implements IteratorType
+	{
+		private Iterator<Map.Entry<Object, Object>> wrapped;
+		private IteratorPair pair;
+		
+		private WrappedMapIterator(Iterator<Map.Entry<Object, Object>> iter)
+		{
+			this.wrapped = iter;
+			this.pair = new IteratorPair();
+		}
+		
+		@Override
+		public boolean hasNext()
+		{
+			return wrapped.hasNext();
+		}
+	
+		@Override
+		public IteratorPair next()
+		{
+			Map.Entry<?, ?> entry = wrapped.next();
+			pair.set(entry.getKey(), entry.getValue());
+			return pair;
+		}
+	}
+
+	/**
+	 * Iterator Type for OBJECTREFs that return their own iterators.
+	 */
+	private static class WrappedGenericIterator implements IteratorType
+	{
+		private Iterator<?> wrapped;
+		private IteratorPair pair;
+		private int cur;
+
+		private WrappedGenericIterator(Iterator<Object> iter)
+		{
+			this.wrapped = iter;
+			this.pair = new IteratorPair();
+			this.cur = 0;
+		}
+		
+		@Override
+		public boolean hasNext()
+		{
+			return wrapped.hasNext();
+		}
+	
+		@Override
+		public IteratorPair next()
+		{
+			pair.set(cur++, wrapped.next());
+			return pair;
+		}
+	}
+
+	/**
 	 * The class used for a buffer of bytes.
 	 */
-	public static class BufferType
+	public static class BufferType implements Iterable<IteratorPair>
 	{
 		static final String BYTEALPHABET = "0123456789abcdef";
 		
@@ -3097,12 +3236,44 @@ public class ScriptValue implements Comparable<ScriptValue>
 			sb.append(']');
 			return sb.toString();
 		}
+
+		@Override
+		public IteratorType iterator()
+		{
+			return new BufferTypeIterator();
+		}
+		
+		private class BufferTypeIterator implements IteratorType
+		{
+			private IteratorPair pair;
+			private int cur;
+
+			private BufferTypeIterator()
+			{
+				this.pair = new IteratorPair();
+				this.cur = 0;
+			}
+			
+			@Override
+			public boolean hasNext()
+			{
+				return cur < data.length;
+			}
+
+			@Override
+			public IteratorPair next()
+			{
+				pair.set(cur, data[cur]);
+				cur++;
+				return pair;
+			}
+		}
 	}
 	
 	/**
 	 * The class used for a list/set.
 	 */
-	public static class ListType implements Iterable<ScriptValue>
+	public static class ListType implements Iterable<IteratorPair>
 	{
 		private ScriptValue[] data;
 		private int size;
@@ -3332,7 +3503,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 		}
 		
 		@Override
-		public Iterator<ScriptValue> iterator()
+		public IteratorType iterator()
 		{
 			return new ListTypeIterator();
 		}
@@ -3352,11 +3523,17 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return sb.toString();
 		}
 		
-		private class ListTypeIterator implements Iterator<ScriptValue>
+		private class ListTypeIterator implements IteratorType
 		{
-			private int cur = 0;
-			private boolean removed = false;
+			private IteratorPair pair;
+			private int cur;
 
+			private ListTypeIterator()
+			{
+				this.pair = new IteratorPair();
+				this.cur = 0;
+			}
+			
 			@Override
 			public boolean hasNext()
 			{
@@ -3364,29 +3541,11 @@ public class ScriptValue implements Comparable<ScriptValue>
 			}
 
 			@Override
-			public ScriptValue next()
+			public IteratorPair next()
 			{
-				removed = false;
-				return data[cur++];
-			}
-		
-			@Override
-			public void remove()
-			{
-				ScriptValue temp = CACHEVALUE2.get();
-				try
-				{
-					if (removed)
-						return;
-					
-					removeIndex(cur - 1, temp);
-					removed = true;
-					cur--;
-				}
-				finally
-				{
-					temp.setNull();
-				}
+				pair.set(cur, data[cur]);
+				cur++;
+				return pair;
 			}
 		}
 	}
@@ -3394,7 +3553,7 @@ public class ScriptValue implements Comparable<ScriptValue>
 	/**
 	 * The class used for a map type.
 	 */
-	public static class MapType extends AbstractVariableResolver implements Iterable<AbstractVariableResolver.Entry>
+	public static class MapType extends AbstractVariableResolver implements Iterable<IteratorPair>
 	{
 		private MapType()
 		{
@@ -3424,15 +3583,21 @@ public class ScriptValue implements Comparable<ScriptValue>
 		}
 		
 		@Override
-		public Iterator<Entry> iterator()
+		public IteratorType iterator()
 		{
 			return new MapTypeIterator();
 		}
 
-		private class MapTypeIterator implements Iterator<Entry>
+		private class MapTypeIterator implements IteratorType
 		{
-			private int cur = 0;
-			private boolean removed = false;
+			private IteratorPair pair;
+			private int cur;
+			
+			private MapTypeIterator()
+			{
+				this.pair = new IteratorPair();
+				this.cur = 0;
+			}
 			
 			@Override
 			public boolean hasNext()
@@ -3441,21 +3606,11 @@ public class ScriptValue implements Comparable<ScriptValue>
 			}
 			
 			@Override
-			public Entry next()
+			public IteratorPair next()
 			{
-				removed = false;
-				return entries[cur++];
-			}
-			
-			@Override
-			public void remove()
-			{
-				if (removed)
-					return;
-				
-				removeIndex(cur - 1);
-				removed = true;
-				cur--;
+				Entry entry = entries[cur++];
+				pair.set(entry.getName(), entry.getValue());
+				return pair;
 			}
 		}
 	}
@@ -3535,5 +3690,4 @@ public class ScriptValue implements Comparable<ScriptValue>
 			return localizedMessage;
 		}
 	}
-	
 }
