@@ -329,10 +329,11 @@ public enum ScriptCommandType
 	 * 
 	 * If stack top is not OBJECTREF:IteratorType, Exception - script was compiled badly.
 	 * If stack top's IteratorType.hasNext() is null, POP, then JUMP to [label].
-	 * Else, call IteratorType.next(), then push value, then key.
+	 * Else, call IteratorType.next(), then push value. If operand1 is true, also push key.
 	 *  
-	 * Operand is label.
-	 * Sets a new command index and one POP, or 2 PUSHes.
+	 * Operand1 is label.
+	 * Operand2 is value/key-value flag.
+	 * Sets a new command index and one POP, or 1-2 PUSHes.
 	 */
 	ITERATE
 	{
@@ -352,7 +353,8 @@ public enum ScriptCommandType
 				{
 					IteratorPair pair = iter.next();
 					scriptInstance.pushStackValue(pair.getValue());
-					scriptInstance.pushStackValue(pair.getKey());
+					if ((Boolean)operand2) // true = push key as well.
+						scriptInstance.pushStackValue(pair.getKey());
 				}
 				else
 				{

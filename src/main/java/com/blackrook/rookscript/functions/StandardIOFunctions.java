@@ -120,7 +120,6 @@ public enum StandardIOFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				scriptInstance.getEnvironment().print(temp.asString());
 				scriptInstance.getEnvironment().print('\n');
-				scriptInstance.pushStackValue(null);
 				return true;
 			}
 			finally

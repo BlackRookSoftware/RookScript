@@ -85,6 +85,7 @@ public class ScriptKernel extends Lexer.Kernel
 	public static final int TYPE_PRAGMA = 114;
 	public static final int TYPE_BREAK = 115;
 	public static final int TYPE_CONTINUE = 116;
+	public static final int TYPE_EACH = 117;
 	
 	/**
 	 * Creates a new script lexer kernel.
@@ -164,6 +165,7 @@ public class ScriptKernel extends Lexer.Kernel
 		addCaseInsensitiveKeyword("return", TYPE_RETURN);
 		addCaseInsensitiveKeyword("while", TYPE_WHILE);
 		addCaseInsensitiveKeyword("for", TYPE_FOR);
+		addCaseInsensitiveKeyword("each", TYPE_EACH);
 		addCaseInsensitiveKeyword("entry", TYPE_ENTRY);
 		addCaseInsensitiveKeyword("function", TYPE_FUNCTION);
 		addCaseInsensitiveKeyword("break", TYPE_BREAK);

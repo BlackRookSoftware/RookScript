@@ -1,0 +1,34 @@
+#!/usr/bin/env rookscript -i
+
+entry main()
+{
+	numbers = [1,2,3,4,5];
+	triple = { x:3, y:4, z:-2, a:"apple", b:"banana" };
+	
+	each (x : numbers)
+		println(x);
+	each (k,v : triple)
+		println(k + " -> " + v);
+
+	a = listnew(5);
+	b = listnew(5);
+	i = 0;
+	each (k, v : triple)
+	{
+		a[i] = k;
+		b[i] = v;
+		i += 1;
+	}
+
+	println(a);
+	println(b);
+		
+	buffer = bufwrap([0,1,2,3,4,5,6,7,8,9]);
+	each (x : buffer)
+		println(x);
+		
+	each (x : 3)
+		println(x);
+	each (k,v : 3)
+		println(k + " -> " + v);
+}

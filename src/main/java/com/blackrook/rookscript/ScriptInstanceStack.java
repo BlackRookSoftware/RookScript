@@ -86,7 +86,7 @@ public class ScriptInstanceStack
 		if (scriptValueStack != null)
 			System.arraycopy(scriptValueStack, 0, newStack, 0, scriptValueStack.length);
 		for (int i = scriptValueStack != null ? scriptValueStack.length : 0; i < newStack.length; i++)
-			newStack[i] = ScriptValue.create(false);
+			newStack[i] = ScriptValue.create(null);
 		scriptValueStack = newStack;
 	}
 	

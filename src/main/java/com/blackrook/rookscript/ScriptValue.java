@@ -2525,7 +2525,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 
 		private ValueIterator(ScriptValue value)
 		{
-			this.value = value;
+			this.value = ScriptValue.create(value);
 			this.calledNext = false;
 			this.pair = new IteratorPair();
 		}
@@ -2541,7 +2541,13 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		{
 			calledNext = true;
 			pair.set(null, value);
-			return null;
+			return pair;
+		}
+
+		@Override
+		public String toString() 
+		{
+			return "ValueIterator";
 		}
 	}
 	
@@ -2573,6 +2579,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 			pair.set(entry.getKey(), entry.getValue());
 			return pair;
 		}
+
+		@Override
+		public String toString() 
+		{
+			return "WrappedMapIterator";
+		}
 	}
 
 	/**
@@ -2602,6 +2614,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		{
 			pair.set(cur++, wrapped.next());
 			return pair;
+		}
+		
+		@Override
+		public String toString() 
+		{
+			return "WrappedGenericIterator:" + cur;
 		}
 	}
 
@@ -3267,6 +3285,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 				cur++;
 				return pair;
 			}
+			
+			@Override
+			public String toString() 
+			{
+				return "BufferTypeIterator:" + cur + "/" + data.length;
+			}
 		}
 	}
 	
@@ -3547,6 +3571,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 				cur++;
 				return pair;
 			}
+
+			@Override
+			public String toString() 
+			{
+				return "ListTypeIterator:" + cur + "/" + size;
+			}
 		}
 	}
 	
@@ -3611,6 +3641,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 				Entry entry = entries[cur++];
 				pair.set(entry.getName(), entry.getValue());
 				return pair;
+			}
+			
+			@Override
+			public String toString() 
+			{
+				return "MapTypeIterator:" + cur + "/" + size();
 			}
 		}
 	}

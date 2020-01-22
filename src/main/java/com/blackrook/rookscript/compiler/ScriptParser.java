@@ -51,6 +51,18 @@ public class ScriptParser extends Lexer.Parser
 	/** Label prefix. */
 	public static final String LABEL_FOR_END = "_for_end_";
 	/** Label prefix. */
+	public static final String LABEL_EACH_START = "_each_start_";
+	/** Label prefix. */
+	public static final String LABEL_EACH_NEXT = "_each_next_";
+	/** Label prefix. */
+	public static final String LABEL_EACH_INIT = "_each_init_";
+	/** Label prefix. */
+	public static final String LABEL_EACH_STEP = "_each_step_";
+	/** Label prefix. */
+	public static final String LABEL_EACH_BODY = "_each_body_";
+	/** Label prefix. */
+	public static final String LABEL_EACH_END = "_each_end_";
+	/** Label prefix. */
 	public static final String LABEL_TERNARY_TRUE = "_tern_true_";
 	/** Label prefix. */
 	public static final String LABEL_TERNARY_FALSE = "_tern_false_";
@@ -792,6 +804,11 @@ public class ScriptParser extends Lexer.Parser
 		{
 			return parseForClause(currentScript);
 		}
+		// each iterator clause.
+		else if (matchType(ScriptKernel.TYPE_EACH))
+		{
+			return parseEachClause(currentScript);
+		}
 		// assignment statement or function call.
 		else if (currentType(ScriptKernel.TYPE_IDENTIFIER))
 		{
@@ -879,7 +896,16 @@ public class ScriptParser extends Lexer.Parser
 			if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 			{
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, identifierName, scopeVar));
-				return parseListMapDerefStatementChain(currentScript);
+
+				Boolean lastWasList;
+				if ((lastWasList = parseListMapDerefStatementChain(currentScript)) == null)
+					return false;
+				
+				if (!parseMapOrListAssignmentStatement(currentScript, lastWasList))
+					return false;
+
+				currentScript.addCommand(ScriptCommand.create(lastWasList ? ScriptCommandType.POP_LIST : ScriptCommandType.POP_MAP));
+				return true;
 			}
 			// might be namespaced host function.
 			else if (currentType(ScriptKernel.TYPE_LPAREN))
@@ -926,7 +952,16 @@ public class ScriptParser extends Lexer.Parser
 		else if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 		{
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, identifierName));
-			return parseListMapDerefStatementChain(currentScript);
+			
+			Boolean lastWasList;
+			if ((lastWasList = parseListMapDerefStatementChain(currentScript)) == null)
+				return false;
+			
+			if (!parseMapOrListAssignmentStatement(currentScript, lastWasList))
+				return false;
+
+			currentScript.addCommand(ScriptCommand.create(lastWasList ? ScriptCommandType.POP_LIST : ScriptCommandType.POP_MAP));
+			return true;
 		}
 		// is assignment?
 		else if (isAssignmentOperator(currentToken().getType()))
@@ -964,7 +999,8 @@ public class ScriptParser extends Lexer.Parser
 		}
 	}
 
-	private boolean parseListMapDerefStatementChain(Script currentScript)
+	// Null = error, True = ended on list, False = ended on map deref.
+	private Boolean parseListMapDerefStatementChain(Script currentScript)
 	{
 		boolean lastWasList = false;
 		while (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
@@ -973,12 +1009,12 @@ public class ScriptParser extends Lexer.Parser
 			{
 				nextToken();
 				if (!parseExpression(currentScript))
-					return false;
+					return null;
 
 				if (!matchType(ScriptKernel.TYPE_RBRACK))
 				{
 					addErrorMessage("Expected \"]\" after a list index expression.");
-					return false;
+					return null;
 				}
 
 				// another dimension or deref incoming?
@@ -993,7 +1029,7 @@ public class ScriptParser extends Lexer.Parser
 				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
 				{
 					addErrorMessage("Expected map key identifier.");
-					return false;
+					return null;
 				}
 				
 				String key = currentToken().getLexeme();
@@ -1010,11 +1046,15 @@ public class ScriptParser extends Lexer.Parser
 			else
 			{
 				addErrorMessage("INTERNAL ERROR - EXPECTED [ or .");
-				return false;
+				return null;
 			}
-			
 		}
 		
+		return lastWasList;
+	}
+
+	private boolean parseMapOrListAssignmentStatement(Script currentScript, boolean lastWasList) 
+	{
 		int assignmentType = currentToken().getType();
 		if (!isAssignmentOperator(assignmentType))
 		{
@@ -1024,17 +1064,18 @@ public class ScriptParser extends Lexer.Parser
 		nextToken();
 		
 		if (isAccumulatingAssignmentOperator(assignmentType))
+		{
 			currentScript.addCommand(ScriptCommand.create(
 					lastWasList ? ScriptCommandType.PUSH_LIST_INDEX_CONTENTS : ScriptCommandType.PUSH_MAP_KEY_CONTENTS
 			));
+		}
 		
 		if (!parseExpression(currentScript))
 			return false;
 		
 		if (isAccumulatingAssignmentOperator(assignmentType))
 			emitArithmeticCommand(currentScript, assignmentType);
-
-		currentScript.addCommand(ScriptCommand.create(lastWasList ? ScriptCommandType.POP_LIST : ScriptCommandType.POP_MAP));
+		
 		return true;
 	}
 	
@@ -1179,6 +1220,95 @@ public class ScriptParser extends Lexer.Parser
 		return true;
 	}
 
+	// <EACH> "(" <IdentifierAssignment> <IdentifierAssignment'> ":" <Expression> ")" <StatementBody>
+	private boolean parseEachClause(Script currentScript)
+	{
+		if (!matchType(ScriptKernel.TYPE_LPAREN))
+		{
+			addErrorMessage("Expected \"(\" after \"each\".");
+			return false;
+		}
+
+		if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+		{
+			addErrorMessage("Expected identifier at the start of an \"each\" clause.");
+			return false;
+		}
+		
+		String startLabel = currentScript.getNextGeneratedLabel(LABEL_EACH_START); 
+		String initLabel = currentScript.getNextGeneratedLabel(LABEL_EACH_INIT); 
+		String nextLabel = currentScript.getNextGeneratedLabel(LABEL_EACH_NEXT); 
+		String stepLabel = currentScript.getNextGeneratedLabel(LABEL_EACH_STEP); 
+		String bodyLabel = currentScript.getNextGeneratedLabel(LABEL_EACH_BODY); 
+		String endLabel = currentScript.getNextGeneratedLabel(LABEL_EACH_END); 
+
+		// start
+		mark(currentScript, startLabel);
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, initLabel));
+
+		// next variables
+		mark(currentScript, nextLabel);
+		
+		boolean keyval = false; 
+		
+		// key or value
+		if (!parseEachClauseVariable(currentScript))
+			return false;
+		
+		// if comma, parse value variable (previous is now key).
+		if (matchType(ScriptKernel.TYPE_COMMA))
+		{
+			keyval = true; 
+			if (!parseEachClauseVariable(currentScript))
+				return false;
+		}
+
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, bodyLabel));
+
+		mark(currentScript, stepLabel);
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.ITERATE, endLabel, keyval));
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, nextLabel));
+		
+		if (!matchType(ScriptKernel.TYPE_COLON))
+		{
+			addErrorMessage("Expected \":\" after the variables in \"each\".");
+			return false;
+		}
+
+		mark(currentScript, initLabel);
+		
+		if (!parseExpression(currentScript))
+			return false;
+
+		if (!matchType(ScriptKernel.TYPE_RPAREN))
+		{
+			addErrorMessage("Expected \")\" after the expression.");
+			return false;
+		}
+
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_ITERATOR));
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, stepLabel));
+
+		mark(currentScript, bodyLabel);
+
+		if (!parseStatementBody(currentScript, endLabel, stepLabel))
+			return false;
+
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, stepLabel));
+		mark(currentScript, endLabel);
+
+		return true;
+	}
+
+	// Parses a single each clause variable.
+	private boolean parseEachClauseVariable(Script currentScript)
+	{
+		String lexeme = currentToken().getLexeme();
+		nextToken();
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_VARIABLE, lexeme));
+		return true;
+	}
+	
 	// <ExpressionPhrase>
 	// If null, bad parse.
 	private boolean parseExpression(Script currentScript)
@@ -2046,6 +2176,7 @@ public class ScriptParser extends Lexer.Parser
 			case ScriptKernel.TYPE_IF:
 			case ScriptKernel.TYPE_WHILE:
 			case ScriptKernel.TYPE_FOR:
+			case ScriptKernel.TYPE_EACH:
 				return true;
 		}
 	}
