@@ -92,9 +92,10 @@ public class ScriptParser extends Lexer.Parser
 	/** Return false. */
 	public static final int PARSEFUNCTIONCALL_FALSE = -1;
 
+	private static final char[] HEXALPHABET = "0123456789abcdef".toCharArray();
+	
 	/** List of errors. */
 	private LinkedList<String> errors;
-	
 	/**
 	 * Creates a new script parser.
 	 * @param lexer the lexer to fetch tokens from.
@@ -1974,8 +1975,6 @@ public class ScriptParser extends Lexer.Parser
 		}
 	}
 
-	private static final char[] HEXALPHABET = "0123456789abcdef".toCharArray();
-	
 	// parses an unsigned hex string.
 	private Long parseUnsignedHexLong(String hexString)
 	{
