@@ -7,6 +7,9 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.blackrook.rookscript.Script.Entry;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.exception.ScriptStackException;
@@ -14,6 +17,7 @@ import com.blackrook.rookscript.lang.ScriptCommand;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
+import com.blackrook.rookscript.struct.Utils;
 
 /**
  * A single script instance.
@@ -89,6 +93,13 @@ public class ScriptInstance
 	private Object waitParameter;
 	/** Commands executed per slice. */
 	private int commandsExecuted;
+
+	// ======================================================================
+	// Resources
+	// ======================================================================
+	
+	/** All registered, presumably unclosed resources. */
+	private Set<AutoCloseable> closeables;
 	
 	/**
 	 * Creates a new script instance, no wait handler.
@@ -135,11 +146,7 @@ public class ScriptInstance
 		this.scopeResolver = scopeResolver;
 		this.waitHandler = waitHandler;
 		
-		this.state = State.CREATED;
-		this.entryName = null;
-		this.waitType = null;
-		this.waitParameter = null;
-		this.commandsExecuted = 0;
+		reset();
 	}
 	
 	/**
@@ -162,6 +169,7 @@ public class ScriptInstance
 		waitType = null;
 		waitParameter = null;
 		commandsExecuted = 0;
+		closeables = null;
 	}
 
 	/**
@@ -271,6 +279,7 @@ public class ScriptInstance
 	/**
 	 * Initializes the script with parameters.
 	 * If the amount of parameters are less than the expected amount, nulls are pushed until the amount is met.
+	 * The method {@link #update()} can be called afterward.
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.
 	 * @throws ScriptExecutionException if the provided amount of parameters do not match the amount of parameters that the script requires, 
@@ -305,6 +314,7 @@ public class ScriptInstance
 	/**
 	 * Initializes the script at an arbitrary label.
 	 * Use with caution - this is assuming manual setup of a script instance.
+	 * The method {@link #update()} can be called afterward.
 	 * @param labelName the script label name.
 	 * @throws ScriptExecutionException if the provided label does not exist.
 	 */
@@ -320,6 +330,7 @@ public class ScriptInstance
 	/**
 	 * Initializes the script at an arbitrary index.
 	 * Use with caution - this is assuming manual setup of a script instance.
+	 * The method {@link #update()} can be called afterward.
 	 * @param index the command index.
 	 * @throws ScriptExecutionException if the provided index is out of script command bounds.
 	 */
@@ -337,8 +348,27 @@ public class ScriptInstance
 	}
 	
 	/**
+	 * Makes a single command step in the script.
+	 * @return false if the script should halt, true to continue.
+	 */
+	public boolean step()
+	{
+		int index = getCurrentCommandIndex();
+		ScriptCommand command = script.getCommand(index);
+		setCurrentCommandIndex(index + 1);
+		if (command == null)
+		{
+			terminate();
+			return false;
+		}
+		else
+			return command.execute(this);
+	}
+
+	/**
 	 * Executes the script.
 	 * Note that the script may stop, but not terminate.
+	 * @throws ScriptExecutionException if this instance is in {@link State#CREATED} state (init methods not called).
 	 */
 	public void update()
 	{
@@ -347,6 +377,8 @@ public class ScriptInstance
 			case CREATED:
 				throw new ScriptExecutionException("Script not initialized.");
 			case INIT:
+				state = State.RUNNING;
+				// fall through.
 			case RUNNING:
 			{
 				// reset counter.
@@ -376,48 +408,10 @@ public class ScriptInstance
 	}
 	
 	/**
-	 * Makes a single command step in the script.
-	 * @return false if the script should halt, true to continue.
-	 */
-	public boolean step()
-	{
-		int index = getCurrentCommandIndex();
-		ScriptCommand command = script.getCommand(index);
-		setCurrentCommandIndex(index + 1);
-		if (command == null)
-		{
-			terminate();
-			return false;
-		}
-		else
-			return command.execute(this);
-	}
-	
-	/**
-	 * Sets the ENDED state.
-	 * This clears a wait state, if currently waiting.
-	 */
-	public void terminate()
-	{
-		this.state = State.ENDED;
-		this.waitType = null;
-		this.waitParameter = null;
-	}
-	
-	/**
-	 * Sets the SUSPENDED state.
-	 * This clears a wait state, if currently waiting.
-	 */
-	public void suspend()
-	{
-		this.state = State.SUSPENDED;
-		this.waitType = null;
-		this.waitParameter = null;
-	}
-	
-	/**
 	 * Sets the RUNNING state.
 	 * This clears a wait state, if currently waiting.
+	 * Does not actually run anything - this just sets the script's state as "enabled" for a future call to {@link #update()}.
+	 * @see #update()
 	 */
 	public void resume()
 	{
@@ -425,9 +419,10 @@ public class ScriptInstance
 		this.waitType = null;
 		this.waitParameter = null;
 	}
-	
+
 	/**
 	 * Sets the WAITING state and waiting parameters.
+	 * A future call to {@link #update()} afterward will attempt to re-check and update the waiting state.
 	 * @param waitType the type for the wait (seen by the waiting handler).
 	 * @param waitParameter the parameter for the wait (seen by the waiting handler).
 	 */
@@ -437,7 +432,34 @@ public class ScriptInstance
 		this.waitType = waitType;
 		this.waitParameter = waitParameter;
 	}
+
+	/**
+	 * Sets the SUSPENDED state.
+	 * This clears a wait state, if currently waiting.
+	 * A call to {@link #update()} afterward will do nothing.
+	 */
+	public void suspend()
+	{
+		this.state = State.SUSPENDED;
+		this.waitType = null;
+		this.waitParameter = null;
+	}
 	
+	/**
+	 * Sets the ENDED state.
+	 * Also closes all registered closeables.
+	 * This clears a wait state, if currently waiting.
+	 * A future call to {@link #update()} afterward will do nothing.
+	 * @see #registerCloseable(AutoCloseable)
+	 */
+	public void terminate()
+	{
+		this.state = State.ENDED;
+		this.waitType = null;
+		this.waitParameter = null;
+		closeAllCloseables();
+	}
+
 	/**
 	 * Gets a command index by label.
 	 * @param labelName the label name.
@@ -584,6 +606,41 @@ public class ScriptInstance
 	public void clearStackValues()
 	{
 		scriptInstanceStack.clearStackValues();
+	}
+	
+	/**
+	 * Registers a resource that will be automatically closed when this instance terminates.
+	 * Function calls that open resources should call this.
+	 * @param closeable the closeable to add to the instance registry.
+	 */
+	public void registerCloseable(AutoCloseable closeable)
+	{
+		if (closeables == null)
+			closeables = new HashSet<AutoCloseable>();
+		closeables.add(closeable);
+	}
+	
+	/**
+	 * Unregisters a resource that should be closed when this instance terminates.
+	 * Function calls that close resources should call this.
+	 * @param closeable the closeable to remove from the instance registry.
+	 */
+	public void unregisterCloseable(AutoCloseable closeable)
+	{
+		if (closeables != null)
+			closeables.remove(closeable);
+	}
+	
+	/**
+	 * Unregisters and closes all closeable resources that are registered on this instance.
+	 * This is called when the instance enters the "terminated" state.
+	 * @see #terminate()
+	 */
+	public void closeAllCloseables()
+	{
+		for (AutoCloseable c : closeables)
+			Utils.close(c);
+		closeables = null;
 	}
 	
 	@Override
