@@ -7,6 +7,7 @@
  ******************************************************************************/
 package com.blackrook.rookscript.struct;
 
+import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -729,5 +730,30 @@ public final class Utils
 		arraySwap(array, i, hi);
 	    return i;
 	}
-	
+
+	/**
+	 * Returns the extension of a filename.
+	 * @param filename the file name.
+	 * @param extensionSeparator the text or characters that separates file name from extension.
+	 * @return the file's extension, or an empty string for no extension.
+	 */
+	public static String getFileExtension(String filename, String extensionSeparator)
+	{
+		int extindex = filename.lastIndexOf(extensionSeparator);
+		if (extindex >= 0)
+			return filename.substring(extindex+1);
+		return "";
+	}
+
+	/**
+	 * Returns the extension of a file's name.
+	 * @param file the file.
+	 * @param extensionSeparator the text or characters that separates file name from extension.
+	 * @return the file's extension, or an empty string for no extension.
+	 */
+	public static String getFileExtension(File file, String extensionSeparator)
+	{
+		return getFileExtension(file.getName(), extensionSeparator);
+	}
+
 }

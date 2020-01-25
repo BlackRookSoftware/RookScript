@@ -12,8 +12,10 @@ import java.util.List;
 
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.RegexFunctions;
-import com.blackrook.rookscript.functions.CommonFunctions;
+import com.blackrook.rookscript.functions.FileFunctions;
+import com.blackrook.rookscript.functions.FileIOFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
+import com.blackrook.rookscript.functions.common.MiscFunctions;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionType.Usage;
 import com.blackrook.rookscript.lang.ScriptFunctionType.Usage.ParameterUsage;
@@ -85,13 +87,17 @@ public class ScriptFunctionDescriptorTest
 	public static void main(String[] args) throws Exception
 	{
 		printHeader(System.out, "Common");
-		printUsages(System.out, CommonFunctions.createResolver());
+		printUsages(System.out, MiscFunctions.createResolver());
 		printHeader(System.out, "Math");
 		printUsages(System.out, MathFunctions.createResolver());
 		printHeader(System.out, "Standard I/O");
 		printUsages(System.out, StandardIOFunctions.createResolver());
 		printHeader(System.out, "RegEx");
 		printUsages(System.out, RegexFunctions.createResolver());
+		printHeader(System.out, "Files");
+		printUsages(System.out, FileFunctions.createResolver());
+		printHeader(System.out, "File I/O");
+		printUsages(System.out, FileIOFunctions.createResolver());
 	}
 	
 }

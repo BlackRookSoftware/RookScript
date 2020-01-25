@@ -749,7 +749,7 @@ public class ScriptParser extends Lexer.Parser
 		{
 			if (breakLabel == null)
 			{
-				addErrorMessage("\"Break\" used outside of a loop.");
+				addErrorMessage("\"Break\" used outside of a loop (while/for/each).");
 				return false;
 			}
 			
@@ -761,7 +761,7 @@ public class ScriptParser extends Lexer.Parser
 		{
 			if (continueLabel == null)
 			{
-				addErrorMessage("\"Continue\" used outside of a loop.");
+				addErrorMessage("\"Continue\" used outside of a loop (while/for/each).");
 				return false;
 			}
 			

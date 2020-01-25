@@ -1,0 +1,18 @@
+#!/usr/bin/env rookscript -i
+
+function listfiles(dir)
+{
+	fl = dir->flist();
+	for (i = 0; i < fl->length(); i = i + 1)
+	{
+		//println(fl[i]->fpath());
+		if (fl[i]->fisdir() && !fl[i]->fhidden())
+			listfiles(fl[i]);
+	}	
+}
+
+entry main()
+{
+	f = file(".");
+	listfiles(f);
+}

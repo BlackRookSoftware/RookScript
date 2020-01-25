@@ -638,8 +638,9 @@ public class ScriptInstance
 	 */
 	public void closeAllCloseables()
 	{
-		for (AutoCloseable c : closeables)
-			Utils.close(c);
+		if (closeables != null) 
+			for (AutoCloseable c : closeables)
+				Utils.close(c);
 		closeables = null;
 	}
 	

@@ -14,10 +14,12 @@ import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
+import com.blackrook.rookscript.struct.Utils;
 
 import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Script common functions for files.
@@ -51,8 +53,614 @@ public enum FileFunctions implements ScriptFunctionType
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
-				scriptInstance.popStackValue(temp);
-				returnValue.set(Type.OBJECTREF, new File(temp.asString()));
+				File file = popFile(scriptInstance, temp);
+				if (file != null)
+					returnValue.set(Type.OBJECTREF, file);
+				else
+					returnValue.setNull();
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILEEXISTS(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a file exists."
+				)
+				.parameter("path", 
+					type(Type.STRING, "Path to file."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if the file exists, false otherwise."),
+					type(Type.ERROR, "Security", "If the OS is preventing the search.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				try {
+					if (file != null)
+						returnValue.set(file.exists());
+					else
+						returnValue.set(false);
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILEISDIR(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a file is a directory path."
+				)
+				.parameter("path", 
+					type(Type.STRING, "Path to file."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if the file is a directory, false otherwise."),
+					type(Type.ERROR, "Security", "If the OS is preventing the read.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				try {
+					if (file != null)
+						returnValue.set(file.isDirectory());
+					else
+						returnValue.set(false);
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILEISHIDDEN(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a file is hidden."
+				)
+				.parameter("path", 
+					type(Type.STRING, "Path to file."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if the file is hidden, false otherwise."),
+					type(Type.ERROR, "Security", "If the OS is preventing the read.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				try {
+					if (file != null)
+						returnValue.set(file.isHidden());
+					else
+						returnValue.set(false);
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILENAME(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the name of a file."
+				)
+				.parameter("path", 
+					type(Type.STRING, "A file path to inspect."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.NULL, "If [file] is null."),
+					type(Type.STRING, "The file's name only.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				if (file != null)
+					returnValue.set(file.getName());
+				else
+					returnValue.setNull();
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILEPATH(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the path used to open the file."
+				)
+				.parameter("path", 
+					type(Type.STRING, "A file path to inspect."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.NULL, "If [file] is null."),
+					type(Type.STRING, "The file's path.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				if (file != null)
+					returnValue.set(file.getPath());
+				else
+					returnValue.setNull();
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILEEXT(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a file's extension."
+				)
+				.parameter("path", 
+					type(Type.STRING, "A file path to inspect."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.NULL, "If [file] is null."),
+					type(Type.STRING, "The file's extension only. Empty string if no extension.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				if (file != null)
+					returnValue.set(Utils.getFileExtension(file, "."));
+				else
+					returnValue.setNull();
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILELENGTH(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a file's length in bytes."
+				)
+				.parameter("path", 
+					type(Type.STRING, "A file path to inspect."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.NULL, "If [file] is null."),
+					type(Type.INTEGER, "The file's length."),
+					type(Type.ERROR, "BadFile", "If the file could not be found."),
+					type(Type.ERROR, "Security", "If the OS is preventing the read.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				try {
+					if (file == null)
+						returnValue.setNull();
+					else if (!file.exists())
+						returnValue.setError("BadFile", "File \"" + file.getPath() + "\" not found.");
+					else
+						returnValue.set(file.length());
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILEDATE(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a file's modified date in milliseconds since Epoch (Jan. 1, 1970 UTC)."
+				)
+				.parameter("path", 
+					type(Type.STRING, "A file path to inspect."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.NULL, "If [file] is null."),
+					type(Type.INTEGER, "The file's modified date in milliseconds since Epoch."),
+					type(Type.ERROR, "BadFile", "If the file could not be found."),
+					type(Type.ERROR, "Security", "If the OS is preventing the read.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				try {
+					if (file == null)
+						returnValue.setNull();
+					else if (!file.exists())
+						returnValue.setError("BadFile", "File \"" + file.getPath() + "\" not found.");
+					else
+						returnValue.set(file.lastModified());
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILEPARENT(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a file's parent path."
+				)
+				.parameter("path", 
+					type(Type.STRING, "A file path to inspect."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.NULL, "If [file] is null."),
+					type(Type.STRING, "The file's parent path (if parameter was string)."),
+					type(Type.OBJECTREF, "File", "The file's parent path (if parameter was file)."),
+					type(Type.ERROR, "Security", "If the OS is preventing the search.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				try {
+					if (file == null)
+						returnValue.setNull();
+					else if (temp.isString())
+						returnValue.set(file.getParent());
+					else
+						returnValue.set(file.getParentFile());
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILEABSOLUTEPATH(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the absolute path of a file."
+				)
+				.parameter("path", 
+					type(Type.STRING, "A file path to inspect."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.NULL, "If [file] is null."),
+					type(Type.STRING, "The file's absolute path (if parameter was string)."),
+					type(Type.OBJECTREF, "File", "The file's absolute path (if parameter was file)."),
+					type(Type.ERROR, "Security", "If the OS is preventing the search.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				try {
+					if (file == null)
+						returnValue.setNull();
+					else if (temp.isString())
+						returnValue.set(file.getAbsolutePath());
+					else
+						returnValue.set(file.getAbsoluteFile());
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILECANONPATH(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the canonical path of a file."
+				)
+				.parameter("path", 
+					type(Type.STRING, "A file path to inspect."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.NULL, "If [file] is null."),
+					type(Type.STRING, "The file's canonical path (if parameter was string)."),
+					type(Type.OBJECTREF, "File", "The file's canonical path (if parameter was file)."),
+					type(Type.ERROR, "Security", "If the OS is preventing the search."),
+					type(Type.ERROR, "IOError", "If an error occurred during search.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				try {
+					if (file == null)
+						returnValue.setNull();
+					else if (temp.isString())
+						returnValue.set(file.getCanonicalPath());
+					else
+						returnValue.set(file.getCanonicalFile());
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				} catch (IOException e) {
+					returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILELIST(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns all files in a directory (and optionally, whose name fits a RegEx pattern)."
+				)
+				.parameter("path", 
+					type(Type.STRING, "A file path to inspect."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.NULL, "If not a directory or [path] is null."),
+					type(Type.LIST, "[STRING, ...]", "A list of file paths in the directory (if parameter was string)."),
+					type(Type.LIST, "[OBJECTREF:File, ...]", "A list of file paths in the directory (if parameter was file)."),
+					type(Type.ERROR, "Security", "If the OS is preventing the search.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				try {
+					if (file == null || !file.isDirectory())
+					{
+						returnValue.setNull();
+					}
+					else
+					{
+						boolean wasString = temp.isString();
+						File[] files = file.listFiles();
+						returnValue.setEmptyList(files.length);
+						if (wasString)
+						{
+							for (int i = 0; i < files.length; i++)
+								returnValue.listAdd(files[i].getPath());
+						}
+						else
+						{
+							for (int i = 0; i < files.length; i++)
+								returnValue.listAdd(files[i]);
+						}						
+					}
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	FILEDELETE(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Attempts to delete a file."
+				)
+				.parameter("path", 
+					type(Type.STRING, "The file to delete."),
+					type(Type.OBJECTREF, "File", "The file to delete.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if the file existed and was deleted, false otherwise."),
+					type(Type.ERROR, "Security", "If the OS is preventing the delete.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				try {
+					if (file == null)
+						returnValue.setNull();
+					else if (!file.exists())
+						returnValue.set(false);
+					else
+						returnValue.set(file.delete());
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
 				return true;
 			}
 			finally
@@ -94,6 +702,23 @@ public enum FileFunctions implements ScriptFunctionType
 		if (usage == null)
 			usage = usage();
 		return usage;
+	}
+	
+	/**
+	 * Pops a variable off the stack and, using a temp variable, extracts a File/String.
+	 * @param scriptInstance the script instance.
+	 * @param temp the temporary script value.
+	 * @return a File object.
+	 */
+	protected File popFile(ScriptInstance scriptInstance, ScriptValue temp) 
+	{
+		scriptInstance.popStackValue(temp);
+		if (temp.isNull())
+			return null;
+		else if (temp.isObjectRef(File.class))
+			return temp.asObjectType(File.class);
+		else
+			return new File(temp.asString());
 	}
 	
 	@Override

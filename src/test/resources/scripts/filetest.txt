@@ -1,18 +1,25 @@
-#!/usr/bin/env rookscript -i
-
-function listfiles(dir)
-{
-	fl = dir->flist();
-	for (i = 0; i < fl->length(); i = i + 1)
-	{
-		//println(fl[i]->fpath());
-		if (fl[i]->fisdir() && !fl[i]->fhidden())
-			listfiles(fl[i]);
-	}	
-}
-
 entry main()
 {
-	f = file(".");
-	listfiles(f);
+	f = file("build.xml");
+	println(typeof(f) + " : " + tostring(f));
+	println(fileexists("build.xml"));
+	println(fileexists("build.xmld"));
+	println(fileisdir(".git"));
+	println(fileisdir("build.xml"));
+	println(fileishidden(".git"));
+	println(fileishidden("build.xml"));
+	
+	p = "src/test/resources/scripts/filetest.txt";
+	println(filename(p));
+	println(filepath(p));
+	println(fileext(p));
+	println(filelength(p));
+	println(filedate(p));
+	println(fileparent(p));
+	println(fileabsolutepath(p));
+	println(filecanonpath(p));
+	println(filecanonpath(p));
+
+	each (s : fileparent(p)->filelist())
+		println(s);
 }
