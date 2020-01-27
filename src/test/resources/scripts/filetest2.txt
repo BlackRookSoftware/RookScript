@@ -1,0 +1,37 @@
+entry main()
+{
+	b = listnew(256);
+	for (i = 0; i < 256; i += 1)
+		b[i] = i;
+	
+	buf = bufwrap(b);
+	println(buf);
+
+	f = fopen("build.xml", "r");
+	println(fgetlen(f));
+	println(fgetpos(f));
+	fclose(f);
+	
+	f = fopen("newfile.bin", "rw");
+	println(fwrite(f, buf));
+	println(fgetlen(f));
+	fsetlen(f, 1024);
+	println(fgetlen(f));
+	fsetlen(f, 256);
+	println(fgetlen(f));
+	bufsetpos(buf, 0);
+	println(fwrite(f, buf, 192));
+	println(fgetlen(f));
+	bufsetpos(buf, 0);
+	fsetpos(f, 32);
+	println(fread(f, buf));
+	println(buf);
+	fskip(f, 16);
+	bufsetpos(buf);
+	println(fread(f, buf));
+	println(buf);
+	fclose(f);
+	
+	println(filerename("newfile.bin", "newname.bin"));
+	println(filedelete("newname.bin"));
+}

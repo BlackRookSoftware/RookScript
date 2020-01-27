@@ -69,7 +69,6 @@ public enum FileIOFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(temp);
 				String mode = temp.asString();
-				scriptInstance.popStackValue(temp);
 				File file = popFile(scriptInstance, temp);
 				try {
 					if (file == null)
@@ -307,7 +306,7 @@ public enum FileIOFunctions implements ScriptFunctionType
 				.parameter("rafile", 
 					type(Type.OBJECTREF, "RandomAccessFile", "An open file handle.")
 				)
-				.parameter("pos", 
+				.parameter("position", 
 					type(Type.INTEGER, "The new position.")
 				)
 				.returns(
@@ -325,7 +324,7 @@ public enum FileIOFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				long length = temp.asLong();
+				long position = temp.asLong();
 				scriptInstance.popStackValue(temp);
 				if (!temp.isObjectRef(RandomAccessFile.class))
 				{
@@ -334,7 +333,7 @@ public enum FileIOFunctions implements ScriptFunctionType
 				}
 				
 				try {
-					temp.asObjectType(RandomAccessFile.class).setLength(length);
+					temp.asObjectType(RandomAccessFile.class).seek(position);
 					returnValue.set(temp);
 				} catch (IOException e) {
 					returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());
@@ -452,7 +451,7 @@ public enum FileIOFunctions implements ScriptFunctionType
 					returnValue.setError("BadParameter", "First parameter is not an open file handle.");
 					return true;
 				}
-				if (!buffer.isObjectRef(BufferType.class))
+				if (!buffer.isBuffer())
 				{
 					returnValue.setError("BadParameter", "Second parameter is not a buffer.");
 					return true;
@@ -527,7 +526,7 @@ public enum FileIOFunctions implements ScriptFunctionType
 					returnValue.setError("BadParameter", "First parameter is not an open file handle.");
 					return true;
 				}
-				if (!buffer.isObjectRef(BufferType.class))
+				if (!buffer.isBuffer())
 				{
 					returnValue.setError("BadParameter", "Second parameter is not a buffer.");
 					return true;
