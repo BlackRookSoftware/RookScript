@@ -91,8 +91,8 @@ public enum MapFunctions implements ScriptFunctionType
 					type(Type.STRING, "The key.")
 				)
 				.returns(
-					type(Type.NULL, "If not a map."),
-					type(Type.LIST, "[STRING, ...]", "A new list of the map's keys.")
+					type(Type.NULL, "If not a map or no value for that key."),
+					type("The corresponding value, if found.")
 				)
 			;
 		}
