@@ -15,7 +15,7 @@ import com.blackrook.rookscript.functions.common.MiscFunctions;
 import com.blackrook.rookscript.functions.common.StringFunctions;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
-import com.blackrook.rookscript.resolvers.hostfunction.MultiFunctionResolver;
+import com.blackrook.rookscript.resolvers.hostfunction.CompoundFunctionResolver;
 
 /**
  * RookScript common functions.
@@ -32,7 +32,7 @@ public final class CommonFunctions
 	 */
 	public static final ScriptFunctionResolver createResolver()
 	{
-		return new MultiFunctionResolver()
+		return new CompoundFunctionResolver()
 			.addResolver(new EnumFunctionResolver(MiscFunctions.values()))
 			.addResolver(new EnumFunctionResolver(ErrorFunctions.values()))
 			.addResolver(new EnumFunctionResolver(StringFunctions.values()))

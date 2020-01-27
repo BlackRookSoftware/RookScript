@@ -129,7 +129,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		}
 	},
 
-	PRINTLNERR(1)
+	PRINTERRLN(1)
 	{
 		@Override
 		protected Usage usage()

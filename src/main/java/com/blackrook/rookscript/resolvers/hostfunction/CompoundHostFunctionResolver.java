@@ -7,8 +7,8 @@
  ******************************************************************************/
 package com.blackrook.rookscript.resolvers.hostfunction;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
@@ -19,29 +19,29 @@ import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
  * Functions are resolved in the order that they are added to this resolver.
  * @author Matthew Tropiano
  */
-public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
+public class CompoundHostFunctionResolver implements ScriptHostFunctionResolver
 {
 	/** Resolvers in the global namespace. */
-	private MultiFunctionResolver globalResolver;
+	private CompoundFunctionResolver globalResolver;
 	/** Resolvers in the named namespaces. */
-	private Map<String, ScriptFunctionResolver> namedResolvers;
+	private SortedMap<String, ScriptFunctionResolver> namedResolvers;
 
 	/**
-	 * Creates a new MultiHostFunctionResolver.
+	 * Creates a new CompoundHostFunctionResolver.
 	 */
-	public MultiHostFunctionResolver()
+	public CompoundHostFunctionResolver()
 	{
-		this.globalResolver = new MultiFunctionResolver();
-		this.namedResolvers = new HashMap<>();
+		this.globalResolver = new CompoundFunctionResolver();
+		this.namedResolvers = new TreeMap<String, ScriptFunctionResolver>(String.CASE_INSENSITIVE_ORDER);
 	}
 	
 	/**
 	 * Adds a global resolver.
-	 * If it has been added before to global, it is not added again.
 	 * @param resolver the resolver to add.
 	 * @return itself.
+	 * @see CompoundFunctionResolver#addResolver(ScriptFunctionResolver)
 	 */
-	public MultiHostFunctionResolver addResolver(ScriptFunctionResolver resolver)
+	public CompoundHostFunctionResolver addResolver(ScriptFunctionResolver resolver)
 	{
 		globalResolver.addResolver(resolver);
 		return this;
@@ -54,9 +54,9 @@ public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
 	 * @param resolver the resolver to add.
 	 * @return itself.
 	 */
-	public MultiHostFunctionResolver addNamedResolver(String namespace, ScriptFunctionResolver resolver)
+	public CompoundHostFunctionResolver addNamedResolver(String namespace, ScriptFunctionResolver resolver)
 	{
-		namedResolvers.put(namespace.toLowerCase(), resolver);
+		namedResolvers.put(namespace, resolver);
 		return this;
 	}
 	
@@ -64,7 +64,7 @@ public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
 	 * Removes all resolvers (and all namespaced ones).
 	 * @return itself.
 	 */
-	public MultiHostFunctionResolver clear()
+	public CompoundHostFunctionResolver clear()
 	{
 		globalResolver.clear();
 		namedResolvers.clear();
@@ -77,7 +77,7 @@ public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
 		ScriptFunctionResolver resolver;
 		if (namespace == null)
 			return globalResolver.containsFunction(name);
-		else if ((resolver = namedResolvers.get(namespace.toLowerCase())) != null)
+		else if ((resolver = namedResolvers.get(namespace)) != null)
 			return resolver.containsFunction(name);
 		else
 			return false;
@@ -89,7 +89,7 @@ public class MultiHostFunctionResolver implements ScriptHostFunctionResolver
 		ScriptFunctionResolver resolver;
 		if (namespace == null)
 			return globalResolver.getFunction(name);
-		else if ((resolver = namedResolvers.get(namespace.toLowerCase())) != null)
+		else if ((resolver = namedResolvers.get(namespace)) != null)
 			return resolver.getFunction(name);
 		else
 			return null;

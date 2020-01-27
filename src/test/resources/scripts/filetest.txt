@@ -13,11 +13,10 @@ entry main()
 	println(filename(p));
 	println(filepath(p));
 	println(fileext(p));
-	println(filelength(p));
+	println(filelen(p));
 	println(filedate(p));
 	println(fileparent(p));
 	println(fileabsolutepath(p));
-	println(filecanonpath(p));
 	println(filecanonpath(p));
 
 	each (s : fileparent(p)->filelist())

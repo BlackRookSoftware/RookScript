@@ -14,6 +14,8 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
@@ -46,7 +48,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	private static final ThreadLocal<InvokerCache> OBJECTARRAYS = ThreadLocal.withInitial(()->new InvokerCache());
 
 	/** The map of name to function type. */
-	private Map<String, ScriptFunctionType> map;
+	private SortedMap<String, ScriptFunctionType> map;
 	/** The valid type to verify. */
 	private Class<C> validType;
 
@@ -168,7 +170,7 @@ public class ClassMemberFunctionResolver<C> implements ScriptFunctionResolver
 	public ClassMemberFunctionResolver(Class<C> type)
 	{
 		this.validType = type;
-		this.map = new HashMap<>(8, 1f);
+		this.map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 	}
 	
 	/**

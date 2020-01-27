@@ -8,10 +8,10 @@
 package com.blackrook.rookscript.resolvers.hostfunction;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
@@ -24,7 +24,7 @@ import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
  */
 public class EnumFunctionResolver implements ScriptFunctionResolver
 {
-	private Map<String, ScriptFunctionType> map;
+	private SortedMap<String, ScriptFunctionType> map;
 	private ScriptFunctionType[] list;
 	
 	/**
@@ -34,7 +34,7 @@ public class EnumFunctionResolver implements ScriptFunctionResolver
 	@SafeVarargs
 	public EnumFunctionResolver(Enum<? extends ScriptFunctionType> ... en)
 	{
-		this.map = new HashMap<>(10, 1f);
+		this.map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		List<ScriptFunctionType> funcs = new LinkedList<ScriptFunctionType>();
 		for (Enum<? extends ScriptFunctionType> e : en)
 		{

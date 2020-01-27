@@ -319,7 +319,7 @@ public enum FileFunctions implements ScriptFunctionType
 		}
 	},
 
-	FILELENGTH(1)
+	FILELEN(1)
 	{
 		@Override
 		protected Usage usage()
@@ -638,6 +638,7 @@ public enum FileFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "File", "The file to delete.")
 				)
 				.returns(
+					type(Type.NULL, "If [path] is null."),
 					type(Type.BOOLEAN, "True if the file existed and was deleted, false otherwise."),
 					type(Type.ERROR, "Security", "If the OS is preventing the delete.")
 				)
@@ -670,8 +671,58 @@ public enum FileFunctions implements ScriptFunctionType
 		}
 	},
 
-	// TODO: Finish this.
-	
+	FILERENAME(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Attempts to rename/move a file."
+				)
+				.parameter("path", 
+					type(Type.STRING, "The file to rename."),
+					type(Type.OBJECTREF, "File", "The file to rename.")
+				)
+				.parameter("newname", 
+					type(Type.STRING, "The new path."),
+					type(Type.OBJECTREF, "File", "The new path.")
+				)
+				.returns(
+					type(Type.NULL, "If [path] or [newname] is null."),
+					type(Type.BOOLEAN, "True if renamed/moved, false if not."),
+					type(Type.ERROR, "Security", "If the OS is preventing the rename/move.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File dest = popFile(scriptInstance, temp);
+				File source = popFile(scriptInstance, temp);
+				try {
+					if (source == null || dest == null)
+						returnValue.setNull();
+					else if (!source.exists())
+						returnValue.set(false);
+					else
+						returnValue.set(source.renameTo(dest));
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
 	;
 	
 	private final int parameterCount;

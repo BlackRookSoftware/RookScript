@@ -9,6 +9,7 @@ package com.blackrook.rookscript;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Array;
 import java.nio.ByteOrder;
@@ -2702,9 +2703,29 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public int readBytes(Integer index, InputStream in, int length) throws IOException
 		{
 			int out = in.read(data, index != null ? index : position, length);
-			if (index == null)
+			if (index == null && out >= 0)
 				position += out;
 			return out;
+		}
+
+		/**
+		 * Writes bytes from this buffer into an input stream.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by the amount written.
+		 * @param index the destination index (or null for current position).
+		 * @param out the output stream to write to.
+		 * @param length the maximum amount of bytes to write.
+		 * @return the amount of bytes actually written. May be less than length.
+		 * @throws IOException if a write error occurs.
+		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds the buffer length. 
+		 */
+		public int writeBytes(Integer index, OutputStream out, int length) throws IOException
+		{
+			int p = index != null ? index : position;
+			int amount = Math.max(Math.min(length, data.length - p), 0);
+			out.write(data, p, amount);
+			if (index == null)
+				position += amount;
+			return amount;
 		}
 
 		/**
@@ -2721,9 +2742,30 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public int readBytes(Integer index, RandomAccessFile file, int length) throws IOException
 		{
 			int out = file.read(data, index != null ? index : position, length);
-			if (index == null)
+			if (index == null && out >= 0)
 				position += out;
 			return out;
+		}
+		
+		/**
+		 * Writes bytes from this buffer into an open file handle.
+		 * This relies on the file's position to be set to where the write should occur.
+		 * If null is passed in as the index, the buffer's cursor position is advanced by the amount written.
+		 * @param index the destination index (or null for current position).
+		 * @param file the source buffer.
+		 * @param length the maximum amount of bytes to write.
+		 * @return the amount of bytes actually written. May be less than length.
+		 * @throws IOException if a write error occurs.
+		 * @throws IndexOutOfBoundsException if <code>index</code> exceeds this buffer's length. 
+		 */
+		public int writeBytes(Integer index, RandomAccessFile file, int length) throws IOException
+		{
+			int p = index != null ? index : position;
+			int amount = Math.max(Math.min(length, data.length - p), 0);
+			file.write(data, p, amount);
+			if (index == null)
+				position += amount;
+			return amount;
 		}
 		
 		/**

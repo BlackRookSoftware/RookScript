@@ -8,7 +8,9 @@
 package com.blackrook.rookscript.resolvers.hostfunction;
 
 import java.util.LinkedList;
-import java.util.Queue;
+import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
@@ -18,29 +20,41 @@ import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
  * Functions are resolved in the order that they are added to this resolver.
  * @author Matthew Tropiano
  */
-public class MultiFunctionResolver implements ScriptFunctionResolver
+public class CompoundFunctionResolver implements ScriptFunctionResolver
 {
 	/** All added resolvers. */
-	private Queue<ScriptFunctionResolver> globalResolvers;
+	private SortedMap<String, ScriptFunctionType> functionMap;
 
 	/**
 	 * Creates a new MultiHostFunctionResolver.
 	 */
-	public MultiFunctionResolver()
+	public CompoundFunctionResolver()
 	{
-		this.globalResolvers = new LinkedList<>();
+		this.functionMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 	}
 	
 	/**
-	 * Adds a global resolver.
-	 * If it has been added before to global, it is not added again.
-	 * @param resolver the resolver to add.
+	 * Adds a script function type.
+	 * If a function has the same name as another function, this function overwrites the current mapping.
+	 * @param functionType the function type to add. 
 	 * @return itself.
 	 */
-	public MultiFunctionResolver addResolver(ScriptFunctionResolver resolver)
+	public CompoundFunctionResolver addFunction(ScriptFunctionType functionType)
 	{
-		if (!globalResolvers.contains(resolver))
-			globalResolvers.add(resolver);
+		functionMap.put(functionType.name(), functionType);
+		return this;
+	}
+	
+	/**
+	 * Adds all of the functions in a single resolver.
+	 * @param resolver the resolver to add.
+	 * @return itself.
+	 * @see #addFunction(ScriptFunctionType)
+	 */
+	public CompoundFunctionResolver addResolver(ScriptFunctionResolver resolver)
+	{
+		for (ScriptFunctionType t : resolver.getFunctions())
+			addFunction(t);
 		return this;
 	}
 	
@@ -48,37 +62,30 @@ public class MultiFunctionResolver implements ScriptFunctionResolver
 	 * Removes all resolvers (and all namespaced ones).
 	 * @return itself.
 	 */
-	public MultiFunctionResolver clear()
+	public CompoundFunctionResolver clear()
 	{
-		globalResolvers.clear();
+		functionMap.clear();
 		return this;
 	}
 	
 	@Override
 	public boolean containsFunction(String name)
 	{
-		for (ScriptFunctionResolver r : globalResolvers)
-			if (r.containsFunction(name))
-				return true;
-		return false;
+		return functionMap.containsKey(name);
 	}
 
 	@Override
 	public ScriptFunctionType getFunction(String name)
 	{
-		for (ScriptFunctionResolver r : globalResolvers)
-			if (r.containsFunction(name))
-				return r.getFunction(name);
-		return null;
+		return functionMap.get(name);
 	}
 
 	@Override
 	public ScriptFunctionType[] getFunctions()
 	{
 		LinkedList<ScriptFunctionType> list = new LinkedList<ScriptFunctionType>();
-		for (ScriptFunctionResolver r : globalResolvers)
-			for (ScriptFunctionType t : r.getFunctions())
-				list.add(t);
+		for (Entry<String, ScriptFunctionType> r : functionMap.entrySet())
+			list.add(r.getValue());
 		
 		ScriptFunctionType[] out = new ScriptFunctionType[list.size()];
 		list.toArray(out);

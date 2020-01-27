@@ -24,7 +24,7 @@ import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
-import com.blackrook.rookscript.resolvers.hostfunction.MultiHostFunctionResolver;
+import com.blackrook.rookscript.resolvers.hostfunction.CompoundHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.scope.DefaultScopeResolver;
 
 /**
@@ -339,9 +339,9 @@ public final class ScriptInstanceBuilder
 			throw new BuilderException("An instance stack was not set.");
 	}
 
-	private MultiHostFunctionResolver buildHostFuctionResolver()
+	private CompoundHostFunctionResolver buildHostFuctionResolver()
 	{
-		MultiHostFunctionResolver resolver = new MultiHostFunctionResolver();
+		CompoundHostFunctionResolver resolver = new CompoundHostFunctionResolver();
 		for (ScriptFunctionResolver r : globalResolvers)
 			resolver.addResolver(r);
 		for (Map.Entry<String, ScriptFunctionResolver> r : namedResolvers.entrySet())
@@ -349,7 +349,7 @@ public final class ScriptInstanceBuilder
 		return resolver;
 	}
 
-	private Script buildScript(MultiHostFunctionResolver resolver)
+	private Script buildScript(CompoundHostFunctionResolver resolver)
 	{
 		Script script;
 		try {
@@ -374,7 +374,7 @@ public final class ScriptInstanceBuilder
 	public ScriptInstance createInstance() 
 	{
 		buildCheckProviders();
-		MultiHostFunctionResolver resolver = buildHostFuctionResolver();
+		CompoundHostFunctionResolver resolver = buildHostFuctionResolver();
 		Script script = buildScript(resolver);
 
 		ScriptInstanceStack stack = stackProvider.getStack();
@@ -391,7 +391,7 @@ public final class ScriptInstanceBuilder
 	public ScriptInstanceFactory createFactory() 
 	{
 		buildCheckProviders();
-		MultiHostFunctionResolver resolver = buildHostFuctionResolver();
+		CompoundHostFunctionResolver resolver = buildHostFuctionResolver();
 		Script script = buildScript(resolver);
 
 		ScriptInstanceStack stack = stackProvider.getStack();
