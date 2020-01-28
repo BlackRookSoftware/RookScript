@@ -143,6 +143,55 @@ public enum MiscFunctions implements ScriptFunctionType
 		}
 	},
 
+	CLOSE(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Attempts to close a closeable resource. The resource is deregistered on this instance."
+				)
+				.parameter("value", 
+					type(Type.OBJECTREF, "AutoCloseable", "A closeable resource.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True."),
+					type(Type.ERROR, "BadParameter", "If an AutoCloseable was not provided."),
+					type(Type.ERROR, "BadClose", "If an Error occurs on close.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				if (!temp.isObjectRef(AutoCloseable.class))
+				{
+					returnValue.setError("BadParameter", "Parameter is not an AutoCloseable.");
+					return true;
+				}
+				
+				try {
+					temp.asObjectType(AutoCloseable.class).close();
+					returnValue.set(true);
+					return true;
+				} catch (Exception e) {
+					returnValue.setError("BadClose", e.getMessage(), e.getLocalizedMessage());
+					return true;
+				}
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
 	;
 	
 	private final int parameterCount;

@@ -95,57 +95,6 @@ public enum FileIOFunctions implements ScriptFunctionType
 		}
 	},
 
-	FCLOSE(1)
-	{
-		@Override
-		protected Usage usage()
-		{
-			return ScriptFunctionUsage.create()
-				.instructions(
-					"Attempts to close an open file handle. " +
-					"On successful close, it is unregistered as an open resource."
-				)
-				.parameter("rafile", 
-					type(Type.OBJECTREF, "RandomAccessFile", "An open file handle.")
-				)
-				.returns(
-					type(Type.BOOLEAN, "True, if the file was closed."),
-					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "IOError", "If the file could not be closed for some reason.")
-				)
-			;
-		}
-		
-		@Override
-		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
-		{
-			ScriptValue temp = CACHEVALUE1.get();
-			try
-			{
-				scriptInstance.popStackValue(temp);
-				if (!temp.isObjectRef(RandomAccessFile.class))
-				{
-					returnValue.setError("BadParameter", "First parameter is not an open file handle.");
-					return true;
-				}
-				
-				try {
-					RandomAccessFile raf = temp.asObjectType(RandomAccessFile.class);
-					raf.close();
-					returnValue.set(true);
-					scriptInstance.unregisterCloseable(raf);
-				} catch (IOException e) {
-					returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());
-				}
-				return true;
-			}
-			finally
-			{
-				temp.setNull();
-			}
-		}
-	},
-
 	FGETLEN(1)
 	{
 		@Override

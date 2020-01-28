@@ -723,6 +723,8 @@ public enum FileFunctions implements ScriptFunctionType
 		}
 	},
 
+	// TODO: Add MKDIR, MKDIRS.
+	
 	;
 	
 	private final int parameterCount;

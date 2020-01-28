@@ -14,6 +14,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.ByteOrder;
 import java.util.Collection;
 import java.util.Comparator;
 
@@ -756,4 +757,326 @@ public final class Utils
 		return getFileExtension(file.getName(), extensionSeparator);
 	}
 
+	/**
+	 * Puts a short into an array.
+	 * Writes 2 bytes.
+	 * @param value the value to convert.
+	 * @param order the byte ordering.
+	 * @param data the output array.
+	 * @param offset the offset into the array to write.
+	 */
+	public static void putShort(short value, ByteOrder order, byte[] data, int offset)
+	{
+		if (order == ByteOrder.LITTLE_ENDIAN)
+		{
+			data[offset] =     (byte)((value & 0x000ff));
+			data[offset + 1] = (byte)((value & 0x0ff00) >> 8);
+		}
+		else // BIG_ENDIAN
+		{
+			data[offset] =     (byte)((value & 0x0ff00) >> 8);
+			data[offset + 1] = (byte)((value & 0x000ff));
+		}
+	}
+	
+	/**
+	 * Gets a short from an array.
+	 * Reads 2 bytes.
+	 * @param order the byte ordering.
+	 * @param data the input array.
+	 * @param offset the offset into the array to read.
+	 * @return the resultant short.
+	 */
+	public static short getShort(ByteOrder order, byte[] data, int offset)
+	{
+		short out = 0;
+		if (order == ByteOrder.LITTLE_ENDIAN)
+		{
+			out |= (data[offset]     & 0x0ff);
+			out |= (data[offset + 1] & 0x0ff) << 8;
+		}
+		else // BIG_ENDIAN
+		{
+			out |= (data[offset]     & 0x0ff) << 8;
+			out |= (data[offset + 1] & 0x0ff);
+		}
+		return out;
+	}
+	
+	/**
+	 * Puts an unsigned short into an array.
+	 * Writes 2 bytes.
+	 * @param value the value to convert.
+	 * @param order the byte ordering.
+	 * @param data the output array.
+	 * @param offset the offset into the array to write.
+	 */
+	public static void putUnsignedShort(int value, ByteOrder order, byte[] data, int offset)
+	{
+		if (order == ByteOrder.LITTLE_ENDIAN)
+		{
+			data[offset] =     (byte)((value & 0x000ff));
+			data[offset + 1] = (byte)((value & 0x0ff00) >> 8);
+		}
+		else // BIG_ENDIAN
+		{
+			data[offset] =     (byte)((value & 0x0ff00) >> 8);
+			data[offset + 1] = (byte)((value & 0x000ff));
+		}
+	}
+	
+	/**
+	 * Gets an unsigned short from an array.
+	 * Reads 2 bytes.
+	 * @param order the byte ordering.
+	 * @param data the input array.
+	 * @param offset the offset into the array to read.
+	 * @return the resultant short.
+	 */
+	public static int getUnsignedShort(ByteOrder order, byte[] data, int offset)
+	{
+		int out = 0;
+		if (order == ByteOrder.LITTLE_ENDIAN)
+		{
+			out |= (data[offset]     & 0x0ff);
+			out |= (data[offset + 1] & 0x0ff) << 8;
+		}
+		else // BIG_ENDIAN
+		{
+			out |= (data[offset]     & 0x0ff) << 8;
+			out |= (data[offset + 1] & 0x0ff);
+		}
+		return out;
+	}
+	
+	/**
+	 * Puts an integer into an array.
+	 * Writes 4 bytes.
+	 * @param value the value to convert.
+	 * @param order the byte ordering.
+	 * @param data the output array.
+	 * @param offset the offset into the array to write.
+	 */
+	public static void putInteger(int value, ByteOrder order, byte[] data, int offset)
+	{
+		if (order == ByteOrder.LITTLE_ENDIAN)
+		{
+			data[offset] =     (byte)((value & 0x000000ff));
+			data[offset + 1] = (byte)((value & 0x0000ff00) >> 8);
+			data[offset + 2] = (byte)((value & 0x00ff0000) >> 16);
+			data[offset + 3] = (byte)((value & 0xff000000) >> 24);
+		}
+		else // BIG_ENDIAN
+		{
+			data[offset] =     (byte)((value & 0xff000000) >> 24);
+			data[offset + 1] = (byte)((value & 0x00ff0000) >> 16);
+			data[offset + 2] = (byte)((value & 0x0000ff00) >> 8);
+			data[offset + 3] = (byte)((value & 0x000000ff));
+		}
+	}
+	
+	/**
+	 * Gets an integer from an array.
+	 * Reads 4 bytes.
+	 * @param order the byte ordering.
+	 * @param data the input array.
+	 * @param offset the offset into the array to read.
+	 * @return the resultant integer.
+	 */
+	public static int getInteger(ByteOrder order, byte[] data, int offset)
+	{
+		int out = 0;
+		if (order == ByteOrder.LITTLE_ENDIAN)
+		{
+			out |= (data[offset]     & 0x0ff);
+			out |= (data[offset + 1] & 0x0ff) << 8;
+			out |= (data[offset + 2] & 0x0ff) << 16;
+			out |= (data[offset + 3] & 0x0ff) << 24;
+		}
+		else // BIG_ENDIAN
+		{
+			out |= (data[offset]     & 0x0ff) << 24;
+			out |= (data[offset + 1] & 0x0ff) << 16;
+			out |= (data[offset + 2] & 0x0ff) << 8;
+			out |= (data[offset + 3] & 0x0ff);
+		}
+		return out;
+	}
+	
+	/**
+	 * Puts an unsigned integer into an array.
+	 * Writes 4 bytes.
+	 * @param value the value to convert.
+	 * @param order the byte ordering.
+	 * @param data the output array.
+	 * @param offset the offset into the array to write.
+	 */
+	public static void putUnsignedInteger(long value, ByteOrder order, byte[] data, int offset)
+	{
+		if (order == ByteOrder.LITTLE_ENDIAN)
+		{
+			data[offset] =     (byte)((value & 0x0000000ffL));
+			data[offset + 1] = (byte)((value & 0x00000ff00L) >> 8);
+			data[offset + 2] = (byte)((value & 0x000ff0000L) >> 16);
+			data[offset + 3] = (byte)((value & 0x0ff000000L) >> 24);
+		}
+		else // BIG_ENDIAN
+		{
+			data[offset] =     (byte)((value & 0x0ff000000L) >> 24);
+			data[offset + 1] = (byte)((value & 0x000ff0000L) >> 16);
+			data[offset + 2] = (byte)((value & 0x00000ff00L) >> 8);
+			data[offset + 3] = (byte)((value & 0x0000000ffL));
+		}
+	}
+	
+	/**
+	 * Gets an unsigned integer from an array.
+	 * Reads 4 bytes.
+	 * @param order the byte ordering.
+	 * @param data the input array.
+	 * @param offset the offset into the array to read.
+	 * @return the resultant integer.
+	 */
+	public static long getUnsignedInteger(ByteOrder order, byte[] data, int offset)
+	{
+		long out = 0L;
+		if (order == ByteOrder.LITTLE_ENDIAN)
+		{
+			out |= (data[offset]     & 0x0ffL);
+			out |= (data[offset + 1] & 0x0ffL) << 8;
+			out |= (data[offset + 2] & 0x0ffL) << 16;
+			out |= (data[offset + 3] & 0x0ffL) << 24;
+		}
+		else // BIG_ENDIAN
+		{
+			out |= (data[offset]     & 0x0ffL) << 24;
+			out |= (data[offset + 1] & 0x0ffL) << 16;
+			out |= (data[offset + 2] & 0x0ffL) << 8;
+			out |= (data[offset + 3] & 0x0ffL);
+		}
+		return out;
+	}
+	
+	/**
+	 * Puts a floating-point number into an array.
+	 * Writes 4 bytes.
+	 * @param value the value to convert.
+	 * @param order the byte ordering.
+	 * @param data the output array.
+	 * @param offset the offset into the array to write.
+	 */
+	public static void putFloat(float value, ByteOrder order, byte[] data, int offset)
+	{
+		putInteger(Float.floatToRawIntBits(value), order, data, offset);
+	}
+	
+	/**
+	 * Gets a floating-point number from an array.
+	 * Reads 4 bytes.
+	 * @param order the byte ordering.
+	 * @param data the input array.
+	 * @param offset the offset into the array to read.
+	 * @return the resultant float.
+	 */
+	public static float getFloat(ByteOrder order, byte[] data, int offset)
+	{
+		return Float.intBitsToFloat(getInteger(order, data, offset));
+	}
+	
+	/**
+	 * Puts a long integer into an array.
+	 * Writes 8 bytes.
+	 * @param value the value to convert.
+	 * @param order the byte ordering.
+	 * @param data the output array.
+	 * @param offset the offset into the array to write.
+	 */
+	public static void putLong(long value, ByteOrder order, byte[] data, int offset)
+	{
+		if (order == ByteOrder.LITTLE_ENDIAN)
+		{
+			data[offset] =     (byte)((value & 0x00000000000000ffL));
+			data[offset + 1] = (byte)((value & 0x000000000000ff00L) >> 8);
+			data[offset + 2] = (byte)((value & 0x0000000000ff0000L) >> 16);
+			data[offset + 3] = (byte)((value & 0x00000000ff000000L) >> 24);
+			data[offset + 4] = (byte)((value & 0x000000ff00000000L) >> 32);
+			data[offset + 5] = (byte)((value & 0x0000ff0000000000L) >> 40);
+			data[offset + 6] = (byte)((value & 0x00ff000000000000L) >> 48);
+			data[offset + 7] = (byte)((value & 0xff00000000000000L) >> 56);
+		}
+		else // BIG_ENDIAN
+		{
+			data[offset] =     (byte)((value & 0xff00000000000000L) >> 56);
+			data[offset + 1] = (byte)((value & 0x00ff000000000000L) >> 48);
+			data[offset + 2] = (byte)((value & 0x0000ff0000000000L) >> 40);
+			data[offset + 3] = (byte)((value & 0x000000ff00000000L) >> 32);
+			data[offset + 4] = (byte)((value & 0x00000000ff000000L) >> 24);
+			data[offset + 5] = (byte)((value & 0x0000000000ff0000L) >> 16);
+			data[offset + 6] = (byte)((value & 0x000000000000ff00L) >> 8);
+			data[offset + 7] = (byte)((value & 0x00000000000000ffL));
+		}
+	}
+	
+	/**
+	 * Gets a long integer from an array.
+	 * Reads 8 bytes.
+	 * @param order the byte ordering.
+	 * @param data the input array.
+	 * @param offset the offset into the array to read.
+	 * @return the resultant integer.
+	 */
+	public static long getLong(ByteOrder order, byte[] data, int offset)
+	{
+		long out = 0;
+		if (order == ByteOrder.LITTLE_ENDIAN)
+		{
+			out |= (data[offset]     & 0x0ffL);
+			out |= (data[offset + 1] & 0x0ffL) << 8;
+			out |= (data[offset + 2] & 0x0ffL) << 16;
+			out |= (data[offset + 3] & 0x0ffL) << 24;
+			out |= (data[offset + 4] & 0x0ffL) << 32;
+			out |= (data[offset + 5] & 0x0ffL) << 40;
+			out |= (data[offset + 6] & 0x0ffL) << 48;
+			out |= (data[offset + 7] & 0x0ffL) << 56;
+		}
+		else // BIG_ENDIAN
+		{
+			out |= (data[offset]     & 0x0ffL) << 56;
+			out |= (data[offset + 1] & 0x0ffL) << 48;
+			out |= (data[offset + 2] & 0x0ffL) << 40;
+			out |= (data[offset + 3] & 0x0ffL) << 32;
+			out |= (data[offset + 4] & 0x0ffL) << 24;
+			out |= (data[offset + 5] & 0x0ffL) << 16;
+			out |= (data[offset + 6] & 0x0ffL) << 8;
+			out |= (data[offset + 7] & 0x0ffL);
+		}
+		return out;
+	}
+	
+	/**
+	 * Puts a double floating-point number into an array.
+	 * Writes 8 bytes.
+	 * @param value the value to convert.
+	 * @param order the byte ordering.
+	 * @param data the output array.
+	 * @param offset the offset into the array to write.
+	 */
+	public static void putDouble(float value, ByteOrder order, byte[] data, int offset)
+	{
+		putLong(Double.doubleToRawLongBits(value), order, data, offset);
+	}
+	
+	/**
+	 * Gets a double floating-point number from an array.
+	 * Reads 8 bytes.
+	 * @param order the byte ordering.
+	 * @param data the input array.
+	 * @param offset the offset into the array to read.
+	 * @return the resultant float.
+	 */
+	public static double getDouble(ByteOrder order, byte[] data, int offset)
+	{
+		return Double.longBitsToDouble(getLong(order, data, offset));
+	}
+	
 }

@@ -2898,16 +2898,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public void putShort(Integer index, short value)
 		{
 			int i = index != null ? index : position;
-			if (order == ByteOrder.LITTLE_ENDIAN)
-			{
-				data[i + 0] = (byte)((value & 0x000ff) >> 0);
-				data[i + 1] = (byte)((value & 0x0ff00) >> 8);
-			}
-			else // BIG_ENDIAN
-			{
-				data[i + 0] = (byte)((value & 0x0ff00) >> 8);
-				data[i + 1] = (byte)((value & 0x000ff) >> 0);
-			}
+			Utils.putShort(value, order, data, i);
 			if (index == null)
 				position += 2;
 		}
@@ -2923,17 +2914,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public short getShort(Integer index)
 		{
 			int i = index != null ? index : position;
-			short out = 0;
-			if (order == ByteOrder.LITTLE_ENDIAN)
-			{
-				out |= (data[i + 0] & 0x0ff) << 0;
-				out |= (data[i + 1] & 0x0ff) << 8;
-			}
-			else // BIG_ENDIAN
-			{
-				out |= (data[i + 0] & 0x0ff) << 8;
-				out |= (data[i + 1] & 0x0ff) << 0;
-			}
+			short out = Utils.getShort(order, data, i);
 			if (index == null)
 				position += 2;
 			return out;
@@ -2950,16 +2931,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public void putUnsignedShort(Integer index, int value)
 		{
 			int i = index != null ? index : position;
-			if (order == ByteOrder.LITTLE_ENDIAN)
-			{
-				data[i + 0] = (byte)((value & 0x000ff) >> 0);
-				data[i + 1] = (byte)((value & 0x0ff00) >> 8);
-			}
-			else // BIG_ENDIAN
-			{
-				data[i + 0] = (byte)((value & 0x0ff00) >> 8);
-				data[i + 1] = (byte)((value & 0x000ff) >> 0);
-			}
+			Utils.putUnsignedShort(value, order, data, i);
 			if (index == null)
 				position += 2;
 		}
@@ -2975,17 +2947,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public int getUnsignedShort(Integer index)
 		{
 			int i = index != null ? index : position;
-			int out = 0;
-			if (order == ByteOrder.LITTLE_ENDIAN)
-			{
-				out |= (data[i + 0] & 0x0ff) << 0;
-				out |= (data[i + 1] & 0x0ff) << 8;
-			}
-			else // BIG_ENDIAN
-			{
-				out |= (data[i + 0] & 0x0ff) << 8;
-				out |= (data[i + 1] & 0x0ff) << 0;
-			}
+			int out = Utils.getUnsignedShort(order, data, i);
 			if (index == null)
 				position += 2;
 			return out;
@@ -3002,20 +2964,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public void putInteger(Integer index, int value)
 		{
 			int i = index != null ? index : position;
-			if (order == ByteOrder.LITTLE_ENDIAN)
-			{
-				data[i + 0] = (byte)((value & 0x000000ff) >> 0);
-				data[i + 1] = (byte)((value & 0x0000ff00) >> 8);
-				data[i + 2] = (byte)((value & 0x00ff0000) >> 16);
-				data[i + 3] = (byte)((value & 0xff000000) >> 24);
-			}
-			else // BIG_ENDIAN
-			{
-				data[i + 0] = (byte)((value & 0xff000000) >> 24);
-				data[i + 1] = (byte)((value & 0x00ff0000) >> 16);
-				data[i + 2] = (byte)((value & 0x0000ff00) >> 8);
-				data[i + 3] = (byte)((value & 0x000000ff) >> 0);
-			}
+			Utils.putInteger(value, order, data, i);
 			if (index == null)
 				position += 4;
 		}
@@ -3031,21 +2980,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public int getInteger(Integer index)
 		{
 			int i = index != null ? index : position;
-			int out = 0;
-			if (order == ByteOrder.LITTLE_ENDIAN)
-			{
-				out |= (data[i + 0] & 0x0ff) << 0;
-				out |= (data[i + 1] & 0x0ff) << 8;
-				out |= (data[i + 2] & 0x0ff) << 16;
-				out |= (data[i + 3] & 0x0ff) << 24;
-			}
-			else // BIG_ENDIAN
-			{
-				out |= (data[i + 0] & 0x0ff) << 24;
-				out |= (data[i + 1] & 0x0ff) << 16;
-				out |= (data[i + 2] & 0x0ff) << 8;
-				out |= (data[i + 3] & 0x0ff) << 0;
-			}
+			int out = Utils.getInteger(order, data, i);
 			if (index == null)
 				position += 4;
 			return out;
@@ -3062,20 +2997,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public void putUnsignedInteger(Integer index, long value)
 		{
 			int i = index != null ? index : position;
-			if (order == ByteOrder.LITTLE_ENDIAN)
-			{
-				data[i + 0] = (byte)((value & 0x0000000ffL) >> 0);
-				data[i + 1] = (byte)((value & 0x00000ff00L) >> 8);
-				data[i + 2] = (byte)((value & 0x000ff0000L) >> 16);
-				data[i + 3] = (byte)((value & 0x0ff000000L) >> 24);
-			}
-			else // BIG_ENDIAN
-			{
-				data[i + 0] = (byte)((value & 0x0ff000000L) >> 24);
-				data[i + 1] = (byte)((value & 0x000ff0000L) >> 16);
-				data[i + 2] = (byte)((value & 0x00000ff00L) >> 8);
-				data[i + 3] = (byte)((value & 0x0000000ffL) >> 0);
-			}
+			Utils.putUnsignedInteger(value, order, data, i);
 			if (index == null)
 				position += 4;
 		}
@@ -3091,21 +3013,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public long getUnsignedInteger(Integer index)
 		{
 			int i = index != null ? index : position;
-			long out = 0L;
-			if (order == ByteOrder.LITTLE_ENDIAN)
-			{
-				out |= (data[i + 0] & 0x0ffL) << 0;
-				out |= (data[i + 1] & 0x0ffL) << 8;
-				out |= (data[i + 2] & 0x0ffL) << 16;
-				out |= (data[i + 3] & 0x0ffL) << 24;
-			}
-			else // BIG_ENDIAN
-			{
-				out |= (data[i + 0] & 0x0ffL) << 24;
-				out |= (data[i + 1] & 0x0ffL) << 16;
-				out |= (data[i + 2] & 0x0ffL) << 8;
-				out |= (data[i + 3] & 0x0ffL) << 0;
-			}
+			long out = Utils.getUnsignedInteger(order, data, i);
 			if (index == null)
 				position += 4;
 			return out;
@@ -3148,28 +3056,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public void putLong(Integer index, long value)
 		{
 			int i = index != null ? index : position;
-			if (order == ByteOrder.LITTLE_ENDIAN)
-			{
-				data[i + 0] = (byte)((value & 0x00000000000000ffL) >> 0);
-				data[i + 1] = (byte)((value & 0x000000000000ff00L) >> 8);
-				data[i + 2] = (byte)((value & 0x0000000000ff0000L) >> 16);
-				data[i + 3] = (byte)((value & 0x00000000ff000000L) >> 24);
-				data[i + 4] = (byte)((value & 0x000000ff00000000L) >> 32);
-				data[i + 5] = (byte)((value & 0x0000ff0000000000L) >> 40);
-				data[i + 6] = (byte)((value & 0x00ff000000000000L) >> 48);
-				data[i + 7] = (byte)((value & 0xff00000000000000L) >> 56);
-			}
-			else // BIG_ENDIAN
-			{
-				data[i + 0] = (byte)((value & 0xff00000000000000L) >> 56);
-				data[i + 1] = (byte)((value & 0x00ff000000000000L) >> 48);
-				data[i + 2] = (byte)((value & 0x0000ff0000000000L) >> 40);
-				data[i + 3] = (byte)((value & 0x000000ff00000000L) >> 32);
-				data[i + 4] = (byte)((value & 0x00000000ff000000L) >> 24);
-				data[i + 5] = (byte)((value & 0x0000000000ff0000L) >> 16);
-				data[i + 6] = (byte)((value & 0x000000000000ff00L) >> 8);
-				data[i + 7] = (byte)((value & 0x00000000000000ffL) >> 0);
-			}
+			Utils.putLong(value, order, data, i);
 			if (index == null)
 				position += 8;
 		}
@@ -3185,29 +3072,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		public long getLong(Integer index)
 		{
 			int i = index != null ? index : position;
-			long out = 0;
-			if (order == ByteOrder.LITTLE_ENDIAN)
-			{
-				out |= (data[i + 0] & 0x0ffL) << 0;
-				out |= (data[i + 1] & 0x0ffL) << 8;
-				out |= (data[i + 2] & 0x0ffL) << 16;
-				out |= (data[i + 3] & 0x0ffL) << 24;
-				out |= (data[i + 4] & 0x0ffL) << 32;
-				out |= (data[i + 5] & 0x0ffL) << 40;
-				out |= (data[i + 6] & 0x0ffL) << 48;
-				out |= (data[i + 7] & 0x0ffL) << 56;
-			}
-			else // BIG_ENDIAN
-			{
-				out |= (data[i + 0] & 0x0ffL) << 56;
-				out |= (data[i + 1] & 0x0ffL) << 48;
-				out |= (data[i + 2] & 0x0ffL) << 40;
-				out |= (data[i + 3] & 0x0ffL) << 32;
-				out |= (data[i + 4] & 0x0ffL) << 24;
-				out |= (data[i + 5] & 0x0ffL) << 16;
-				out |= (data[i + 6] & 0x0ffL) << 8;
-				out |= (data[i + 7] & 0x0ffL) << 0;
-			}
+			long out = Utils.getLong(order, data, i);
 			if (index == null)
 				position += 8;
 			return out;

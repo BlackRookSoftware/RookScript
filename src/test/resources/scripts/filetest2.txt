@@ -10,7 +10,7 @@ entry main()
 	f = fopen("build.xml", "r");
 	println(fgetlen(f));
 	println(fgetpos(f));
-	fclose(f);
+	close(f);
 	
 	f = fopen("newfile.bin", "rw");
 	println(fwrite(f, buf));
@@ -30,7 +30,7 @@ entry main()
 	bufsetpos(buf);
 	println(fread(f, buf));
 	println(buf);
-	fclose(f);
+	close(f);
 	
 	println(filerename("newfile.bin", "newname.bin"));
 	println(filedelete("newname.bin"));
