@@ -15,6 +15,7 @@ import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.RegexFunctions;
 import com.blackrook.rookscript.functions.CommonFunctions;
+import com.blackrook.rookscript.functions.DateFunctions;
 import com.blackrook.rookscript.functions.FileFunctions;
 import com.blackrook.rookscript.functions.FileIOFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
@@ -74,6 +75,7 @@ public class ScriptTest
 				.andFunctionResolver(RegexFunctions.createResolver())
 				.andFunctionResolver(FileFunctions.createResolver())
 				.andFunctionResolver(FileIOFunctions.createResolver())
+				.andFunctionResolver(DateFunctions.createResolver())
 			.withScriptStack(16, 512)
 			.withScope("script", new DefaultVariableResolver())
 			.createInstance();

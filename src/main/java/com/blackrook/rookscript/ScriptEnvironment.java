@@ -9,7 +9,6 @@ package com.blackrook.rookscript;
 
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.BufferedInputStream;
 import java.io.IOException;
 
 /**
@@ -26,14 +25,14 @@ public class ScriptEnvironment
 	/** Standard error. */
 	private PrintStream standardErr;
 	/** Standard in. */
-	private BufferedInputStream standardIn;
+	private InputStream standardIn;
 
 	private ScriptEnvironment(Object hostInterface, PrintStream standardOut, PrintStream standardErr, InputStream standardIn)
 	{
 		this.hostInterface = hostInterface;
 		this.standardOut = standardOut;
 		this.standardErr = standardErr;
-		this.standardIn = new BufferedInputStream(standardIn);
+		this.standardIn = standardIn;
 	}
 	
 	/**
@@ -167,6 +166,30 @@ public class ScriptEnvironment
 		if (standardIn != null)
 			return standardIn.read(buffer, offset, len);
 		return -1;
+	}
+	
+	/**
+	 * @return the bound standard in stream.
+	 */
+	public InputStream getStandardIn() 
+	{
+		return standardIn;
+	}
+	
+	/**
+	 * @return the bound standard out stream.
+	 */
+	public PrintStream getStandardOut() 
+	{
+		return standardOut;
+	}
+	
+	/**
+	 * @return the bound standard error stream.
+	 */
+	public PrintStream getStandardErr() 
+	{
+		return standardErr;
 	}
 	
 }

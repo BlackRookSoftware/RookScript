@@ -621,6 +621,18 @@ public class ScriptInstance
 	}
 	
 	/**
+	 * Checks if a closeable resource is registered on this instance.
+	 * @param closeable the closeable to look for.
+	 * @return true if it is, false if it isn't.
+	 */
+	public boolean closeableIsRegistered(AutoCloseable closeable)
+	{
+		if (closeables == null)
+			return false;
+		return closeables.contains(closeable);
+	}
+	
+	/**
 	 * Unregisters a resource that should be closed when this instance terminates.
 	 * Function calls that close resources should call this.
 	 * @param closeable the closeable to remove from the instance registry.

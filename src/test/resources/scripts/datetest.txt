@@ -1,0 +1,7 @@
+#!/usr/bin/env rookscript -i
+
+entry main()
+{
+	println("The current time is: " + dateformat("yyyy-MM-dd hh:mm:ss.SSS a Z", date()));
+	println("The Epoch is: " + dateformat("yyyy-MM-dd hh:mm:ss.SSS a Z", 0));
+}

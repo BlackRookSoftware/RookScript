@@ -58,41 +58,6 @@ public enum StandardIOFunctions implements ScriptFunctionType
 		}
 	},
 
-	PRINTERR(1)
-	{
-		@Override
-		protected Usage usage()
-		{
-			return ScriptFunctionUsage.create()
-				.instructions(
-					"Prints something to standard error."
-				)
-				.parameter("message", 
-					type(Type.STRING, "Value to print.")
-				)
-				.returns(
-					type(Type.NULL, "Returns nothing.")
-				)
-			;
-		}
-		
-		@Override
-		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
-		{
-			ScriptValue temp = CACHEVALUE1.get();
-			try
-			{
-				scriptInstance.popStackValue(temp);
-				scriptInstance.getEnvironment().printErr(temp.asString());
-				return true;
-			}
-			finally
-			{
-				temp.setNull();
-			}
-		}
-	},
-
 	PRINTLN(1)
 	{
 		@Override
@@ -120,6 +85,41 @@ public enum StandardIOFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				scriptInstance.getEnvironment().print(temp.asString());
 				scriptInstance.getEnvironment().print('\n');
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	}, 
+	
+	PRINTERR(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Prints something to standard error."
+				)
+				.parameter("message", 
+					type(Type.STRING, "Value to print.")
+				)
+				.returns(
+					type(Type.NULL, "Returns nothing.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				scriptInstance.getEnvironment().printErr(temp.asString());
 				return true;
 			}
 			finally
