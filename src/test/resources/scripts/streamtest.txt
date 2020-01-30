@@ -1,0 +1,14 @@
+entry main()
+{
+	csr = sifopen("build.xml")->csropen();
+	
+	println(csr->csread(32));
+	println(csr->csread(32));
+	println(csr->csread(32));
+	println(csr->csread(32));
+	println(csr->csread(32));
+	println(csr->csread(32));
+	println(csr->csread(32));
+	
+	close(csr);
+}

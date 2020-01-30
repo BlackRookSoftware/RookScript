@@ -1360,6 +1360,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 			case OBJECTREF:
 			case LIST:
 			case MAP:
+			case BUFFER:
 			case ERROR:
 				return ref != null; 
 		}
@@ -1571,6 +1572,8 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 				return "integer";
 			case STRING:
 				return "string";
+			case BUFFER:
+				return "buffer";
 			case LIST:
 				return "list";
 			case MAP:

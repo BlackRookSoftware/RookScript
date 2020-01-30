@@ -1843,7 +1843,7 @@ public class ScriptParser extends Lexer.Parser
 	{
 		int parsed = 0;
 		if (currentType(ScriptKernel.TYPE_RPAREN))
-			return 0;
+			return parsed;
 		while (paramCount-- > 0)
 		{
 			if (!parseExpression(currentScript))
@@ -1868,6 +1868,8 @@ public class ScriptParser extends Lexer.Parser
 	{
 		int paramCount = functionType.getParameterCount() - (partial ? 1 : 0);
 		int parsed = partial ? 1 : 0;
+		if (currentType(ScriptKernel.TYPE_RPAREN))
+			return parsed;
 		while (paramCount-- > 0)
 		{
 			if (!parseExpression(currentScript))

@@ -1683,7 +1683,7 @@ public enum BufferFunctions implements ScriptFunctionType
 					type(Type.STRING, "The string to write.")
 				)
 				.parameter("encoding", 
-					type(Type.NULL, "Use UTF-8."),
+					type(Type.NULL, "Use native encoding."),
 					type(Type.STRING, "The name of the encoding to use.")
 				)
 				.parameter("index", 
@@ -1708,7 +1708,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				Integer index = temp.isNull() ? null : temp.asInt();
 				scriptInstance.popStackValue(temp);
-				String encodingName = temp.isNull() ? "UTF8": temp.asString();
+				String encodingName = temp.isNull() ? null: temp.asString();
 				scriptInstance.popStackValue(temp);
 				String value = temp.asString();
 				scriptInstance.popStackValue(temp);
@@ -1720,13 +1720,18 @@ public enum BufferFunctions implements ScriptFunctionType
 				}
 				
 				Charset encoding;
-				try {
+				if (encodingName == null)
+					encoding = Charset.defaultCharset();
+				else try {
 					encoding = Charset.forName(encodingName);
-					BufferType buf = temp.asObjectType(BufferType.class);
-					buf.putString(index, encoding, value);
 				} catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
 					returnValue.setError("BadEncoding", e.getMessage(), e.getLocalizedMessage());
 					return true;
+				}
+				
+				try {
+					BufferType buf = temp.asObjectType(BufferType.class);
+					buf.putString(index, encoding, value);
 				} catch (IndexOutOfBoundsException e) {
 					returnValue.setError("OutOfBounds", e.getMessage(), e.getLocalizedMessage());
 					return true;
@@ -1758,7 +1763,7 @@ public enum BufferFunctions implements ScriptFunctionType
 					type(Type.INTEGER, "The amount of bytes to read and decode into a string.")
 				)
 				.parameter("encoding", 
-					type(Type.NULL, "Use UTF-8."),
+					type(Type.NULL, "Use native encoding."),
 					type(Type.STRING, "The name of the encoding to use.")
 				)
 				.parameter("index", 
@@ -1783,7 +1788,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				Integer index = temp.isNull() ? null : temp.asInt();
 				scriptInstance.popStackValue(temp);
-				String encodingName = temp.isNull() ? "UTF8": temp.asString();
+				String encodingName = temp.isNull() ? null : temp.asString();
 				scriptInstance.popStackValue(temp);
 				int length = temp.asInt();
 				scriptInstance.popStackValue(temp);
@@ -1801,8 +1806,16 @@ public enum BufferFunctions implements ScriptFunctionType
 				}
 				
 				Charset encoding;
-				try {
+				if (encodingName == null)
+					encoding = Charset.defaultCharset();
+				else try {
 					encoding = Charset.forName(encodingName);
+				} catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+					returnValue.setError("BadEncoding", e.getMessage(), e.getLocalizedMessage());
+					return true;
+				}
+				
+				try {
 					returnValue.set(temp.asObjectType(BufferType.class).getString(index, encoding, length));
 					return true;
 				} catch (IllegalCharsetNameException | UnsupportedCharsetException e) {

@@ -15,6 +15,7 @@ import com.blackrook.rookscript.functions.RegexFunctions;
 import com.blackrook.rookscript.functions.FileFunctions;
 import com.blackrook.rookscript.functions.FileIOFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
+import com.blackrook.rookscript.functions.StreamFunctions;
 import com.blackrook.rookscript.functions.common.BufferFunctions;
 import com.blackrook.rookscript.functions.common.ErrorFunctions;
 import com.blackrook.rookscript.functions.common.ListFunctions;
@@ -113,6 +114,8 @@ public class ScriptFunctionDescriptorTest
 		printUsages(System.out, FileFunctions.createResolver());
 		printHeader(System.out, "File I/O");
 		printUsages(System.out, FileIOFunctions.createResolver());
+		printHeader(System.out, "Stream I/O");
+		printUsages(System.out, StreamFunctions.createResolver());
 	}
 	
 }
