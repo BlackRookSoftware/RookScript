@@ -1,0 +1,12 @@
+entry main()
+{
+	csr = csropen(stdinopen());
+	csw = cswopen(stdoutopen());
+	
+	line = csreadln(csr);
+	while (line != null)
+	{
+		cswriteln(csw, line)->flush();
+		line = csreadln(csr);
+	}
+}

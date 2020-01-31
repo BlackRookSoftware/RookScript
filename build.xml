@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE project>
 <!-- ====================================================================== 
-     Black Rook RookScript Build File    
-     Matt Tropiano                                                                
+     Black Rook RookScript Build File
+     Matt Tropiano
      ====================================================================== -->
 <project name="build" default="jar">
 

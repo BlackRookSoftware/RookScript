@@ -8,9 +8,9 @@
 package com.blackrook.rookscript.functions.common;
 
 import com.blackrook.rookscript.ScriptInstance;
+import com.blackrook.rookscript.ScriptIteratorType.IteratorPair;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.Type;
-import com.blackrook.rookscript.ScriptValue.IteratorPair;
 import com.blackrook.rookscript.ScriptValue.MapType;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;

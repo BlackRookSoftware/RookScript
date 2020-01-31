@@ -692,7 +692,7 @@ public enum BufferFunctions implements ScriptFunctionType
 					returnValue.set(temp);
 					return true;
 				} catch (IndexOutOfBoundsException e) {
-					returnValue.setError("OutOfBounds", e.getMessage());
+					returnValue.setError("OutOfBounds", e.getMessage(), e.getLocalizedMessage());
 					return true;
 				}
 			}
@@ -1817,9 +1817,6 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				try {
 					returnValue.set(temp.asObjectType(BufferType.class).getString(index, encoding, length));
-					return true;
-				} catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
-					returnValue.setError("BadEncoding", e.getMessage(), e.getLocalizedMessage());
 					return true;
 				} catch (IndexOutOfBoundsException e) {
 					returnValue.setError("OutOfBounds", e.getMessage(), e.getLocalizedMessage());

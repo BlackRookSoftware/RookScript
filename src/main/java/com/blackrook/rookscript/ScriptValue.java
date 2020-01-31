@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.blackrook.rookscript.ScriptIteratorType.IteratorPair;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver;
 import com.blackrook.rookscript.struct.Utils;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
@@ -30,7 +31,7 @@ import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
  * Script value encapsulation.
  * @author Matthew Tropiano
  */
-public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValue.IteratorPair>
+public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPair>
 {
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
@@ -1157,8 +1158,8 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		
 		for (IteratorPair entry : map)
 		{
-			String name = String.valueOf(entry.key).toLowerCase();
-			ScriptValue value = entry.value;
+			String name = String.valueOf(entry.getKey()).toLowerCase();
+			ScriptValue value = entry.getValue();
 
 			FieldInfo fi;
 			MethodInfo mi;
@@ -1738,7 +1739,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public IteratorType iterator()
+	public ScriptIteratorType iterator()
 	{
 		if (isBuffer())
 			return ((BufferType)ref).iterator();
@@ -2485,43 +2486,9 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 	}
 
 	/**
-	 * The interator pair.
-	 */
-	public static class IteratorPair
-	{
-		private ScriptValue key = ScriptValue.create(null);
-		private ScriptValue value = ScriptValue.create(null);
-		
-		public void set(Object key, Object value)
-		{
-			this.key.set(key);
-			this.value.set(value);
-		}
-		
-		public Object getKey() 
-		{
-			return key;
-		}
-		
-		public ScriptValue getValue() 
-		{
-			return value;
-		}
-	}
-
-	/**
-	 * Describes a type that iterates over ScriptValues, generically. 
-	 * The returned {@link IteratorPair}s are RE-USED, and each piece meant to be pushed onto a stack. 
-	 */
-	public interface IteratorType extends Iterator<IteratorPair>
-	{
-		// Nothing - this is for type detection by internal opcodes.
-	}
-
-	/**
 	 * Iterator Type for single values (returns just one element - the value itself with no key).
 	 */
-	private static class ValueIterator implements IteratorType
+	private static class ValueIterator implements ScriptIteratorType
 	{
 		private ScriptValue value;
 		private boolean calledNext;
@@ -2559,7 +2526,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 	 * Iterator Type for OBJECTREFs that return their own iterators.
 	 * This is specifically for other {@link Map} types.
 	 */
-	private static class WrappedMapIterator implements IteratorType
+	private static class WrappedMapIterator implements ScriptIteratorType
 	{
 		private Iterator<Map.Entry<Object, Object>> wrapped;
 		private IteratorPair pair;
@@ -2594,7 +2561,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 	/**
 	 * Iterator Type for OBJECTREFs that return their own iterators.
 	 */
-	private static class WrappedGenericIterator implements IteratorType
+	private static class WrappedGenericIterator implements ScriptIteratorType
 	{
 		private Iterator<?> wrapped;
 		private IteratorPair pair;
@@ -3166,12 +3133,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		}
 
 		@Override
-		public IteratorType iterator()
+		public ScriptIteratorType iterator()
 		{
 			return new BufferTypeIterator();
 		}
 		
-		private class BufferTypeIterator implements IteratorType
+		private class BufferTypeIterator implements ScriptIteratorType
 		{
 			private IteratorPair pair;
 			private int cur;
@@ -3437,7 +3404,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		}
 		
 		@Override
-		public IteratorType iterator()
+		public ScriptIteratorType iterator()
 		{
 			return new ListTypeIterator();
 		}
@@ -3457,7 +3424,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 			return sb.toString();
 		}
 		
-		private class ListTypeIterator implements IteratorType
+		private class ListTypeIterator implements ScriptIteratorType
 		{
 			private IteratorPair pair;
 			private int cur;
@@ -3523,12 +3490,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<ScriptValu
 		}
 		
 		@Override
-		public IteratorType iterator()
+		public ScriptIteratorType iterator()
 		{
 			return new MapTypeIterator();
 		}
 
-		private class MapTypeIterator implements IteratorType
+		private class MapTypeIterator implements ScriptIteratorType
 		{
 			private IteratorPair pair;
 			private int cur;

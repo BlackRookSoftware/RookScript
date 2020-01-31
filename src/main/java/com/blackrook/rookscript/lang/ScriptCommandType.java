@@ -8,9 +8,9 @@
 package com.blackrook.rookscript.lang;
 
 import com.blackrook.rookscript.ScriptInstance;
+import com.blackrook.rookscript.ScriptIteratorType;
+import com.blackrook.rookscript.ScriptIteratorType.IteratorPair;
 import com.blackrook.rookscript.ScriptValue;
-import com.blackrook.rookscript.ScriptValue.IteratorPair;
-import com.blackrook.rookscript.ScriptValue.IteratorType;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
@@ -324,12 +324,12 @@ public enum ScriptCommandType
 	},
 	
 	/**
-	 * Performs a single iteration, expecting an OBJECTREF:IteratorType 
+	 * Performs a single iteration, expecting an OBJECTREF:ScriptIteratorType 
 	 * on the stack top when this is executed.
 	 * 
-	 * If stack top is not OBJECTREF:IteratorType, Exception - script was compiled badly.
-	 * If stack top's IteratorType.hasNext() is null, POP, then JUMP to [label].
-	 * Else, call IteratorType.next(), then push value. If operand1 is true, also push key.
+	 * If stack top is not OBJECTREF:ScriptIteratorType, Exception - script was compiled badly.
+	 * If stack top's ScriptIteratorType.hasNext() is null, POP, then JUMP to [label].
+	 * Else, call ScriptIteratorType.next(), then push value. If operand1 is true, also push key.
 	 *  
 	 * Operand1 is label.
 	 * Operand2 is value/key-value flag.
@@ -345,10 +345,10 @@ public enum ScriptCommandType
 			{
 				scriptInstance.getStackValue(0, sv);
 				
-				if (!sv.isObjectRef(IteratorType.class))
-					throw new ScriptExecutionException("Called ITERATE with stack top that isn't an IteratorType!");
+				if (!sv.isObjectRef(ScriptIteratorType.class))
+					throw new ScriptExecutionException("Called ITERATE with stack top that isn't a ScriptIteratorType!");
 				
-				IteratorType iter = sv.asObjectType(IteratorType.class);
+				ScriptIteratorType iter = sv.asObjectType(ScriptIteratorType.class);
 				if (iter.hasNext())
 				{
 					IteratorPair pair = iter.next();

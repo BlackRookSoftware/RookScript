@@ -1,14 +1,25 @@
 entry main()
 {
-	csr = sifopen("build.xml")->csropen();
+	csr = csropen(sifopen("build.xml"));
+	csw = cswopen(sofopen("build2.xml"));
 	
-	println(csr->csread(32));
-	println(csr->csread(32));
-	println(csr->csread(32));
-	println(csr->csread(32));
-	println(csr->csread(32));
-	println(csr->csread(32));
-	println(csr->csread(32));
-	
+	line = csreadln(csr);
+	while (line != null)
+	{
+		cswriteln(csw, line);
+		line = csreadln(csr);
+	}
 	close(csr);
+	close(csw);
+	
+	csr = csropen(sifopen("build2.xml"));
+	line = csreadln(csr);
+	while (line != null)
+	{
+		println(line);
+		line = csreadln(csr);
+	}
+	close(csr);
+
+	filedelete("build2.xml");
 }
