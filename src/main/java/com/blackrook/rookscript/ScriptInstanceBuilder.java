@@ -78,7 +78,7 @@ public final class ScriptInstanceBuilder
 		this.scopeResolver = new DefaultScopeResolver();
 		this.waitHandler = null;
 		this.environment = null;
-		this.runawayLimit = 0;
+		this.runawayLimit = ScriptInstance.DEFAULT_RUNAWAY_LIMIT;
 	}
 	
 	/**
