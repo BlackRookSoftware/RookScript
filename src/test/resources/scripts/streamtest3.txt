@@ -2,7 +2,7 @@ entry main()
 {
 	sin = sifopen("build.xml");
 	buf = bufnew(278);
-	println(sread(sin, buf, 0));
+	println(read(sin, buf, 0));
 	println(buf);
 	println(bufgetstr(buf, 278));
 	close(sin);

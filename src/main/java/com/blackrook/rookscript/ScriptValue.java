@@ -7,10 +7,10 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.lang.reflect.Array;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
@@ -1749,8 +1749,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			return ((MapType)ref).iterator();
 		else if (isObjectRef(Map.class))
 			return new WrappedMapIterator(((Map<Object, Object>)ref).entrySet().iterator());
+		else if (isObjectRef(ScriptIteratorType.class))
+			return (ScriptIteratorType)ref;
 		else if (isObjectRef(Iterable.class))
 			return new WrappedGenericIterator(((Iterable<Object>)ref).iterator());
+		else if (isObjectRef(Iterator.class))
+			return new WrappedGenericIterator((Iterator<Object>)ref);
 		else
 			return new ValueIterator(this);
 	}
@@ -2670,9 +2674,9 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		 * @throws IOException if a read error occurs.
 		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds the buffer length. 
 		 */
-		public int readBytes(Integer index, InputStream in, int length) throws IOException
+		public int readBytes(Integer index, DataInput in, int length) throws IOException
 		{
-			int out = in.read(data, index != null ? index : position, length);
+			int out = Utils.read(in, data, index != null ? index : position, length);
 			if (index == null && out >= 0)
 				position += out;
 			return out;
@@ -2688,7 +2692,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		 * @throws IOException if a write error occurs.
 		 * @throws IndexOutOfBoundsException if <code>index + length</code> exceeds the buffer length. 
 		 */
-		public int writeBytes(Integer index, OutputStream out, int length) throws IOException
+		public int writeBytes(Integer index, DataOutput out, int length) throws IOException
 		{
 			int p = index != null ? index : position;
 			int amount = Math.max(Math.min(length, data.length - p), 0);
@@ -2698,46 +2702,6 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			return amount;
 		}
 
-		/**
-		 * Reads bytes from an open file handle into this buffer.
-		 * This relies on the file's position to be set to where the read should occur.
-		 * If null is passed in as the index, the buffer's cursor position is advanced by the length.
-		 * @param index the destination index (or null for current position).
-		 * @param file the source buffer.
-		 * @param length the amount of bytes to read.
-		 * @return the amount of bytes actually read. May be less than length (see {@link RandomAccessFile#read(byte[], int, int)}).
-		 * @throws IOException if a read error occurs.
-		 * @throws IndexOutOfBoundsException if <code>index</code> exceeds this buffer's length. 
-		 */
-		public int readBytes(Integer index, RandomAccessFile file, int length) throws IOException
-		{
-			int out = file.read(data, index != null ? index : position, length);
-			if (index == null && out >= 0)
-				position += out;
-			return out;
-		}
-		
-		/**
-		 * Writes bytes from this buffer into an open file handle.
-		 * This relies on the file's position to be set to where the write should occur.
-		 * If null is passed in as the index, the buffer's cursor position is advanced by the amount written.
-		 * @param index the destination index (or null for current position).
-		 * @param file the source buffer.
-		 * @param length the maximum amount of bytes to write.
-		 * @return the amount of bytes actually written. May be less than length.
-		 * @throws IOException if a write error occurs.
-		 * @throws IndexOutOfBoundsException if <code>index</code> exceeds this buffer's length. 
-		 */
-		public int writeBytes(Integer index, RandomAccessFile file, int length) throws IOException
-		{
-			int p = index != null ? index : position;
-			int amount = Math.max(Math.min(length, data.length - p), 0);
-			file.write(data, p, amount);
-			if (index == null)
-				position += amount;
-			return amount;
-		}
-		
 		/**
 		 * Reads bytes from another buffer into this one.
 		 * This relies on the other buffer's position to be set to where the read should occur.
@@ -3602,5 +3566,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		{
 			return localizedMessage;
 		}
+		
+		@Override
+		public String toString() 
+		{
+			return type + ": " + localizedMessage;
+		}
+		
 	}
 }

@@ -7,7 +7,11 @@
  ******************************************************************************/
 package com.blackrook.rookscript.struct;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.EOFException;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -489,6 +493,38 @@ public final class Utils
 	}
 
 	/**
+	 * Reads from an input stream, reading in a consistent set of data
+	 * and writing it to the output stream. The read/write is buffered
+	 * so that it does not bog down the OS's other I/O requests.
+	 * This method finishes when the end of the source stream is reached.
+	 * Note that this may block if the input stream is a type of stream
+	 * that will block if the input stream blocks for additional input.
+	 * This method is thread-safe.
+	 * @param in the input stream to grab data from.
+	 * @param out the output stream to write the data to.
+	 * @param bufferSize the buffer size for the I/O. Must be &gt; 0.
+	 * @param maxLength the maximum amount of bytes to relay, or a value &lt; 0 for no max.
+	 * @return the total amount of bytes relayed.
+	 * @throws IOException if a read or write error occurs.
+	 */
+	public static int relay(DataInput in, DataOutput out, int bufferSize, int maxLength) throws IOException
+	{
+		int total = 0;
+		int buf = 0;
+			
+		byte[] RELAY_BUFFER = new byte[bufferSize];
+		
+		while ((buf = Utils.read(in, RELAY_BUFFER, 0, Math.min(maxLength < 0 ? Integer.MAX_VALUE : maxLength, bufferSize))) > 0)
+		{
+			out.write(RELAY_BUFFER, 0, buf);
+			total += buf;
+			if (maxLength >= 0)
+				maxLength -= buf;
+		}
+		return total;
+	}
+
+	/**
 	 * Attempts to close an {@link AutoCloseable} object.
 	 * If the object is null, this does nothing.
 	 * @param c the reference to the AutoCloseable object.
@@ -764,6 +800,7 @@ public final class Utils
 	 * @param order the byte ordering.
 	 * @param data the output array.
 	 * @param offset the offset into the array to write.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 2</code> exceeds <code>data.length</code>.
 	 */
 	public static void putShort(short value, ByteOrder order, byte[] data, int offset)
 	{
@@ -780,12 +817,57 @@ public final class Utils
 	}
 	
 	/**
+	 * Reads a set of bytes until end-of-stream or file.
+	 * @param input the DataInput to read from.
+	 * @return the byte read (0 - 255), or -1 if end-of-stream/file at time of call.
+	 * @throws IOException if a read error occurs.
+	 */
+	public static int read(DataInput input) throws IOException
+	{
+		int out;
+		try {
+			out = input.readUnsignedByte();
+		} catch (EOFException e) {
+			return -1;
+		}
+		return out;
+	}
+	
+	/**
+	 * Reads a set of bytes until end-of-stream or file.
+	 * @param input the DataInput to read from.
+	 * @param data the recipient array for the byte data.
+	 * @param offset the starting offset into the array to put the bytes.
+	 * @param length the maximum amount of bytes to read.
+	 * @return the amount of bytes read, or -1 if end-of-stream/file at time of call.
+	 * @throws IOException if a read error occurs.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + length</code> breaches the end of the data array.
+	 */
+	public static int read(DataInput input, byte[] data, int offset, int length) throws IOException
+	{
+		int i = offset;
+		int out = 0;
+		while (i < length)
+		{
+			int b = read(input);
+			if (b < 0)
+				break;
+			data[i++] = (byte)b;
+			out++;
+		}
+		if (out == 0)
+			return -1;
+		return out;
+	}
+	
+	/**
 	 * Gets a short from an array.
 	 * Reads 2 bytes.
 	 * @param order the byte ordering.
 	 * @param data the input array.
 	 * @param offset the offset into the array to read.
 	 * @return the resultant short.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 2</code> exceeds <code>data.length</code>.
 	 */
 	public static short getShort(ByteOrder order, byte[] data, int offset)
 	{
@@ -810,6 +892,7 @@ public final class Utils
 	 * @param order the byte ordering.
 	 * @param data the output array.
 	 * @param offset the offset into the array to write.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 2</code> exceeds <code>data.length</code>.
 	 */
 	public static void putUnsignedShort(int value, ByteOrder order, byte[] data, int offset)
 	{
@@ -832,6 +915,7 @@ public final class Utils
 	 * @param data the input array.
 	 * @param offset the offset into the array to read.
 	 * @return the resultant short.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 2</code> exceeds <code>data.length</code>.
 	 */
 	public static int getUnsignedShort(ByteOrder order, byte[] data, int offset)
 	{
@@ -856,6 +940,7 @@ public final class Utils
 	 * @param order the byte ordering.
 	 * @param data the output array.
 	 * @param offset the offset into the array to write.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 4</code> exceeds <code>data.length</code>.
 	 */
 	public static void putInteger(int value, ByteOrder order, byte[] data, int offset)
 	{
@@ -882,6 +967,7 @@ public final class Utils
 	 * @param data the input array.
 	 * @param offset the offset into the array to read.
 	 * @return the resultant integer.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 4</code> exceeds <code>data.length</code>.
 	 */
 	public static int getInteger(ByteOrder order, byte[] data, int offset)
 	{
@@ -910,6 +996,7 @@ public final class Utils
 	 * @param order the byte ordering.
 	 * @param data the output array.
 	 * @param offset the offset into the array to write.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 4</code> exceeds <code>data.length</code>.
 	 */
 	public static void putUnsignedInteger(long value, ByteOrder order, byte[] data, int offset)
 	{
@@ -936,6 +1023,7 @@ public final class Utils
 	 * @param data the input array.
 	 * @param offset the offset into the array to read.
 	 * @return the resultant integer.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 4</code> exceeds <code>data.length</code>.
 	 */
 	public static long getUnsignedInteger(ByteOrder order, byte[] data, int offset)
 	{
@@ -964,6 +1052,7 @@ public final class Utils
 	 * @param order the byte ordering.
 	 * @param data the output array.
 	 * @param offset the offset into the array to write.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 4</code> exceeds <code>data.length</code>.
 	 */
 	public static void putFloat(float value, ByteOrder order, byte[] data, int offset)
 	{
@@ -977,6 +1066,7 @@ public final class Utils
 	 * @param data the input array.
 	 * @param offset the offset into the array to read.
 	 * @return the resultant float.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 4</code> exceeds <code>data.length</code>.
 	 */
 	public static float getFloat(ByteOrder order, byte[] data, int offset)
 	{
@@ -990,6 +1080,7 @@ public final class Utils
 	 * @param order the byte ordering.
 	 * @param data the output array.
 	 * @param offset the offset into the array to write.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 8</code> exceeds <code>data.length</code>.
 	 */
 	public static void putLong(long value, ByteOrder order, byte[] data, int offset)
 	{
@@ -1024,6 +1115,7 @@ public final class Utils
 	 * @param data the input array.
 	 * @param offset the offset into the array to read.
 	 * @return the resultant integer.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 8</code> exceeds <code>data.length</code>.
 	 */
 	public static long getLong(ByteOrder order, byte[] data, int offset)
 	{
@@ -1060,8 +1152,9 @@ public final class Utils
 	 * @param order the byte ordering.
 	 * @param data the output array.
 	 * @param offset the offset into the array to write.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 8</code> exceeds <code>data.length</code>.
 	 */
-	public static void putDouble(float value, ByteOrder order, byte[] data, int offset)
+	public static void putDouble(double value, ByteOrder order, byte[] data, int offset)
 	{
 		putLong(Double.doubleToRawLongBits(value), order, data, offset);
 	}
@@ -1073,6 +1166,7 @@ public final class Utils
 	 * @param data the input array.
 	 * @param offset the offset into the array to read.
 	 * @return the resultant float.
+	 * @throws ArrayIndexOutOfBoundsException if <code>offset + 8</code> exceeds <code>data.length</code>.
 	 */
 	public static double getDouble(ByteOrder order, byte[] data, int offset)
 	{

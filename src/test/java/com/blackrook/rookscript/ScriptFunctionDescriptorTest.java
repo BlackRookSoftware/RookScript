@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.RegexFunctions;
+import com.blackrook.rookscript.functions.DataIOFunctions;
 import com.blackrook.rookscript.functions.FileFunctions;
 import com.blackrook.rookscript.functions.FileIOFunctions;
 import com.blackrook.rookscript.functions.StandardIOFunctions;
@@ -116,6 +117,8 @@ public class ScriptFunctionDescriptorTest
 		printUsages(System.out, FileIOFunctions.createResolver());
 		printHeader(System.out, "Stream I/O");
 		printUsages(System.out, StreamFunctions.createResolver());
+		printHeader(System.out, "Data I/O");
+		printUsages(System.out, DataIOFunctions.createResolver());
 	}
 	
 }

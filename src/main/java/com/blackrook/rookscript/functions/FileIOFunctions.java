@@ -9,7 +9,6 @@ package com.blackrook.rookscript.functions;
 
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
-import com.blackrook.rookscript.ScriptValue.BufferType;
 import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;
@@ -296,212 +295,6 @@ public enum FileIOFunctions implements ScriptFunctionType
 		}
 	},
 
-	FSKIP(2)
-	{
-		@Override
-		protected Usage usage()
-		{
-			return ScriptFunctionUsage.create()
-				.instructions(
-					"Skips reading [length] amount of bytes from an open file, from the file's " +
-					"current cursor position. The file's cursor will be advanced."
-				)
-				.parameter("rafile", 
-					type(Type.OBJECTREF, "RandomAccessFile", "An open file handle.")
-				)
-				.parameter("length",
-					type(Type.NULL, "Use 0."),
-					type(Type.INTEGER, "The amount of bytes to skip.")
-				)
-				.returns(
-					type(Type.INTEGER, "The amount of bytes actually skipped."),
-					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "IOError", "If a read error occurs.")
-				)
-			;
-		}
-		
-		@Override
-		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
-		{
-			ScriptValue temp = CACHEVALUE1.get();
-			try
-			{
-				scriptInstance.popStackValue(temp);
-				int length = temp.asInt();
-				scriptInstance.popStackValue(temp);
-				if (!temp.isObjectRef(RandomAccessFile.class))
-				{
-					returnValue.setError("BadParameter", "First parameter is not an open file handle.");
-					return true;
-				}
-				
-				try {
-					returnValue.set(temp.asObjectType(RandomAccessFile.class).skipBytes(length));
-				} catch (IOException e) {
-					returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());
-				}
-				return true;
-			}
-			finally
-			{
-				temp.setNull();
-			}
-		}
-	},
-
-	FREAD(4)
-	{
-		@Override
-		protected Usage usage()
-		{
-			return ScriptFunctionUsage.create()
-				.instructions(
-					"Reads [length] amount of bytes from an open file, from the file's current " +
-					"cursor position. The file's cursor will be advanced."
-				)
-				.parameter("rafile", 
-					type(Type.OBJECTREF, "RandomAccessFile", "An open file handle.")
-				)
-				.parameter("buffer",
-					type(Type.BUFFER, "The buffer object to read into.")
-				)
-				.parameter("offset",
-					type(Type.NULL, "Use current buffer cursor position (buffer cursor will be advanced)."),
-					type(Type.INTEGER, "The offset into the buffer object to put the bytes (buffer cursor will NOT be advanced).")
-				)
-				.parameter("length",
-					type(Type.NULL, "Use length(buffer) - offset."),
-					type(Type.INTEGER, "The maximum amount of bytes to read.")
-				)
-				.returns(
-					type(Type.INTEGER, "The actual amount of bytes read, or -1 if end-of-file was reached at time of read."),
-					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "IOError", "If a read error occurs.")
-				)
-			;
-		}
-		
-		@Override
-		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
-		{
-			ScriptValue temp = CACHEVALUE1.get();
-			ScriptValue buffer = CACHEVALUE2.get();
-			try
-			{
-				scriptInstance.popStackValue(temp);
-				Integer length = temp.isNull() ? null : temp.asInt();
-				scriptInstance.popStackValue(temp);
-				Integer offset = temp.isNull() ? null : temp.asInt();
-				scriptInstance.popStackValue(buffer);
-				scriptInstance.popStackValue(temp);
-				if (!temp.isObjectRef(RandomAccessFile.class))
-				{
-					returnValue.setError("BadParameter", "First parameter is not an open file handle.");
-					return true;
-				}
-				if (!buffer.isBuffer())
-				{
-					returnValue.setError("BadParameter", "Second parameter is not a buffer.");
-					return true;
-				}
-
-				BufferType buf = buffer.asObjectType(BufferType.class);
-				
-				if (length == null)
-					length = buf.size() - (offset == null ? buf.getPosition() : offset);
-				
-				try {
-					returnValue.set(buf.readBytes(offset, temp.asObjectType(RandomAccessFile.class), length));
-				} catch (IOException e) {
-					returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());
-				}
-				return true;
-			}
-			finally
-			{
-				temp.setNull();
-			}
-		}
-	},
-
-	FWRITE(4)
-	{
-		@Override
-		protected Usage usage()
-		{
-			return ScriptFunctionUsage.create()
-				.instructions(
-					"Writes [length] amount of bytes to the file, from the file's current cursor " +
-					"position using the bytes in a buffer. The file's cursor will be advanced."
-				)
-				.parameter("rafile", 
-					type(Type.OBJECTREF, "RandomAccessFile", "An open file handle.")
-				)
-				.parameter("buffer",
-					type(Type.BUFFER, "The buffer object to read from.")
-				)
-				.parameter("offset",
-					type(Type.NULL, "Use current buffer cursor position (buffer cursor will be advanced)."),
-					type(Type.INTEGER, "The offset into the buffer object to get the bytes to write (buffer cursor will NOT be advanced).")
-				)
-				.parameter("length",
-					type(Type.NULL, "Use length(buffer) - offset."),
-					type(Type.INTEGER, "The maximum amount of bytes to write.")
-				)
-				.returns(
-					type(Type.INTEGER, "The actual amount of bytes written."),
-					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "IOError", "If a write error occurs.")
-				)
-			;
-		}
-		
-		@Override
-		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
-		{
-			ScriptValue temp = CACHEVALUE1.get();
-			ScriptValue buffer = CACHEVALUE2.get();
-			try
-			{
-				scriptInstance.popStackValue(temp);
-				Integer length = temp.isNull() ? null : temp.asInt();
-				scriptInstance.popStackValue(temp);
-				Integer offset = temp.isNull() ? null : temp.asInt();
-				scriptInstance.popStackValue(buffer);
-				scriptInstance.popStackValue(temp);
-				if (!temp.isObjectRef(RandomAccessFile.class))
-				{
-					returnValue.setError("BadParameter", "First parameter is not an open file handle.");
-					return true;
-				}
-				if (!buffer.isBuffer())
-				{
-					returnValue.setError("BadParameter", "Second parameter is not a buffer.");
-					return true;
-				}
-
-				BufferType buf = buffer.asObjectType(BufferType.class);
-				
-				if (length == null)
-					length = buf.size() - (offset == null ? buf.getPosition() : offset);
-				
-				RandomAccessFile file = temp.asObjectType(RandomAccessFile.class);
-				
-				try {
-					returnValue.set(buf.writeBytes(offset, file, length));
-				} catch (IOException e) {
-					returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());
-				}
-				return true;
-			}
-			finally
-			{
-				temp.setNull();
-			}
-		}
-	},
-	
 	;
 	
 	private final int parameterCount;
@@ -551,6 +344,19 @@ public enum FileIOFunctions implements ScriptFunctionType
 			return new File(temp.asString());
 	}
 	
+	/**
+	 * Gets or resizes the byte array for serial reads.
+	 * @param wantedlength the desired length. 
+	 * @return the byte array to use.
+	 */
+	protected byte[] getByteArray(int wantedlength) 
+	{
+		byte[] out = BYTEARRAY.get();
+		if (out.length < wantedlength)
+			BYTEARRAY.set(out = new byte[wantedlength]);
+		return out;
+	}
+	
 	@Override
 	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
 
@@ -558,6 +364,6 @@ public enum FileIOFunctions implements ScriptFunctionType
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
-	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<byte[]> BYTEARRAY = ThreadLocal.withInitial(()->new byte[8]);
 
 }

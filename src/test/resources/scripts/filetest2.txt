@@ -13,22 +13,22 @@ entry main()
 	close(f);
 	
 	f = fopen("newfile.bin", "rw");
-	println(fwrite(f, buf));
+	println(write(f, buf));
 	println(fgetlen(f));
 	fsetlen(f, 1024);
 	println(fgetlen(f));
 	fsetlen(f, 256);
 	println(fgetlen(f));
 	bufsetpos(buf, 0);
-	println(fwrite(f, buf, 192));
+	println(write(f, buf, 192));
 	println(fgetlen(f));
 	bufsetpos(buf, 0);
 	fsetpos(f, 32);
-	println(fread(f, buf));
+	println(read(f, buf));
 	println(buf);
-	fskip(f, 16);
+	skip(f, 16);
 	bufsetpos(buf);
-	println(fread(f, buf));
+	println(read(f, buf));
 	println(buf);
 	close(f);
 	

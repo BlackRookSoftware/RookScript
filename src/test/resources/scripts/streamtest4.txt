@@ -4,26 +4,27 @@ entry main()
 	
 	// Get WAD Info
 	info = {
-		type: sreadstr(sin, 4, "ASCII"),
-		entrycount: sreadint(sin, false),
-		listoffset: sreadint(sin, false)
+		type: readstr(sin, 4, "ASCII"),
+		entrycount: readint(sin, false),
+		listoffset: readint(sin, false)
 	};
 	
+	println(info);
+
 	// Skip to WAD entry list.
-	sskip(sin, info.listoffset - 12);
+	skip(sin, info.listoffset - 12);
 	
 	// Read entries.
 	list = listnew(info.entrycount);
 	for (i = 0; i < info.entrycount; i += 1)
 		list[i] = {
-			offset: sreadint(sin, false),
-			size: sreadint(sin, false),
-			name: strtrim(sreadstr(sin, 8, "ASCII"))
+			offset: readint(sin, false),
+			size: readint(sin, false),
+			name: strtrim(readstr(sin, 8, "ASCII"))
 		};
 	
 	close(sin);
 	
-	println(info);
 	each (k,v : list)
 		println(k + " " + v.name + " " + v.offset + " " + v.size);
 }
