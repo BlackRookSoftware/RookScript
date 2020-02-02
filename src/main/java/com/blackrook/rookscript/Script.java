@@ -46,8 +46,6 @@ public class Script
 	
 	/** Label generator sequencer for generated labels. */
 	private CountMap<String> labelGeneratorCounter;
-	/** Pragma setting - runaway limit. */
-	private int commandRunawayLimit;
 	
 	/**
 	 * Creates a new empty script.
@@ -61,7 +59,6 @@ public class Script
 		this.labelMap = new HashMap<>();
 		this.indexMap = null;
 		this.labelGeneratorCounter = null;
-		this.commandRunawayLimit = 0;
 	}
 	
 	/**
@@ -84,28 +81,6 @@ public class Script
 			this.commands.add(command);
 	}
 
-	/**
-	 * Sets the amount of commands that can be executed in one 
-	 * update before the runaway detection is triggered.
-	 * By default, this is 0, which means no detection.
-	 * @param commandRunawayLimit the amount of commands.
-	 */
-	public void setCommandRunawayLimit(int commandRunawayLimit)
-	{
-		this.commandRunawayLimit = commandRunawayLimit;
-	}
-
-	/**
-	 * Gets the amount of commands that can be executed in one 
-	 * update before the runaway detection is triggered.
-	 * By default, this is 0, which means no detection.
-	 * @return the amount of commands.
-	 */
-	public int getCommandRunawayLimit()
-	{
-		return commandRunawayLimit;
-	}
-	
 	/**
 	 * Creates/sets a command index for a subscript entry name in the script.
 	 * Entry names are case-insensitive.

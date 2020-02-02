@@ -28,7 +28,7 @@ import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 
 /**
- * Script common functions for random-access file I/O.
+ * Script common functions for generic data I/O.
  * @author Matthew Tropiano
  */
 public enum DataIOFunctions implements ScriptFunctionType

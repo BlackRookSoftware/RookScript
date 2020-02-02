@@ -42,6 +42,7 @@ public enum FileIOFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "File", "Path to file. Relative paths are relative to working directory.")
 				)
 				.parameter("mode", 
+					type(Type.NULL, "Use \"r\", read-only mode."),
 					type(Type.STRING, 
 						"Mode string.\n" +
 						"\"r\" = readonly,\n" +
@@ -67,7 +68,7 @@ public enum FileIOFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				String mode = temp.asString();
+				String mode = temp.isNull() ? "r" : temp.asString();
 				File file = popFile(scriptInstance, temp);
 				try {
 					if (file == null)

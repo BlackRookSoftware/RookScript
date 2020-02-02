@@ -1,0 +1,30 @@
+entry main()
+{
+	f = fopen("H:\\Doom\\Iwads\\DOOM2.WAD");
+	
+	// Get WAD Info
+	info = {
+		type: readstr(f, 4, "ASCII"),
+		entrycount: readint(f, false),
+		listoffset: readint(f, false)
+	};
+	
+	println(info);
+
+	// Skip to WAD entry list.
+	skip(f, info.listoffset - 12);
+	
+	// Read entries.
+	list = listnew(info.entrycount);
+	for (i = 0; i < info.entrycount; i += 1)
+		list[i] = {
+			offset: readint(f, false),
+			size: readint(f, false),
+			name: strtrim(readstr(f, 8, "ASCII"))
+		};
+	
+	close(f);
+	
+	each (k,v : list)
+		println(k + " " + v.name + " " + v.offset + " " + v.size);
+}

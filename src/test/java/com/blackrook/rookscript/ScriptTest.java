@@ -84,6 +84,8 @@ public class ScriptTest
 			.withScope("script", new DefaultVariableResolver())
 			.createInstance();
 		
+		instance.setCommandRunawayLimit(1000000);
+		
 		//doDisassemble(instance);
 		doStress(instance, 1);
 	}

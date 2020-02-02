@@ -78,6 +78,8 @@ public class ScriptInstance
 	private ScriptInstanceStack scriptInstanceStack;
 	/** The script's wait handler. */
 	private ScriptWaitHandler waitHandler;
+	/** Pragma setting - runaway limit. */
+	private int commandRunawayLimit;
 
 	// ======================================================================
 	// State
@@ -145,7 +147,8 @@ public class ScriptInstance
 		this.scriptInstanceStack = scriptInstanceStack;
 		this.scopeResolver = scopeResolver;
 		this.waitHandler = waitHandler;
-		
+		this.commandRunawayLimit = 0;
+
 		reset();
 	}
 	
@@ -235,6 +238,28 @@ public class ScriptInstance
 		return scriptInstanceStack;
 	}
 
+	/**
+	 * Sets the amount of commands that can be executed in one 
+	 * update before the runaway detection is triggered.
+	 * By default, this is 0, which means no detection.
+	 * @param commandRunawayLimit the amount of commands.
+	 */
+	public void setCommandRunawayLimit(int commandRunawayLimit)
+	{
+		this.commandRunawayLimit = commandRunawayLimit;
+	}
+
+	/**
+	 * Gets the amount of commands that can be executed in one 
+	 * update before the runaway detection is triggered.
+	 * By default, this is 0, which means no detection.
+	 * @return the amount of commands.
+	 */
+	public int getCommandRunawayLimit()
+	{
+		return commandRunawayLimit;
+	}
+	
 	/**
 	 * Initializes the script with an entry point and parameters and calls {@link #update()} to execute it.
 	 * The return value for the entry point should still be on the stack.
@@ -386,7 +411,7 @@ public class ScriptInstance
 				while (step())
 				{
 					commandsExecuted++;
-					if (script.getCommandRunawayLimit() > 0 && commandsExecuted > script.getCommandRunawayLimit())
+					if (commandRunawayLimit > 0 && commandsExecuted > commandRunawayLimit)
 						throw new ScriptExecutionException("Script runaway triggered. Possible infinite loop. "+commandsExecuted+" commands executed.");
 				}
 				break;
