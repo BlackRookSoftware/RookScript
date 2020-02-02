@@ -95,6 +95,8 @@ public class ScriptFunctionDescriptorTest
 	{
 		printHeader(System.out, "Common");
 		printUsages(System.out, MiscFunctions.createResolver());
+		printHeader(System.out, "Standard I/O");
+		printUsages(System.out, StandardIOFunctions.createResolver());
 		printHeader(System.out, "String");
 		printUsages(System.out, StringFunctions.createResolver());
 		printHeader(System.out, "List / Set");
@@ -107,8 +109,6 @@ public class ScriptFunctionDescriptorTest
 		printUsages(System.out, ErrorFunctions.createResolver());
 		printHeader(System.out, "Math");
 		printUsages(System.out, MathFunctions.createResolver());
-		printHeader(System.out, "Standard I/O");
-		printUsages(System.out, StandardIOFunctions.createResolver());
 		printHeader(System.out, "RegEx");
 		printUsages(System.out, RegexFunctions.createResolver());
 		printHeader(System.out, "Files");
