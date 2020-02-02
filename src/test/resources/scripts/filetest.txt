@@ -21,4 +21,20 @@ entry main()
 
 	each (s : fileparent(p)->filelist())
 		println(s);
+		
+	println(createdir("testjunk"));
+	println(createdir("testjunk/stuff"));
+	println(filedelete("testjunk/stuff"));
+	println(filedelete("testjunk"));
+	
+	println(createdir("testjunk/stuff"));
+	println(createdirs("testjunk/stuff"));
+	println(filedelete("testjunk/stuff"));
+	println(filedelete("testjunk"));
+
+	println(verifydirs("testjunk/stuff"));
+	println(verifydirs("testjunk/stuff"));
+	println(filedelete("testjunk/stuff"));
+	println(filedelete("testjunk"));
+	
 }
