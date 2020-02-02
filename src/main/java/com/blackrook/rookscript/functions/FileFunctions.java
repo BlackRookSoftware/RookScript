@@ -723,8 +723,144 @@ public enum FileFunctions implements ScriptFunctionType
 		}
 	},
 
-	// TODO: Add MKDIR, MKDIRS.
-	
+	CREATEDIR(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Attempts to create a directory using an abstract pathname."
+				)
+				.parameter("path", 
+					type(Type.STRING, "The directory to create."),
+					type(Type.OBJECTREF, "File", "The directory to create.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if and only if the directory did not exist and was created, false if not."),
+					type(Type.ERROR, "Security", "If the OS is preventing the creation.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File dir = popFile(scriptInstance, temp);
+				try {
+					if (dir == null)
+						returnValue.set(false);
+					else
+						returnValue.set(dir.mkdir());
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	CREATEDIRS(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Attempts to create a directory using an abstract pathname and all of directories in between, if they also don't exist. " +
+					"NOTE: A failure may still involve some directories being created!"
+				)
+				.parameter("path", 
+					type(Type.STRING, "The directory or directories to create."),
+					type(Type.OBJECTREF, "File", "The directory or directories to create.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if and only if ALL of the directories did not exist and were created, false if not."),
+					type(Type.ERROR, "Security", "If the OS is preventing the creation.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File dir = popFile(scriptInstance, temp);
+				try {
+					if (dir == null)
+						returnValue.set(false);
+					else
+						returnValue.set(dir.mkdirs());
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	VERIFYDIRS(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Attempts to create a directory using an abstract pathname and all of " +
+					"directories in between, if they also don't exist, OR verify that the directory path that was specified already exists. " +
+					"NOTE: A failure due to path creation may still involve some directories being created!"
+				)
+				.parameter("path", 
+					type(Type.STRING, "The directory or directories to create."),
+					type(Type.OBJECTREF, "File", "The directory or directories to create.")
+				)
+				.returns(
+					type(Type.BOOLEAN, 
+						"True if ALL of the directories did not exist and were created or if " +
+						"the path is a directory and already exists, and false otherwise."
+					),
+					type(Type.ERROR, "Security", "If the OS is preventing the creation.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File dir = popFile(scriptInstance, temp);
+				try {
+					if (dir == null)
+						returnValue.set(false);
+					else
+						returnValue.set((dir.exists() && dir.isDirectory()) || dir.mkdirs());
+				} catch (SecurityException e) {
+					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
 	;
 	
 	private final int parameterCount;
