@@ -21,6 +21,7 @@ public class ScriptInstanceFactory
 {
 	public static final int DEFAULT_ACTIVATION_DEPTH = 16;
 	public static final int DEFAULT_STACK_DEPTH = 512;
+	public static final int DEFAULT_RUNAWAY_LIMIT = 1024 * 1024;
 	
 	/** The script to use for each instance. */
 	private Script script;
@@ -34,6 +35,8 @@ public class ScriptInstanceFactory
 	private ScriptWaitHandler waitHandler;
 	/** The script environment to use for each instance. */
 	private ScriptEnvironment environment;
+	/** The script runaway limit. */
+	private int runawayLimit;
 
 	/** Queue of available stacks. */
 	private final Queue<ScriptInstanceStack> availableStacks;
@@ -47,7 +50,7 @@ public class ScriptInstanceFactory
 	 */
 	public ScriptInstanceFactory(Script script, ScriptEnvironment environment)
 	{
-		this(script, DEFAULT_ACTIVATION_DEPTH, DEFAULT_STACK_DEPTH, ScriptInstance.NO_SCOPES, null, environment);
+		this(script, DEFAULT_ACTIVATION_DEPTH, DEFAULT_STACK_DEPTH, ScriptInstance.NO_SCOPES, null, environment, DEFAULT_RUNAWAY_LIMIT);
 	}
 
 	/**
@@ -59,7 +62,7 @@ public class ScriptInstanceFactory
 	 */
 	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptEnvironment environment)
 	{
-		this(script, activationDepth, stackDepth, ScriptInstance.NO_SCOPES, null, environment);
+		this(script, activationDepth, stackDepth, ScriptInstance.NO_SCOPES, null, environment, DEFAULT_RUNAWAY_LIMIT);
 	}
 	
 	/**
@@ -72,7 +75,21 @@ public class ScriptInstanceFactory
 	 */
 	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptEnvironment environment)
 	{
-		this(script, activationDepth, stackDepth, scopeResolver, null, environment);
+		this(script, activationDepth, stackDepth, scopeResolver, null, environment, DEFAULT_RUNAWAY_LIMIT);
+	}
+	
+	/**
+	 * Creates a new instance factory.
+	 * @param script the script to use for each instance.
+	 * @param activationDepth the activation stack depth for new instances.
+	 * @param stackDepth the value stack depth for new instances.
+	 * @param scopeResolver the scope resolver to use for each instance.
+	 * @param environment the script environment to use for each instance.
+	 * @param runawayLimit the amount of commands to run before the endless loop protection triggers.
+	 */
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptEnvironment environment, int runawayLimit)
+	{
+		this(script, activationDepth, stackDepth, scopeResolver, null, environment, runawayLimit);
 	}
 	
 	/**
@@ -86,12 +103,28 @@ public class ScriptInstanceFactory
 	 */
 	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, ScriptEnvironment environment)
 	{
+		this(script, activationDepth, stackDepth, scopeResolver, waitHandler, environment, DEFAULT_RUNAWAY_LIMIT);
+	}
+	
+	/**
+	 * Creates a new instance factory.
+	 * @param script the script to use for each instance.
+	 * @param activationDepth the activation stack depth for new instances.
+	 * @param stackDepth the value stack depth for new instances.
+	 * @param scopeResolver the scope resolver to use for each instance.
+	 * @param waitHandler the wait handler to use for each instance.
+	 * @param environment the script environment to use for each instance.
+	 * @param runawayLimit the amount of commands to run before the endless loop protection triggers.
+	 */
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, ScriptEnvironment environment, int runawayLimit)
+	{
 		this.script = script;
 		this.activationDepth = activationDepth;
 		this.stackDepth = stackDepth;
 		this.scopeResolver = scopeResolver;
 		this.waitHandler = waitHandler;
 		this.environment = environment;
+		this.runawayLimit = runawayLimit;
 		
 		this.availableStacks = new LinkedList<>();
 	}
@@ -117,7 +150,7 @@ public class ScriptInstanceFactory
 	 */
 	public ScriptInstance create()
 	{
-		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, environment);
+		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, environment, runawayLimit);
 	}
 	
 	/**
@@ -127,7 +160,7 @@ public class ScriptInstanceFactory
 	 */
 	public ScriptInstance create(ScriptEnvironment environment)
 	{
-		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, environment);
+		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, environment, runawayLimit);
 	}
 	
 	/**

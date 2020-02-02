@@ -3570,8 +3570,9 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		@Override
 		public String toString() 
 		{
-			return type + ": " + localizedMessage;
+			return "[" + type + ": " + localizedMessage + "]";
 		}
 		
 	}
+	
 }

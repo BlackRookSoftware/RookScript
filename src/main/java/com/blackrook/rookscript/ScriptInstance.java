@@ -27,6 +27,8 @@ public class ScriptInstance
 {
 	private static final ThreadLocal<ScriptValue> CACHEVALUE = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	
+	public static final int DEFAULT_RUNAWAY_LIMIT = 1024 * 1024;
+
 	/**
 	 * Enumeration of script states.
 	 */
@@ -104,14 +106,26 @@ public class ScriptInstance
 	private Set<AutoCloseable> closeables;
 	
 	/**
-	 * Creates a new script instance, no wait handler.
+	 * Creates a new script instance, no wait handler, default runaway limit.
 	 * @param script the script that holds the code.
 	 * @param scriptInstanceStack the instance stack. 
 	 * @param environment the script environment to use.
 	 */
 	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptEnvironment environment)
 	{
-		this(script, scriptInstanceStack, NO_SCOPES, null, environment);
+		this(script, scriptInstanceStack, NO_SCOPES, null, environment, DEFAULT_RUNAWAY_LIMIT);
+	}
+	
+	/**
+	 * Creates a new script instance, no wait handler, default runaway limit.
+	 * @param script the script that holds the code.
+	 * @param scriptInstanceStack the instance stack. 
+	 * @param scopeResolver the scope resolver for this script.
+	 * @param environment the script environment to use.
+	 */
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptEnvironment environment)
+	{
+		this(script, scriptInstanceStack, scopeResolver, null, environment, DEFAULT_RUNAWAY_LIMIT);
 	}
 	
 	/**
@@ -120,10 +134,11 @@ public class ScriptInstance
 	 * @param scriptInstanceStack the instance stack. 
 	 * @param scopeResolver the scope resolver for this script.
 	 * @param environment the script environment to use.
+	 * @param runawayLimit the runaway script command limit. 0 or less is no limit.
 	 */
-	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptEnvironment environment)
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptEnvironment environment, int runawayLimit)
 	{
-		this(script, scriptInstanceStack, scopeResolver, null, environment);
+		this(script, scriptInstanceStack, scopeResolver, null, environment, runawayLimit);
 	}
 	
 	/**
@@ -133,9 +148,10 @@ public class ScriptInstance
 	 * @param scopeResolver the scope resolver for this script.
 	 * @param waitHandler the handler for handling a script in a waiting state (can be null).
 	 * @param environment the script environment to use.
+	 * @param runawayLimit the runaway script command limit. 0 or less is no limit.
 	 * @throws IllegalArgumentException if script or scriptInstanceStack
 	 */
-	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, ScriptEnvironment environment)
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, ScriptEnvironment environment, int runawayLimit)
 	{
 		if (script == null)
 			throw new IllegalArgumentException("script is null");
@@ -147,7 +163,7 @@ public class ScriptInstance
 		this.scriptInstanceStack = scriptInstanceStack;
 		this.scopeResolver = scopeResolver;
 		this.waitHandler = waitHandler;
-		this.commandRunawayLimit = 0;
+		this.commandRunawayLimit = runawayLimit;
 
 		reset();
 	}

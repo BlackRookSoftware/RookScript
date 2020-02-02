@@ -47,30 +47,24 @@ public final class ScriptInstanceBuilder
 
 	/** Script provider. */
 	private ScriptProvider scriptProvider;
-	
 	/** The optional reader includer. */
 	private ScriptReaderIncluder readerIncluder;
-	
 	/** The optional reader options. */
 	private ScriptReaderOptions readerOptions;
-	
 	/** The script stack to use. */
 	private ScriptInstanceStackProvider stackProvider;
-	
 	/** Resolvers in the global namespace. */
 	private Queue<ScriptFunctionResolver> globalResolvers;
-	
 	/** Resolvers in the named namespaces. */
 	private Map<String, ScriptFunctionResolver> namedResolvers;
-
 	/** Scope resolver to use with each instance. */
 	private DefaultScopeResolver scopeResolver;
-	
 	/** Wait handler to use with each instance. */
 	private ScriptWaitHandler waitHandler;
-	
 	/** The the environment to use for each instance. */
 	private ScriptEnvironment environment;
+	/** The script runaway limit. */
+	private int runawayLimit;
 
 	// Can't instantiate via new.
 	ScriptInstanceBuilder()
@@ -84,6 +78,7 @@ public final class ScriptInstanceBuilder
 		this.scopeResolver = new DefaultScopeResolver();
 		this.waitHandler = null;
 		this.environment = null;
+		this.runawayLimit = 0;
 	}
 	
 	/**
@@ -331,6 +326,18 @@ public final class ScriptInstanceBuilder
 		return this;
 	}
 	
+	/**
+	 * Sets the runaway limit for the instance.
+	 * Each instance created will use this limit.
+	 * @param runawayLimit the limit. 0 or less is no limit.
+	 * @return the builder, for chained calls.
+	 */
+	public ScriptInstanceBuilder withRunawayLimit(int runawayLimit)
+	{
+		this.runawayLimit = runawayLimit;
+		return this;
+	}
+	
 	private void buildCheckProviders()
 	{
 		if (scriptProvider == null)
@@ -378,7 +385,7 @@ public final class ScriptInstanceBuilder
 		Script script = buildScript(resolver);
 
 		ScriptInstanceStack stack = stackProvider.getStack();
-		return new ScriptInstance(script, stack, scopeResolver, waitHandler, environment != null ? environment : ScriptEnvironment.create());
+		return new ScriptInstance(script, stack, scopeResolver, waitHandler, environment != null ? environment : ScriptEnvironment.create(), runawayLimit);
 	}
 
 	/**
@@ -395,7 +402,7 @@ public final class ScriptInstanceBuilder
 		Script script = buildScript(resolver);
 
 		ScriptInstanceStack stack = stackProvider.getStack();
-		return new ScriptInstanceFactory(script, stack.getActivationStackDepth(), stack.getValueStackDepth(), scopeResolver, waitHandler, environment != null ? environment : ScriptEnvironment.create());
+		return new ScriptInstanceFactory(script, stack.getActivationStackDepth(), stack.getValueStackDepth(), scopeResolver, waitHandler, environment != null ? environment : ScriptEnvironment.create(), runawayLimit);
 	}
 	
 	/**
