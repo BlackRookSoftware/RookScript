@@ -321,6 +321,66 @@ public enum StringFunctions implements ScriptFunctionType
 		}
 	},
 		
+	STRJOIN(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Joins a list of strings together into one string."
+				)
+				.parameter("string", 
+					type(Type.LIST, "[STRING, ...]", "The list of strings (if not LIST, will return this as string).")
+				)
+				.parameter("joiner", 
+					type(Type.NULL, "Use the empty string."),
+					type(Type.STRING, "The joiner string to use between list items.")
+				)
+				.returns(
+					type(Type.STRING, "The resultant string after the join.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			ScriptValue list = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String joiner = temp.isNull() ? "" : temp.asString();
+				scriptInstance.popStackValue(list);
+
+				if (!list.isList())
+				{
+					temp.setEmptyList(1);
+					temp.listAdd(list);
+					list.set(temp);
+				}
+				
+				StringBuilder sb = new StringBuilder();
+				for (int i = 0; i < list.length(); i++)
+				{
+					list.listGetByIndex(i, temp);
+					sb.append(temp.asString());
+					if (i < list.length() - 1)
+						sb.append(joiner);
+				}
+
+				returnValue.set(sb.toString());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+				list.setNull();
+			}
+		}
+	},
+		
 	;
 	
 	private final int parameterCount;
@@ -360,5 +420,6 @@ public enum StringFunctions implements ScriptFunctionType
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 
 }
