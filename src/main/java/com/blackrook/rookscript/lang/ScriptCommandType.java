@@ -38,7 +38,7 @@ public enum ScriptCommandType
 	/**
 	 * Return value.
 	 * No operand.
-	 * Restores previous command index.
+	 * Restores previous command index / frame.
 	 */
 	RETURN
 	{
@@ -55,6 +55,32 @@ public enum ScriptCommandType
 			{
 				scriptInstance.popFrame();
 				return true;
+			}
+		}
+	},
+	
+	/**
+	 * Return value, if the stack top is an error.
+	 * No operand.
+	 * Restores previous command index / frame.
+	 */
+	RETURN_ERRORCHECK
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue sv = CACHEVALUE1.get();
+			try 
+			{
+				scriptInstance.getStackValue(0, sv);
+				if (sv.isError())
+					return RETURN.execute(scriptInstance, null, null);
+				else
+					return true;
+			} 
+			finally 
+			{
+				sv.setNull();
 			}
 		}
 	},

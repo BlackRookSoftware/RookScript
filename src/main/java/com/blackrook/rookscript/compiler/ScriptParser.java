@@ -583,7 +583,7 @@ public class ScriptParser extends Lexer.Parser
 		// control statement?
 		else if (isControlStatementStart(currentToken().getType()))
 		{
-			return parseStatementClause(currentScript, breakLabel, continueLabel);
+			return parseControlClause(currentScript, breakLabel, continueLabel);
 		}
 		else
 		{
@@ -716,24 +716,57 @@ public class ScriptParser extends Lexer.Parser
 			// control statement?
 			else if (isControlStatementStart(currentToken().getType()))
 			{
-				if (!parseStatementClause(currentScript, breakLabel, continueLabel))
+				if (!parseControlClause(currentScript, breakLabel, continueLabel))
 					return false;
 			}
 		}
 		
 		return true;
 	}
+
+	/*
+		<ControlClause> :=
+			<IF> "(" <Expression> ")" <StatementBody> <ElseClause>
+			<WHILE> "(" <Expression> ")" <StatementBody>
+			<FOR> "(" <Statement> ";" <Expression> ";" <Statement> ")" <StatementBody>
+			<EACH>
+	 */
+	private boolean parseControlClause(Script currentScript, String breakLabel, String continueLabel)
+	{
+		// if control clause.
+		if (matchType(ScriptKernel.TYPE_IF))
+		{
+			return parseIfClause(currentScript, breakLabel, continueLabel);
+		}
+		// while control clause.
+		else if (matchType(ScriptKernel.TYPE_WHILE))
+		{
+			return parseWhileClause(currentScript);
+		}
+		// for control clause.
+		else if (matchType(ScriptKernel.TYPE_FOR))
+		{
+			return parseForClause(currentScript);
+		}
+		// each iterator clause.
+		else if (matchType(ScriptKernel.TYPE_EACH))
+		{
+			return parseEachClause(currentScript);
+		}
+		else
+		{
+			addErrorMessage("Expected a valid statement.");
+			return false;
+		}
+	}
 	
 	/*
-		<Statement> :=
+		<StatementClause> :=
 			";"																	(No-op)
 			<BREAK>																(only in for or while)
 			<CONTINUE>															(only in for or while)
 			<RETURN>
-			<IF> "(" <Expression> ")" <StatementBody> <ElseClause>
-			<WHILE> "(" <Expression> ")" <StatementBody>
-			<FOR> "(" <Statement> ";" <Expression> ";" <Statement> ")" <StatementBody>
-			<IDENTIFIER> <IdentifierStatement>
+			<CHECK>
 	 */
 	// the breaklabel or continuelabel can both be null.
 	private boolean parseStatementClause(Script currentScript, String breakLabel, String continueLabel)
@@ -785,28 +818,21 @@ public class ScriptParser extends Lexer.Parser
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
 			return true;
 		}
-		// if control clause.
-		else if (matchType(ScriptKernel.TYPE_IF))
+		else
 		{
-			return parseIfClause(currentScript, breakLabel, continueLabel);
+			return parseValueStatement(currentScript, breakLabel, continueLabel);
 		}
-		// while control clause.
-		else if (matchType(ScriptKernel.TYPE_WHILE))
-		{
-			return parseWhileClause(currentScript);
-		}
-		// for control clause.
-		else if (matchType(ScriptKernel.TYPE_FOR))
-		{
-			return parseForClause(currentScript);
-		}
-		// each iterator clause.
-		else if (matchType(ScriptKernel.TYPE_EACH))
-		{
-			return parseEachClause(currentScript);
-		}
+	}
+
+	/*
+		<ValueStatement> :=
+			<IDENTIFIER> <IdentifierStatement>
+			"(" <Expression> ")" "->" <PartialChain>
+	 */
+	private boolean parseValueStatement(Script currentScript, String breakLabel, String continueLabel)
+	{
 		// assignment statement or function call.
-		else if (currentType(ScriptKernel.TYPE_IDENTIFIER))
+		if (currentType(ScriptKernel.TYPE_IDENTIFIER))
 		{
 			String lexeme = currentToken().getLexeme();
 			nextToken();
@@ -816,6 +842,7 @@ public class ScriptParser extends Lexer.Parser
 			
 			return true;
 		}
+		// literal-led function chain.
 		else if (matchType(ScriptKernel.TYPE_LPAREN))
 		{
 			if (!parseExpression(currentScript))
@@ -839,14 +866,13 @@ public class ScriptParser extends Lexer.Parser
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP));
 			return true;
 		}
-		else
+		else 
 		{
 			addErrorMessage("Expected a valid statement.");
 			return false;
 		}
-		
 	}
-
+	
 	/*
 		<IdentifierStatement> :=
 			"(" <ParameterList> ")" ";"   										(Must be function or host function)
@@ -1646,9 +1672,7 @@ public class ScriptParser extends Lexer.Parser
 				}
 				else
 					throw new ScriptParseException("Expression - Expected value.");
-				
 			}
-			
 		}
 		
 		if (!expressionReduceAll(currentScript, operatorStack, expressionValueCounter))
@@ -2157,6 +2181,7 @@ public class ScriptParser extends Lexer.Parser
 			case ScriptKernel.TYPE_RETURN:
 			case ScriptKernel.TYPE_IDENTIFIER:
 			case ScriptKernel.TYPE_LPAREN:
+			case ScriptKernel.TYPE_CHECK:
 				return true;
 		}
 	}
