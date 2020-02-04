@@ -19,6 +19,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import com.blackrook.rookscript.ScriptIteratorType.IteratorPair;
 import com.blackrook.rookscript.resolvers.variable.AbstractVariableResolver;
@@ -603,7 +606,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public int length()
 	{
-		switch (type)
+		switch (getType())
 		{
 			case BUFFER:
 				return ((BufferType)ref).size();
@@ -635,7 +638,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean empty()
 	{
-		switch (type)
+		switch (getType())
 		{
 			case NULL:
 				return true;
@@ -1187,7 +1190,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	private boolean isRaw()
 	{
-		return type == Type.BOOLEAN || type == Type.INTEGER || type == Type.FLOAT;
+		return isBoolean() || isNumeric();
 	}
 
 	/**
@@ -1195,7 +1198,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	private boolean isAddableType()
 	{
-		switch (type)
+		switch (getType())
 		{
 			default:
 				return false;
@@ -1213,7 +1216,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isNull()
 	{
-		return type == Type.NULL && ref == null;
+		return getType() == Type.NULL && ref == null;
 	}
 
 	/**
@@ -1221,7 +1224,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isNaN()
 	{
-		return type == Type.FLOAT && Double.isNaN(Double.longBitsToDouble(rawbits));
+		return getType() == Type.FLOAT && Double.isNaN(Double.longBitsToDouble(rawbits));
 	}
 	
 	/**
@@ -1229,15 +1232,23 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isInfinite()
 	{
-		return type == Type.FLOAT && Double.isInfinite(Double.longBitsToDouble(rawbits));
+		return getType() == Type.FLOAT && Double.isInfinite(Double.longBitsToDouble(rawbits));
 	}
 	
+	/**
+	 * @return true if this value is a boolean type.
+	 */
+	public boolean isBoolean()
+	{
+		return getType() == Type.BOOLEAN;
+	}
+
 	/**
 	 * @return true if this value is a numeric type.
 	 */
 	public boolean isNumeric()
 	{
-		return type == Type.INTEGER || type == Type.FLOAT;
+		return getType() == Type.INTEGER || getType() == Type.FLOAT;
 	}
 
 	/**
@@ -1245,7 +1256,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isString()
 	{
-		return type == Type.STRING;
+		return getType() == Type.STRING;
 	}
 
 	/**
@@ -1253,7 +1264,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isBuffer()
 	{
-		return type == Type.BUFFER;
+		return getType() == Type.BUFFER;
 	}
 
 	/**
@@ -1261,7 +1272,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isList()
 	{
-		return type == Type.LIST;
+		return getType() == Type.LIST;
 	}
 
 	/**
@@ -1269,7 +1280,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isMap()
 	{
-		return type == Type.MAP;
+		return getType() == Type.MAP;
 	}
 	
 	/**
@@ -1277,7 +1288,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isError()
 	{
-		return type == Type.ERROR;
+		return getType() == Type.ERROR;
 	}
 	
 	/**
@@ -1285,7 +1296,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isObjectRef()
 	{
-		return type == Type.OBJECTREF;
+		return getType() == Type.OBJECTREF;
 	}
 	
 	/**
@@ -1294,7 +1305,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isObjectRef(Class<?> targetType)
 	{
-		return type == Type.OBJECTREF && targetType.isAssignableFrom(ref.getClass());
+		return getType() == Type.OBJECTREF && targetType.isAssignableFrom(ref.getClass());
 	}
 	
 	/**
@@ -1307,7 +1318,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	{
 		if (isNull())
 			return false;
-		switch (type)
+		switch (getType())
 		{
 			default:
 				return targetType.isAssignableFrom(ref.getClass());
@@ -1327,7 +1338,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean isObjectArrayType(Class<?> targetType)
 	{
-		switch (type)
+		switch (getType())
 		{
 			case OBJECTREF:
 			{
@@ -1339,6 +1350,26 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		}
 	}
 
+	private void resolveFuture()
+	{
+		if (type != Type.OBJECTREF || !(ref instanceof Future))
+	        return;
+	    Future<?> future = (Future<?>)ref;
+	    try {
+	        set(future.get());
+	    } catch (CancellationException | InterruptedException e) {
+	        setError(e);
+	    } catch (ExecutionException e) {
+	        setError(e.getCause());
+	    }
+	}
+	
+	private Type getType()
+	{
+		resolveFuture();
+		return type;
+	}
+	
 	/**
 	 * Gets this value as a boolean.
 	 * @return true if the value is nonzero and not NaN, false otherwise.
@@ -1347,7 +1378,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	{
 		if (isNull())
 			return false;
-		switch (type)
+		switch (getType())
 		{
 			default:
 				return false;
@@ -1433,7 +1464,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	{
 		if (isNull())
 			return 0L;
-		switch (type)
+		switch (getType())
 		{
 			default:
 				return 0L;
@@ -1460,7 +1491,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	{
 		if (isNull())
 			return 0.0;
-		switch (type)
+		switch (getType())
 		{
 			default:
 				return Double.NaN;
@@ -1484,7 +1515,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	{
 		if (isNull())
 			return "null";
-		switch (type)
+		switch (getType())
 		{
 			default:
 				return String.valueOf(ref);
@@ -1512,7 +1543,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public Object asObject()
 	{
-		switch (type)
+		switch (getType())
 		{
 			default:
 				return ref;
@@ -1534,7 +1565,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public <T> T asObjectType(Class<T> targetType)
 	{
-		switch (type)
+		switch (getType())
 		{
 			default:
 				return targetType.cast(ref);
@@ -1557,7 +1588,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		{
 			return "null";
 		}
-		else switch (type)
+		else switch (getType())
 		{
 			default:
 			case OBJECTREF:
@@ -1589,9 +1620,9 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * @param newType the new type to convert to.
 	 * @throws IllegalArgumentException if newType is null.
 	 */
-	public void convertTo(Type newType)
+	private void convertTo(Type newType)
 	{
-		switch (type)
+		switch (getType())
 		{
 			default:
 				throw new IllegalArgumentException("Cannot convert current type "+type);
@@ -1712,7 +1743,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public <T> T createForType(Class<T> targetType)
 	{
-		switch(type)
+		switch(getType())
 		{
 			case NULL:
 				return (T)null;
@@ -1782,10 +1813,10 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public boolean equals(ScriptValue value)
 	{
-		if (this.type != value.type)
+		if (getType() != value.getType())
 			return false;
 		
-		if (this.isRaw())
+		if (isRaw())
 			return this.rawbits == value.rawbits;
 		else if (this.ref == null)
 			return value.ref == null;
@@ -1796,9 +1827,9 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	@Override
 	public int compareTo(ScriptValue o)
 	{
-		if (type == Type.NULL)
-			return o.type != Type.NULL ? -1 : 0;
-		else if (o.type == Type.NULL)
+		if (isNull())
+			return !o.isNull() ? -1 : 0;
+		else if (o.isNull())
 			return 1;
 		else if (isNumeric() && o.isNumeric())
 		{
@@ -1806,7 +1837,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			double d2 = o.asDouble();
 			return d1 == d2 ? 0 : (d1 < d2 ? -1 : 1);
 		}
-		else if (type == Type.STRING || o.type == Type.STRING)
+		else if (isString() || o.isString())
 			return asString().compareTo(o.asString());
 		else
 			return ref == o.ref ? 0 : -1;
@@ -1845,6 +1876,15 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		return String.format("%s: %s 0x%016x", type.name(), toString(), rawbits); 
 	}
 	
+	// Up-converts the cached values.
+	private static void convertUp(ScriptValue cache1, ScriptValue cache2, ScriptValue operand, ScriptValue operand2)
+	{
+		if (operand.getType().ordinal() < operand2.getType().ordinal())
+			cache1.convertTo(operand2.type);
+		else if (operand.getType().ordinal() > operand2.getType().ordinal())
+			cache2.convertTo(operand.getType());
+	}
+
 	/**
 	 * Bitwise not calculation.
 	 * @param operand the input value.
@@ -1854,7 +1894,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	{
 		if (operand.isNull())
 			out.setNull();
-		else switch (operand.type)
+		else switch (operand.getType())
 		{
 			default:
 				out.set(Double.NaN);
@@ -1880,7 +1920,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	{
 		if (operand.isNull())
 			out.setNull();
-		else switch (operand.type)
+		else switch (operand.getType())
 		{
 			default:
 				out.set(Double.NaN);
@@ -1906,7 +1946,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	{
 		if (operand.isNull())
 			out.setNull();
-		else switch (operand.type)
+		else switch (operand.getType())
 		{
 			default:
 				out.set(Double.NaN);
@@ -1936,15 +1976,6 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			out.set(!operand.asBoolean());
 	}
 	
-	// Up-converts the cached values.
-	private static void convertUp(ScriptValue cache1, ScriptValue cache2, ScriptValue operand, ScriptValue operand2)
-	{
-		if (operand.type.ordinal() < operand2.type.ordinal())
-			cache1.convertTo(operand2.type);
-		else if (operand.type.ordinal() > operand2.type.ordinal())
-			cache2.convertTo(operand.type);
-	}
-
 	/**
 	 * Add calculation.
 	 * @param operand the source operand.
@@ -1953,7 +1984,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public static void add(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		if (!operand.isAddableType() || !operand2.isAddableType())
+		if (!operand.isString() && !operand2.isString() && (!operand.isAddableType() || !operand2.isAddableType()))
 		{
 			out.set(Double.NaN);
 			return;
@@ -1964,10 +1995,23 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 
 		try
 		{
-			cache1.set(operand);
-			cache2.set(operand2);
-			convertUp(cache1, cache2, operand, operand2);
-			switch (cache2.type)
+			if (operand.isString() || operand2.isString())
+			{
+				cache1.set(operand.asString());
+				cache2.set(operand2.asString());
+			}
+			else if (operand.isNull() || operand2.isNull())
+			{
+				out.set(Double.NaN);
+				return;
+			}
+			else
+			{
+				cache1.set(operand);
+				cache2.set(operand2);
+				convertUp(cache1, cache2, operand, operand2);
+			}
+			switch (cache2.getType())
 			{
 				default:
 					out.set(Double.NaN);
@@ -2014,7 +2058,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			cache1.set(operand);
 			cache2.set(operand2);
 			convertUp(cache1, cache2, operand, operand2);
-			switch (cache2.type)
+			switch (cache2.getType())
 			{
 				default:
 					out.set(Double.NaN);
@@ -2059,7 +2103,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			cache1.set(operand);
 			cache2.set(operand2);
 			convertUp(cache1, cache2, operand, operand2);
-			switch (cache2.type)
+			switch (cache2.getType())
 			{
 				default:
 					out.set(Double.NaN);
@@ -2103,7 +2147,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			cache1.set(operand);
 			cache2.set(operand2);
 			convertUp(cache1, cache2, operand, operand2);
-			switch (cache2.type)
+			switch (cache2.getType())
 			{
 				default:
 					out.set(Double.NaN);
@@ -2151,7 +2195,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			cache1.set(operand);
 			cache2.set(operand2);
 			convertUp(cache1, cache2, operand, operand2);
-			switch (cache2.type)
+			switch (cache2.getType())
 			{
 				default:
 					out.set(Double.NaN);
@@ -2199,7 +2243,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			cache1.set(operand);
 			cache2.set(operand2);
 			convertUp(cache1, cache2, operand, operand2);
-			switch (cache2.type)
+			switch (cache2.getType())
 			{
 				default:
 					out.set(Double.NaN);
@@ -2241,7 +2285,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			cache1.set(operand);
 			cache2.set(operand2);
 			convertUp(cache1, cache2, operand, operand2);
-			switch (cache2.type)
+			switch (cache2.getType())
 			{
 				default:
 					out.set(Double.NaN);
@@ -2283,7 +2327,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			cache1.set(operand);
 			cache2.set(operand2);
 			convertUp(cache1, cache2, operand, operand2);
-			switch (cache2.type)
+			switch (cache2.getType())
 			{
 				default:
 					out.set(Double.NaN);
@@ -2334,7 +2378,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public static void leftShift(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		switch (operand.type)
+		switch (operand.getType())
 		{
 			default:
 				out.set(Double.NaN);
@@ -2359,7 +2403,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public static void rightShift(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		switch (operand.type)
+		switch (operand.getType())
 		{
 			default:
 				out.set(Double.NaN);
@@ -2384,7 +2428,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 */
 	public static void rightShiftPadded(ScriptValue operand, ScriptValue operand2, ScriptValue out)
 	{
-		switch (operand.type)
+		switch (operand.getType())
 		{
 			default:
 				out.set(Double.NaN);
