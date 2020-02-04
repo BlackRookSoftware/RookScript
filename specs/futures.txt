@@ -1,0 +1,28 @@
+RookScript Futures
+..................
+
+RookScript can benefit from some handling of host functions that push Future<T> instances.
+
+resolveFuture()
+    if (!isObjectRef() || !(ref instanceof Future))
+        return;
+    Future<?> future = (Future<?>)ref;
+    try {
+        set(future.get());
+    } catch (CancellationException || InterruptedException e) {
+        setError(e);
+    } catch (ExecutionException e) {
+        setError(e.getCause());
+    }
+
+Futures can be reassigned/pushed/popped, but once they need evaluating (read in some way), they are set to
+their non-future value.
+
+RookScript does not create its own Futures as it cannot be "concurrent" without the host calling scripts 
+concurrently, however, host functions are free to push a Future, since the asynchronous task occurs in the host.
+Script termination/suspension DOES NOT CANCEL a FUTURE!
+
+A FUTURE type is never type-evaluateable. As soon as anything significant about the ScriptValue needs reading,
+(anything but PUSH/POP/SET), a get() is called, and ScriptValue.set(...) is used to change its own value/type using the return.
+CancellationExceptions and InterruptedExceptions are set as Errors, and ExecutionException CAUSES are set as errors.
+
