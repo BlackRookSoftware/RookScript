@@ -85,7 +85,7 @@ public class ScriptTest
 			.createInstance();
 		
 		//doDisassemble(instance);
-		doStress(instance, 1);
+		doStress(instance, 10000);
 	}
 	
 }
