@@ -820,7 +820,7 @@ public class ScriptParser extends Lexer.Parser
 		}
 		else
 		{
-			return parseValueStatement(currentScript, breakLabel, continueLabel);
+			return parseValueReturningStatement(currentScript);
 		}
 	}
 
@@ -829,7 +829,7 @@ public class ScriptParser extends Lexer.Parser
 			<IDENTIFIER> <IdentifierStatement>
 			"(" <Expression> ")" "->" <PartialChain>
 	 */
-	private boolean parseValueStatement(Script currentScript, String breakLabel, String continueLabel)
+	private boolean parseValueReturningStatement(Script currentScript)
 	{
 		// assignment statement or function call.
 		if (currentType(ScriptKernel.TYPE_IDENTIFIER))
