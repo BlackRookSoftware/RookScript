@@ -60,32 +60,6 @@ public enum ScriptCommandType
 	},
 	
 	/**
-	 * Return value, if the stack top is an error.
-	 * No operand.
-	 * Restores previous command index / frame.
-	 */
-	RETURN_ERRORCHECK
-	{
-		@Override
-		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
-		{
-			ScriptValue sv = CACHEVALUE1.get();
-			try 
-			{
-				scriptInstance.getStackValue(0, sv);
-				if (sv.isError())
-					return RETURN.execute(scriptInstance, null, null);
-				else
-					return true;
-			} 
-			finally 
-			{
-				sv.setNull();
-			}
-		}
-	},
-	
-	/**
 	 * Call function.
 	 * Operand is label.
 	 * Pushes and sets a new command index.
@@ -392,6 +366,32 @@ public enum ScriptCommandType
 					scriptInstance.setCurrentCommandIndex(index);
 				}
 				return true;
+			} 
+			finally 
+			{
+				sv.setNull();
+			}
+		}
+	},
+	
+	/**
+	 * If the stack top is an error, jump to label.
+	 * Operand1 is label.
+	 * Pushes nothing.
+	 */
+	CHECK_ERROR
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue sv = CACHEVALUE1.get();
+			try 
+			{
+				scriptInstance.getStackValue(0, sv);
+				if (sv.isError())
+					return JUMP.execute(scriptInstance, operand1, null);
+				else
+					return true;
 			} 
 			finally 
 			{
@@ -823,6 +823,29 @@ public enum ScriptCommandType
 	},
 	
 	/**
+	 * Pushes a Sentinel Object onto the stack.
+	 * Pushes one value onto stack.
+	 * No operands.
+	 */
+	PUSH_SENTINEL
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.pushStackValue(new SentinelObject());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	/**
 	 * POP value into nothing.
 	 * No operands.
 	 */
@@ -967,6 +990,34 @@ public enum ScriptCommandType
 				value.setNull();
 				keyValue.setNull();
 				mapValue.setNull();
+			}
+		}
+	},
+	
+	/**
+	 * POPs values until the sentinel was popped.
+	 * Operand1 is amount of sentinel objects to pop.
+	 */
+	POP_SENTINEL
+	{
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try 
+			{
+				long amount = (Long)operand1;
+				while (amount > 0)
+				{
+					scriptInstance.popStackValue(temp);
+					if (temp.isObjectRef(SentinelObject.class))
+						amount--;
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
 			}
 		}
 	},
@@ -1795,6 +1846,12 @@ public enum ScriptCommandType
 	 */
 	public abstract boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2);
 
+	// Sentinel object for PUSH/POP Sentinel
+	private static class SentinelObject
+	{
+		private SentinelObject() {}
+	}
+	
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));

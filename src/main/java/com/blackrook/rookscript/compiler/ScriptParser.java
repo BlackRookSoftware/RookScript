@@ -85,6 +85,10 @@ public class ScriptParser extends Lexer.Parser
 	/** Label prefix. */
 	public static final String LABEL_COALESCE_END = "_coalesce_end_";
 	/** Label prefix. */
+	public static final String LABEL_CHECK_START = "_check_start_";
+	/** Label prefix. */
+	public static final String LABEL_CHECK_END = "_check_end_";
+	/** Label prefix. */
 	public static final String LABEL_SCRIPTLET_START = "_scriptlet_start_";
 	/** Label prefix. */
 	public static final String LABEL_SCRIPTLET_END = "_scriptlet_end_";
@@ -225,7 +229,7 @@ public class ScriptParser extends Lexer.Parser
 			return false;
 		}
 		
-		if (!parseStatementList(currentScript, null, null))
+		if (!parseStatementList(currentScript, null, null, null, 0))
 			return false;
 		
 		if (!matchType(ScriptKernel.TYPE_RBRACE))
@@ -242,7 +246,7 @@ public class ScriptParser extends Lexer.Parser
 	/*
 	 *  <Function> := "(" <Expression> ... ")"
 	 */
-	protected boolean parseFunctionCall(Script currentScript, String functionNamespace, String functionName, boolean partial)
+	protected boolean parseFunctionCall(Script currentScript, String checkEndLabel, String functionNamespace, String functionName, boolean partial)
 	{
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
@@ -256,7 +260,7 @@ public class ScriptParser extends Lexer.Parser
 		if ((functionType = currentScript.getHostFunctionResolver().getNamespacedFunction(functionNamespace, functionName)) != null)
 		{
 			int parsedCount;
-			if ((parsedCount = parseHostFunctionCall(currentScript, functionType, partial)) == PARSEFUNCTIONCALL_FALSE)
+			if ((parsedCount = parseHostFunctionCall(currentScript, checkEndLabel, functionType, partial)) == PARSEFUNCTIONCALL_FALSE)
 				return false;
 							
 			if (!matchType(ScriptKernel.TYPE_RPAREN))
@@ -274,13 +278,16 @@ public class ScriptParser extends Lexer.Parser
 			else
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST, functionName));
 
+			if (checkEndLabel != null)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CHECK_ERROR, checkEndLabel));
+			
 			return true;
 		}
 		else if (functionNamespace == null && (functionEntry = currentScript.getFunctionEntry(functionName)) != null)
 		{
 			int paramCount = functionEntry.getParameterCount();
 			int parsedCount;
-			if ((parsedCount = parseLocalFunctionCall(currentScript, paramCount - (partial ? 1 : 0))) == PARSEFUNCTIONCALL_FALSE)
+			if ((parsedCount = parseLocalFunctionCall(currentScript, checkEndLabel, paramCount - (partial ? 1 : 0))) == PARSEFUNCTIONCALL_FALSE)
 				return false;
 			if (partial)
 				parsedCount++;
@@ -297,6 +304,9 @@ public class ScriptParser extends Lexer.Parser
 			
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL, getFunctionLabel(functionName)));
 	
+			if (checkEndLabel != null)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CHECK_ERROR, checkEndLabel));
+
 			return true;
 		}
 
@@ -346,7 +356,7 @@ public class ScriptParser extends Lexer.Parser
 			
 			mark(script, startLabel);
 			
-			if (!parseStatementList(script, null, null))
+			if (!parseStatementList(script, null, null, null, 0))
 				return false;
 			
 			mark(script, endLabel);
@@ -385,7 +395,7 @@ public class ScriptParser extends Lexer.Parser
 				return false;
 			}
 
-			if (!parseFunctionCall(script, namespace, functionName, false))
+			if (!parseFunctionCall(script, null, namespace, functionName, false))
 				return false;
 			
 			script.addCommand(ScriptCommand.create(ScriptCommandType.POP));
@@ -550,12 +560,12 @@ public class ScriptParser extends Lexer.Parser
 			"{" <StatementList> "}"
 			<StatementClause> ";"
 	 */
-	private boolean parseStatementBody(Script currentScript, String breakLabel, String continueLabel)
+	private boolean parseStatementBody(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
 	{
 		// start statement list?
 		if (matchType(ScriptKernel.TYPE_LBRACE))
 		{
-			if (!parseStatementList(currentScript, breakLabel, continueLabel))
+			if (!parseStatementList(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
 				return false;
 			
 			if (!matchType(ScriptKernel.TYPE_RBRACE))
@@ -569,7 +579,7 @@ public class ScriptParser extends Lexer.Parser
 		// standard statement?
 		else if (isStatementStart(currentToken().getType()))
 		{
-			if (!parseStatementClause(currentScript, breakLabel, continueLabel))
+			if (!parseStatementClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
 				return false;
 			
 			if (!matchType(ScriptKernel.TYPE_SEMICOLON))
@@ -583,7 +593,7 @@ public class ScriptParser extends Lexer.Parser
 		// control statement?
 		else if (isControlStatementStart(currentToken().getType()))
 		{
-			return parseControlClause(currentScript, breakLabel, continueLabel);
+			return parseControlClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth);
 		}
 		else
 		{
@@ -664,7 +674,7 @@ public class ScriptParser extends Lexer.Parser
 			return false;
 		}
 		
-		if (!parseStatementList(currentScript, null, null))
+		if (!parseStatementList(currentScript, null, null, null, 0))
 			return false;
 		
 		if (!matchType(ScriptKernel.TYPE_RBRACE))
@@ -697,14 +707,14 @@ public class ScriptParser extends Lexer.Parser
 			<StatementClause> ";" <StatementList>
 			[e]
 	 */
-	private boolean parseStatementList(Script currentScript, String breakLabel, String continueLabel)
+	private boolean parseStatementList(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
 	{
 		while (isStatementStart(currentToken().getType()) || isControlStatementStart(currentToken().getType()))
 		{
 			// standard statement?
 			if (isStatementStart(currentToken().getType()))
 			{
-				if (!parseStatementClause(currentScript, breakLabel, continueLabel))
+				if (!parseStatementClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
 					return false;
 				
 				if (!matchType(ScriptKernel.TYPE_SEMICOLON))
@@ -716,7 +726,7 @@ public class ScriptParser extends Lexer.Parser
 			// control statement?
 			else if (isControlStatementStart(currentToken().getType()))
 			{
-				if (!parseControlClause(currentScript, breakLabel, continueLabel))
+				if (!parseControlClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
 					return false;
 			}
 		}
@@ -731,27 +741,32 @@ public class ScriptParser extends Lexer.Parser
 			<FOR> "(" <Statement> ";" <Expression> ";" <Statement> ")" <StatementBody>
 			<EACH>
 	 */
-	private boolean parseControlClause(Script currentScript, String breakLabel, String continueLabel)
+	private boolean parseControlClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
 	{
 		// if control clause.
 		if (matchType(ScriptKernel.TYPE_IF))
 		{
-			return parseIfClause(currentScript, breakLabel, continueLabel);
+			return parseIfClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth);
 		}
 		// while control clause.
 		else if (matchType(ScriptKernel.TYPE_WHILE))
 		{
-			return parseWhileClause(currentScript);
+			return parseWhileClause(currentScript, checkEndLabel, checkBlockDepth);
 		}
 		// for control clause.
 		else if (matchType(ScriptKernel.TYPE_FOR))
 		{
-			return parseForClause(currentScript);
+			return parseForClause(currentScript, checkEndLabel, checkBlockDepth);
 		}
 		// each iterator clause.
 		else if (matchType(ScriptKernel.TYPE_EACH))
 		{
-			return parseEachClause(currentScript);
+			return parseEachClause(currentScript, checkEndLabel, checkBlockDepth);
+		}
+		// catch error
+		else if (matchType(ScriptKernel.TYPE_CHECK))
+		{
+			return parseCheckClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth);
 		}
 		else
 		{
@@ -769,7 +784,7 @@ public class ScriptParser extends Lexer.Parser
 			<CHECK>
 	 */
 	// the breaklabel or continuelabel can both be null.
-	private boolean parseStatementClause(Script currentScript, String breakLabel, String continueLabel)
+	private boolean parseStatementClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
 	{
 		// empty statement
 		if (currentType(ScriptKernel.TYPE_SEMICOLON))
@@ -786,6 +801,10 @@ public class ScriptParser extends Lexer.Parser
 				return false;
 			}
 			
+			// if breaking out inside a check block...
+			if (checkBlockDepth > 0)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SENTINEL, checkBlockDepth));
+			
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, breakLabel));
 			return true;
 		}
@@ -798,6 +817,10 @@ public class ScriptParser extends Lexer.Parser
 				return false;
 			}
 			
+			// if breaking out inside a check block...
+			if (checkBlockDepth > 0)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SENTINEL, checkBlockDepth));
+
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, continueLabel));
 			return true;
 		}
@@ -807,20 +830,28 @@ public class ScriptParser extends Lexer.Parser
 			// if no return, return null.
 			if (currentType(ScriptKernel.TYPE_SEMICOLON))
 			{
+				// if breaking out inside a check block...
+				if (checkBlockDepth > 0)
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SENTINEL, checkBlockDepth));
+
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
 				return true;
 			}
 			
-			if (!parseExpression(currentScript))
+			if (!parseExpression(currentScript, checkEndLabel))
 				return false;
 			
+			// if breaking out inside a check block...
+			if (checkBlockDepth > 0)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SENTINEL, checkBlockDepth));
+
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
 			return true;
 		}
 		else
 		{
-			return parseValueReturningStatement(currentScript);
+			return parseValueReturningStatement(currentScript, checkEndLabel);
 		}
 	}
 
@@ -829,7 +860,7 @@ public class ScriptParser extends Lexer.Parser
 			<IDENTIFIER> <IdentifierStatement>
 			"(" <Expression> ")" "->" <PartialChain>
 	 */
-	private boolean parseValueReturningStatement(Script currentScript)
+	private boolean parseValueReturningStatement(Script currentScript, String checkEndLabel)
 	{
 		// assignment statement or function call.
 		if (currentType(ScriptKernel.TYPE_IDENTIFIER))
@@ -837,7 +868,7 @@ public class ScriptParser extends Lexer.Parser
 			String lexeme = currentToken().getLexeme();
 			nextToken();
 			
-			if (!parseIdentifierStatement(currentScript, lexeme))
+			if (!parseIdentifierStatement(currentScript, checkEndLabel, lexeme))
 				return false;
 			
 			return true;
@@ -845,7 +876,7 @@ public class ScriptParser extends Lexer.Parser
 		// literal-led function chain.
 		else if (matchType(ScriptKernel.TYPE_LPAREN))
 		{
-			if (!parseExpression(currentScript))
+			if (!parseExpression(currentScript, checkEndLabel))
 				return false;
 			
 			if (!matchType(ScriptKernel.TYPE_RPAREN))
@@ -860,7 +891,7 @@ public class ScriptParser extends Lexer.Parser
 				return false;
 			}
 			
-			if (!parsePartialChain(currentScript))
+			if (!parsePartialChain(currentScript, checkEndLabel))
 				return false;
 
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP));
@@ -884,17 +915,17 @@ public class ScriptParser extends Lexer.Parser
 			<ASSIGNMENTOPERATOR> <Expression> ";"								(variable assignment)
 			-> <PartialChain> ";"												(partial application chain)
 	 */
-	private boolean parseIdentifierStatement(Script currentScript, String identifierName)
+	private boolean parseIdentifierStatement(Script currentScript, String checkEndLabel, String identifierName)
 	{
 		// function call.
 		if (currentType(ScriptKernel.TYPE_LPAREN))
 		{
-			if (!parseFunctionCall(currentScript, null, identifierName, false))
+			if (!parseFunctionCall(currentScript, checkEndLabel, null, identifierName, false))
 				return false;
 
 			if (matchType(ScriptKernel.TYPE_RIGHTARROW))
 			{
-				if (!parsePartialChain(currentScript))
+				if (!parsePartialChain(currentScript, checkEndLabel))
 					return false;
 			}
 
@@ -920,10 +951,10 @@ public class ScriptParser extends Lexer.Parser
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, identifierName, scopeVar));
 
 				Boolean lastWasList;
-				if ((lastWasList = parseListMapDerefStatementChain(currentScript)) == null)
+				if ((lastWasList = parseListMapDerefStatementChain(currentScript, checkEndLabel)) == null)
 					return false;
 				
-				if (!parseMapOrListAssignmentStatement(currentScript, lastWasList))
+				if (!parseMapOrListAssignmentStatement(currentScript, checkEndLabel, lastWasList))
 					return false;
 
 				currentScript.addCommand(ScriptCommand.create(lastWasList ? ScriptCommandType.POP_LIST : ScriptCommandType.POP_MAP));
@@ -932,13 +963,13 @@ public class ScriptParser extends Lexer.Parser
 			// might be namespaced host function.
 			else if (currentType(ScriptKernel.TYPE_LPAREN))
 			{
-				if (!parseFunctionCall(currentScript, identifierName, scopeVar, false))
+				if (!parseFunctionCall(currentScript, checkEndLabel, identifierName, scopeVar, false))
 					return false;
 
 				// partial chain?
 				if (matchType(ScriptKernel.TYPE_RIGHTARROW))
 				{
-					if (!parsePartialChain(currentScript))
+					if (!parsePartialChain(currentScript, checkEndLabel))
 						return false;
 				}
 
@@ -960,7 +991,7 @@ public class ScriptParser extends Lexer.Parser
 				if (isAccumulatingAssignmentOperator(assignmentType))
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, identifierName, scopeVar));
 				
-				if (!parseExpression(currentScript))
+				if (!parseExpression(currentScript, checkEndLabel))
 					return false;
 				
 				if (isAccumulatingAssignmentOperator(assignmentType))
@@ -976,10 +1007,10 @@ public class ScriptParser extends Lexer.Parser
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, identifierName));
 			
 			Boolean lastWasList;
-			if ((lastWasList = parseListMapDerefStatementChain(currentScript)) == null)
+			if ((lastWasList = parseListMapDerefStatementChain(currentScript, checkEndLabel)) == null)
 				return false;
 			
-			if (!parseMapOrListAssignmentStatement(currentScript, lastWasList))
+			if (!parseMapOrListAssignmentStatement(currentScript, checkEndLabel, lastWasList))
 				return false;
 
 			currentScript.addCommand(ScriptCommand.create(lastWasList ? ScriptCommandType.POP_LIST : ScriptCommandType.POP_MAP));
@@ -994,7 +1025,7 @@ public class ScriptParser extends Lexer.Parser
 			if (isAccumulatingAssignmentOperator(assignmentType))
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, identifierName));
 			
-			if (!parseExpression(currentScript))
+			if (!parseExpression(currentScript, checkEndLabel))
 				return false;
 			
 			if (isAccumulatingAssignmentOperator(assignmentType))
@@ -1007,7 +1038,7 @@ public class ScriptParser extends Lexer.Parser
 		{
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, identifierName));
 			
-			if (!parsePartialChain(currentScript))
+			if (!parsePartialChain(currentScript, checkEndLabel))
 				return false;
 				
 			// statements should not have a stack value linger.
@@ -1022,7 +1053,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// Null = error, True = ended on list, False = ended on map deref.
-	private Boolean parseListMapDerefStatementChain(Script currentScript)
+	private Boolean parseListMapDerefStatementChain(Script currentScript, String checkEndLabel)
 	{
 		boolean lastWasList = false;
 		while (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
@@ -1030,7 +1061,7 @@ public class ScriptParser extends Lexer.Parser
 			if (currentType(ScriptKernel.TYPE_LBRACK))
 			{
 				nextToken();
-				if (!parseExpression(currentScript))
+				if (!parseExpression(currentScript, checkEndLabel))
 					return null;
 
 				if (!matchType(ScriptKernel.TYPE_RBRACK))
@@ -1075,7 +1106,7 @@ public class ScriptParser extends Lexer.Parser
 		return lastWasList;
 	}
 
-	private boolean parseMapOrListAssignmentStatement(Script currentScript, boolean lastWasList) 
+	private boolean parseMapOrListAssignmentStatement(Script currentScript, String checkEndLabel, boolean lastWasList) 
 	{
 		int assignmentType = currentToken().getType();
 		if (!isAssignmentOperator(assignmentType))
@@ -1092,7 +1123,7 @@ public class ScriptParser extends Lexer.Parser
 			));
 		}
 		
-		if (!parseExpression(currentScript))
+		if (!parseExpression(currentScript, checkEndLabel))
 			return false;
 		
 		if (isAccumulatingAssignmentOperator(assignmentType))
@@ -1102,7 +1133,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 	
 	// 	<IF> "(" <Expression> ")" <StatementBody> <ElseClause>
-	private boolean parseIfClause(Script currentScript, String breakLabel, String continueLabel)
+	private boolean parseIfClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
 	{
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
@@ -1116,7 +1147,7 @@ public class ScriptParser extends Lexer.Parser
 		String endLabel = currentScript.getNextGeneratedLabel(LABEL_IF_END); 
 		
 		mark(currentScript, condLabel);
-		if (!parseExpression(currentScript))
+		if (!parseExpression(currentScript, checkEndLabel))
 			return false;
 	
 		if (!matchType(ScriptKernel.TYPE_RPAREN))
@@ -1128,7 +1159,7 @@ public class ScriptParser extends Lexer.Parser
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_FALSE, failLabel));
 	
 		mark(currentScript, successLabel);
-		if (!parseStatementBody(currentScript, breakLabel, continueLabel))
+		if (!parseStatementBody(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
 			return false;
 	
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, endLabel));
@@ -1138,7 +1169,7 @@ public class ScriptParser extends Lexer.Parser
 		if (currentType(ScriptKernel.TYPE_ELSE))
 		{
 			nextToken();
-			if (!parseStatementBody(currentScript, breakLabel, continueLabel))
+			if (!parseStatementBody(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
 				return false;
 	
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, endLabel));
@@ -1149,7 +1180,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// <WHILE> "(" <Expression> ")" <StatementBody>
-	private boolean parseWhileClause(Script currentScript)
+	private boolean parseWhileClause(Script currentScript, String checkEndLabel, int checkBlockDepth)
 	{
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
@@ -1162,7 +1193,7 @@ public class ScriptParser extends Lexer.Parser
 		String endLabel = currentScript.getNextGeneratedLabel(LABEL_WHILE_END); 
 		
 		mark(currentScript, condLabel);
-		if (!parseExpression(currentScript))
+		if (!parseExpression(currentScript, checkEndLabel))
 			return false;
 	
 		if (!matchType(ScriptKernel.TYPE_RPAREN))
@@ -1174,7 +1205,7 @@ public class ScriptParser extends Lexer.Parser
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_FALSE, endLabel));
 	
 		mark(currentScript, successLabel);
-		if (!parseStatementBody(currentScript, endLabel, condLabel))
+		if (!parseStatementBody(currentScript, endLabel, condLabel, checkEndLabel, 0))
 			return false;
 
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, condLabel));
@@ -1184,7 +1215,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// <FOR> "(" <Statement> ";" <Expression> ";" <Statement> ")" <StatementBody>
-	private boolean parseForClause(Script currentScript)
+	private boolean parseForClause(Script currentScript, String checkEndLabel, int checkBlockDepth)
 	{
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
@@ -1199,7 +1230,7 @@ public class ScriptParser extends Lexer.Parser
 		String endLabel = currentScript.getNextGeneratedLabel(LABEL_FOR_END); 
 		
 		mark(currentScript, initLabel);
-		if (!parseStatementClause(currentScript, null, null))
+		if (!parseStatementClause(currentScript, null, null, checkEndLabel, checkBlockDepth))
 			return false;
 
 		if (!matchType(ScriptKernel.TYPE_SEMICOLON))
@@ -1209,7 +1240,7 @@ public class ScriptParser extends Lexer.Parser
 		}
 
 		mark(currentScript, condLabel);
-		if (!parseExpression(currentScript))
+		if (!parseExpression(currentScript, checkEndLabel))
 			return false;
 		
 		if (!matchType(ScriptKernel.TYPE_SEMICOLON))
@@ -1221,7 +1252,7 @@ public class ScriptParser extends Lexer.Parser
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_BRANCH, successLabel, endLabel));
 
 		mark(currentScript, stepLabel);
-		if (!parseStatementClause(currentScript, null, null))
+		if (!parseStatementClause(currentScript, null, null, checkEndLabel, checkBlockDepth))
 			return false;
 
 		if (!matchType(ScriptKernel.TYPE_RPAREN))
@@ -1233,7 +1264,7 @@ public class ScriptParser extends Lexer.Parser
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, condLabel));
 
 		mark(currentScript, successLabel);
-		if (!parseStatementBody(currentScript, endLabel, stepLabel))
+		if (!parseStatementBody(currentScript, endLabel, stepLabel, checkEndLabel, 0))
 			return false;
 
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, stepLabel));
@@ -1243,7 +1274,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// <EACH> "(" <IdentifierAssignment> <IdentifierAssignment'> ":" <Expression> ")" <StatementBody>
-	private boolean parseEachClause(Script currentScript)
+	private boolean parseEachClause(Script currentScript, String checkEndLabel, int checkBlockDepth)
 	{
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
@@ -1274,14 +1305,14 @@ public class ScriptParser extends Lexer.Parser
 		boolean keyval = false; 
 		
 		// key or value
-		if (!parseEachClauseVariable(currentScript))
+		if (!parseEachClauseVariable(currentScript, checkEndLabel, checkBlockDepth))
 			return false;
 		
 		// if comma, parse value variable (previous is now key).
 		if (matchType(ScriptKernel.TYPE_COMMA))
 		{
 			keyval = true; 
-			if (!parseEachClauseVariable(currentScript))
+			if (!parseEachClauseVariable(currentScript, checkEndLabel, checkBlockDepth))
 				return false;
 		}
 
@@ -1299,7 +1330,7 @@ public class ScriptParser extends Lexer.Parser
 
 		mark(currentScript, initLabel);
 		
-		if (!parseExpression(currentScript))
+		if (!parseExpression(currentScript, checkEndLabel))
 			return false;
 
 		if (!matchType(ScriptKernel.TYPE_RPAREN))
@@ -1313,7 +1344,7 @@ public class ScriptParser extends Lexer.Parser
 
 		mark(currentScript, bodyLabel);
 
-		if (!parseStatementBody(currentScript, endLabel, stepLabel))
+		if (!parseStatementBody(currentScript, endLabel, stepLabel, checkEndLabel, 0))
 			return false;
 
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, stepLabel));
@@ -1321,9 +1352,9 @@ public class ScriptParser extends Lexer.Parser
 
 		return true;
 	}
-
+	
 	// Parses a single each clause variable.
-	private boolean parseEachClauseVariable(Script currentScript)
+	private boolean parseEachClauseVariable(Script currentScript, String checkEndLabel, int checkBlockDepth)
 	{
 		String lexeme = currentToken().getLexeme();
 		nextToken();
@@ -1331,9 +1362,51 @@ public class ScriptParser extends Lexer.Parser
 		return true;
 	}
 	
+	// <CHECK> "(" <IDENTIFIER> ")" <StatementBody>
+	private boolean parseCheckClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
+	{
+		String startLabel = currentScript.getNextGeneratedLabel(LABEL_CHECK_START); 
+		String endLabel = currentScript.getNextGeneratedLabel(LABEL_CHECK_END); 
+		
+		mark(currentScript, startLabel);
+		
+		if (!matchType(ScriptKernel.TYPE_LPAREN))
+		{
+			addErrorMessage("Expected \"(\" to start \"check\" block.");
+			return false;
+		}
+
+		if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+		{
+			addErrorMessage("Expected variable identifier.");
+			return false;
+		}
+		
+		String errorVariable = currentToken().getLexeme();
+		nextToken();
+		
+		if (!matchType(ScriptKernel.TYPE_RPAREN))
+		{
+			addErrorMessage("Expected \")\" after \"check\" error variable.");
+			return false;
+		}
+
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SENTINEL));
+
+		if (!parseStatementBody(currentScript, breakLabel, continueLabel, endLabel, checkBlockDepth + 1))
+			return false;
+
+		mark(currentScript, endLabel);
+		
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_VARIABLE, errorVariable));
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SENTINEL, 1));
+		
+		return true;
+	}
+
 	// <ExpressionPhrase>
 	// If null, bad parse.
-	private boolean parseExpression(Script currentScript)
+	private boolean parseExpression(Script currentScript, String checkEndLabel)
 	{
 		// make stacks.
 		Deque<Integer> operatorStack = new LinkedList<>();
@@ -1397,7 +1470,7 @@ public class ScriptParser extends Lexer.Parser
 				// partial application operator
 				else if (matchType(ScriptKernel.TYPE_RIGHTARROW))
 				{
-					if (!parsePartialChain(currentScript))
+					if (!parsePartialChain(currentScript, checkEndLabel))
 						return false;
 					
 					lastWasValue = true;
@@ -1416,7 +1489,7 @@ public class ScriptParser extends Lexer.Parser
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_FALSE, labelfalse));
 					
 					mark(currentScript, labeltrue);
-					if (!parseExpression(currentScript))
+					if (!parseExpression(currentScript, checkEndLabel))
 						return false;
 
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.LOGICAL));
@@ -1440,7 +1513,7 @@ public class ScriptParser extends Lexer.Parser
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_TRUE, labeltrue));
 					
 					mark(currentScript, labelfalse);
-					if (!parseExpression(currentScript))
+					if (!parseExpression(currentScript, checkEndLabel))
 						return false;
 					
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.LOGICAL));
@@ -1463,7 +1536,7 @@ public class ScriptParser extends Lexer.Parser
 					mark(currentScript, startLabel);
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_FALSECOALESCE, endLabel));
 
-					if (!parseExpression(currentScript))
+					if (!parseExpression(currentScript, checkEndLabel))
 						return false;
 
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, endLabel));
@@ -1482,7 +1555,7 @@ public class ScriptParser extends Lexer.Parser
 					mark(currentScript, startLabel);
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_NULLCOALESCE, endLabel));
 
-					if (!parseExpression(currentScript))
+					if (!parseExpression(currentScript, checkEndLabel))
 						return false;
 
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, endLabel));
@@ -1502,7 +1575,7 @@ public class ScriptParser extends Lexer.Parser
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_FALSE, falseLabel));
 					
 					mark(currentScript, trueLabel);
-					if (!parseExpression(currentScript))
+					if (!parseExpression(currentScript, checkEndLabel))
 						return false;
 					
 					if (!matchType(ScriptKernel.TYPE_COLON))
@@ -1513,7 +1586,7 @@ public class ScriptParser extends Lexer.Parser
 					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, endLabel));
 
 					mark(currentScript, falseLabel);
-					if (!parseExpression(currentScript))
+					if (!parseExpression(currentScript, checkEndLabel))
 						return false;
 
 					mark(currentScript, endLabel);
@@ -1554,7 +1627,7 @@ public class ScriptParser extends Lexer.Parser
 				// parens.
 				else if (matchType(ScriptKernel.TYPE_LPAREN))
 				{
-					if (!parseExpression(currentScript))
+					if (!parseExpression(currentScript, checkEndLabel))
 						return false;
 					
 					if (!matchType(ScriptKernel.TYPE_RPAREN))
@@ -1570,7 +1643,7 @@ public class ScriptParser extends Lexer.Parser
 				// square brackets (literal list).
 				else if (matchType(ScriptKernel.TYPE_LBRACK))
 				{
-					if (!parseListLiteral(currentScript))
+					if (!parseListLiteral(currentScript, checkEndLabel))
 						return false;
 					
 					if (!matchType(ScriptKernel.TYPE_RBRACK))
@@ -1586,7 +1659,7 @@ public class ScriptParser extends Lexer.Parser
 				// braces (literal map).
 				else if (matchType(ScriptKernel.TYPE_LBRACE))
 				{
-					if (!parseMapLiteral(currentScript))
+					if (!parseMapLiteral(currentScript, checkEndLabel))
 						return false;
 					
 					if (!matchType(ScriptKernel.TYPE_RBRACE))
@@ -1608,14 +1681,14 @@ public class ScriptParser extends Lexer.Parser
 					// function call?
 					if (currentType(ScriptKernel.TYPE_LPAREN))
 					{
-						if (!parseFunctionCall(currentScript, null, lexeme, false))
+						if (!parseFunctionCall(currentScript, checkEndLabel, null, lexeme, false))
 							return false;
 					}
 					// array resolution or map deref?
 					else if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 					{
 						currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, lexeme));
-						if (!parseListMapDerefChain(currentScript))
+						if (!parseListMapDerefChain(currentScript, checkEndLabel))
 							return false;
 					}
 					// scope deref?
@@ -1635,19 +1708,19 @@ public class ScriptParser extends Lexer.Parser
 						if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 						{
 							currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, lexeme, var));
-							if (!parseListMapDerefChain(currentScript))
+							if (!parseListMapDerefChain(currentScript, checkEndLabel))
 								return false;
 						}
 						// might be namespaced host function.
 						else if (currentType(ScriptKernel.TYPE_LPAREN))
 						{
-							if (!parseFunctionCall(currentScript, lexeme, var, false))
+							if (!parseFunctionCall(currentScript, checkEndLabel, lexeme, var, false))
 								return false;
 
 							// partial chain?
 							if (matchType(ScriptKernel.TYPE_RIGHTARROW))
 							{
-								if (!parsePartialChain(currentScript))
+								if (!parsePartialChain(currentScript, checkEndLabel))
 									return false;
 							}
 						}
@@ -1688,14 +1761,14 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// Parses a dereferencing expression chain of list indices and map values.
-	private boolean parseListMapDerefChain(Script currentScript)
+	private boolean parseListMapDerefChain(Script currentScript, String checkEndLabel)
 	{
 		while (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 		{
 			if (currentType(ScriptKernel.TYPE_LBRACK))
 			{
 				nextToken();
-				if (!parseExpression(currentScript))
+				if (!parseExpression(currentScript, checkEndLabel))
 					return false;
 
 				if (!matchType(ScriptKernel.TYPE_RBRACK))
@@ -1732,7 +1805,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// parses a partial application chain.
-	private boolean parsePartialChain(Script currentScript)
+	private boolean parsePartialChain(Script currentScript, String checkEndLabel)
 	{
 		if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
 		{
@@ -1764,13 +1837,13 @@ public class ScriptParser extends Lexer.Parser
 			return false;
 		}
 
-		if (!parseFunctionCall(currentScript, namespace, functionName, true))
+		if (!parseFunctionCall(currentScript, checkEndLabel, namespace, functionName, true))
 			return false;
 		
 		if (currentType(ScriptKernel.TYPE_RIGHTARROW))
 		{
 			nextToken();
-			if (!parsePartialChain(currentScript))
+			if (!parsePartialChain(currentScript, checkEndLabel))
 				return false;
 			return true;
 		}
@@ -1780,7 +1853,7 @@ public class ScriptParser extends Lexer.Parser
 
 	// Parses a literally defined map.
 	// 		{ .... , .... }
-	private boolean parseMapLiteral(Script currentScript)
+	private boolean parseMapLiteral(Script currentScript, String checkEndLabel)
 	{
 		// if no map fields.
 		if (currentType(ScriptKernel.TYPE_RBRACE))
@@ -1789,13 +1862,13 @@ public class ScriptParser extends Lexer.Parser
 			return true;
 		}
 		
-		if (!parseMapField(currentScript))
+		if (!parseMapField(currentScript, checkEndLabel))
 			return false;
 		
 		int i = 1;
 		while (matchType(ScriptKernel.TYPE_COMMA))
 		{
-			if (!parseMapField(currentScript))
+			if (!parseMapField(currentScript, checkEndLabel))
 				return false;
 			i++;
 		}
@@ -1807,7 +1880,7 @@ public class ScriptParser extends Lexer.Parser
 	
 	// Parses a map field.
 	// 		[IDENTIFIER] ":" <Expression>
-	private boolean parseMapField(Script currentScript)
+	private boolean parseMapField(Script currentScript, String checkEndLabel)
 	{
 		// if no map fields.
 		if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
@@ -1827,7 +1900,7 @@ public class ScriptParser extends Lexer.Parser
 			return false;			
 		}
 
-		if (!parseExpression(currentScript))
+		if (!parseExpression(currentScript, checkEndLabel))
 			return false;
 		
 		return true;
@@ -1835,7 +1908,7 @@ public class ScriptParser extends Lexer.Parser
 	
 	// Parses a literally defined list.
 	// 		[ .... , .... ]
-	private boolean parseListLiteral(Script currentScript)
+	private boolean parseListLiteral(Script currentScript, String checkEndLabel)
 	{
 		// if no elements.
 		if (currentType(ScriptKernel.TYPE_RBRACK))
@@ -1844,13 +1917,13 @@ public class ScriptParser extends Lexer.Parser
 			return true;
 		}
 		
-		if (!parseExpression(currentScript))
+		if (!parseExpression(currentScript, checkEndLabel))
 			return false;
 		
 		int i = 1;
 		while (matchType(ScriptKernel.TYPE_COMMA))
 		{
-			if (!parseExpression(currentScript))
+			if (!parseExpression(currentScript, checkEndLabel))
 				return false;
 			i++;
 		}
@@ -1863,14 +1936,14 @@ public class ScriptParser extends Lexer.Parser
 	// Parses a function call.
 	// 		( .... , .... )
 	// Returns amount of arguments parsed.
-	private int parseLocalFunctionCall(Script currentScript, int paramCount)
+	private int parseLocalFunctionCall(Script currentScript, String checkEndLabel, int paramCount)
 	{
 		int parsed = 0;
 		if (currentType(ScriptKernel.TYPE_RPAREN))
 			return parsed;
 		while (paramCount-- > 0)
 		{
-			if (!parseExpression(currentScript))
+			if (!parseExpression(currentScript, checkEndLabel))
 				return PARSEFUNCTIONCALL_FALSE;
 			
 			parsed++;
@@ -1888,7 +1961,7 @@ public class ScriptParser extends Lexer.Parser
 	// Parses a host function call.
 	// 		( .... , .... )
 	// Returns amount of arguments parsed.
-	private int parseHostFunctionCall(Script currentScript, ScriptFunctionType functionType, boolean partial)
+	private int parseHostFunctionCall(Script currentScript, String checkEndLabel, ScriptFunctionType functionType, boolean partial)
 	{
 		int paramCount = functionType.getParameterCount() - (partial ? 1 : 0);
 		int parsed = partial ? 1 : 0;
@@ -1896,7 +1969,7 @@ public class ScriptParser extends Lexer.Parser
 			return parsed;
 		while (paramCount-- > 0)
 		{
-			if (!parseExpression(currentScript))
+			if (!parseExpression(currentScript, checkEndLabel))
 				return PARSEFUNCTIONCALL_FALSE;
 			
 			parsed++;
@@ -2197,6 +2270,7 @@ public class ScriptParser extends Lexer.Parser
 			case ScriptKernel.TYPE_WHILE:
 			case ScriptKernel.TYPE_FOR:
 			case ScriptKernel.TYPE_EACH:
+			case ScriptKernel.TYPE_CHECK:
 				return true;
 		}
 	}
