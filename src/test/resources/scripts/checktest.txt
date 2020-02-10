@@ -1,0 +1,54 @@
+function readHeader(in)
+{
+	check (err)
+	{
+		return {
+			type: readstr(in, 4, "ASCII"),
+			entrycount: readint(in, false),
+			listoffset: readint(in, false)
+		};
+	}
+	if (iserror(err))
+		return err;
+}
+
+function readEntry(in)
+{
+	check (err)
+	{
+		return {
+			offset: readint(in, false),
+			size: readint(in, false),
+			name: strtrim(readstr(in, 8, "ASCII"))
+		};
+	}
+	if (iserror(err))
+		return err;
+}
+
+entry main()
+{
+	check (err)
+	{
+		f = fopen("H:\\Doom\\Iwads\\DOOM2.WAD");
+		info = readHeader(f);
+		println(info);
+		
+		// Skip to WAD entry list.
+		skip(f, info.listoffset - 12);
+	
+		// force an error
+		info.entrycount += 2;
+	
+		// Read entries.
+		list = listnew(info.entrycount);
+		for (i = 0; i < info.entrycount; i += 1)
+			list[i] = readEntry(f);
+	} 
+	close(f);
+	
+	if (iserror(err))
+		println("ERROR: " + err);
+	else each (k,v : list)
+		println(k + " " + v.name + " " + v.offset + " " + v.size);
+}

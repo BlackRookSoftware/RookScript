@@ -14,7 +14,7 @@ import java.io.StringWriter;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.CommonFunctions;
-import com.blackrook.rookscript.functions.StandardIOFunctions;
+import com.blackrook.rookscript.functions.PrintFunctions;
 import com.blackrook.rookscript.resolvers.variable.DefaultVariableResolver;
 import com.blackrook.rookscript.struct.Utils;
 
@@ -51,7 +51,7 @@ public class NamespacedScriptTest
 			.withSource(res, Utils.openResource(res))
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
 			.withFunctionResolver(CommonFunctions.createResolver())
-				.andFunctionResolver("io", StandardIOFunctions.createResolver())
+				.andFunctionResolver("io", PrintFunctions.createResolver())
 				.andFunctionResolver("math", MathFunctions.createResolver())
 			.withScriptStack(16, 512)
 			.withScope("script", new DefaultVariableResolver())

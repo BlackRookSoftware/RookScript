@@ -153,6 +153,7 @@ public enum MiscFunctions implements ScriptFunctionType
 					"Attempts to close a closeable resource. The resource is deregistered on this instance."
 				)
 				.parameter("value", 
+					type(Type.NULL, "Do nothing."),
 					type(Type.OBJECTREF, "AutoCloseable", "A closeable resource.")
 				)
 				.returns(
@@ -170,6 +171,11 @@ public enum MiscFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
+				if (temp.isNull())
+				{
+					returnValue.set(true);
+					return true;
+				}
 				if (!temp.isObjectRef(AutoCloseable.class))
 				{
 					returnValue.setError("BadParameter", "Parameter is not an AutoCloseable.");

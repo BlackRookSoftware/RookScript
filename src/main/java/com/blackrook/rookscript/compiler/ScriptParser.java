@@ -162,7 +162,7 @@ public class ScriptParser extends Lexer.Parser
 	 	<FunctionEntry> := 
 	 		<IDENTIFIER> "(" <FunctionArgumentList> ")" "{" <StatementList> "}"
 	 */
-	protected boolean parseFunctionEntry(Script currentScript)
+	protected boolean parseFunctionEntry(Script currentScript, boolean checkMode)
 	{
 		if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
 		{
@@ -211,7 +211,6 @@ public class ScriptParser extends Lexer.Parser
 			
 			while (!paramNameStack.isEmpty())
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_VARIABLE, paramNameStack.pollFirst()));
-			
 		}
 		
 		currentScript.createFunctionEntry(name, paramAmount, index);
@@ -222,23 +221,19 @@ public class ScriptParser extends Lexer.Parser
 			return false;
 		}
 	
-		// start statement list?
-		if (!matchType(ScriptKernel.TYPE_LBRACE))
+		if (checkMode)
 		{
-			addErrorMessage("Expected \"{\" to start \"function\" body.");
-			return false;
+			if (!parseCheckBody(currentScript, null, null, 0, 0))
+				return false;
+		}
+		else
+		{
+			if (!parseStatementBody(currentScript, null, null, null, 0, 0))
+				return false;
+			
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 		}
 		
-		if (!parseStatementList(currentScript, null, null, null, 0))
-			return false;
-		
-		if (!matchType(ScriptKernel.TYPE_RBRACE))
-		{
-			addErrorMessage("Expected statement or \"}\" to close \"function\" body.");
-			return false;
-		}
-		
-		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
 		return true;
 	}
@@ -356,7 +351,7 @@ public class ScriptParser extends Lexer.Parser
 			
 			mark(script, startLabel);
 			
-			if (!parseStatementList(script, null, null, null, 0))
+			if (!parseStatementList(script, null, null, null, 0, 0))
 				return false;
 			
 			mark(script, endLabel);
@@ -527,21 +522,35 @@ public class ScriptParser extends Lexer.Parser
 
 	/*
 		<Entry> :=
-			<INIT> <InitEntry>
+			<CHECK> <ENTRY> <NamedEntry>
+			<CHECK> <FUNCTION> <FunctionEntry>
+			<ENTRY> <NamedEntry>
 			<FUNCTION> <FunctionEntry>
 			<SCRIPT> <ScriptName> "(" <ScriptEntryArgumentList> ")" "{" <StatementList> "}"
 			<PRAGMA> ...
 	 */
 	private boolean parseEntry(Script currentScript)
 	{
-		if (matchType(ScriptKernel.TYPE_FUNCTION))
+		if (matchType(ScriptKernel.TYPE_CHECK))
 		{
-			return parseFunctionEntry(currentScript);
+			if (matchType(ScriptKernel.TYPE_FUNCTION))
+				return parseFunctionEntry(currentScript, true);
+			else if (matchType(ScriptKernel.TYPE_ENTRY))
+				return parseNamedEntry(currentScript, true);
+			else
+			{
+				addErrorMessage("Expected a \"function\" or \"entry\" entry after \"check\".");
+				return false;
+			}
+		}
+		else if (matchType(ScriptKernel.TYPE_FUNCTION))
+		{
+			return parseFunctionEntry(currentScript, false);
 		}
 		// entry.
 		else if (matchType(ScriptKernel.TYPE_ENTRY))
 		{
-			return parseNamedEntry(currentScript);
+			return parseNamedEntry(currentScript, false);
 		}
 		// pragma entry.
 		else if (matchType(ScriptKernel.TYPE_PRAGMA))
@@ -550,7 +559,7 @@ public class ScriptParser extends Lexer.Parser
 		}
 		else
 		{
-			addErrorMessage("Expected an \"main\", \"function\", \"entry\", or \"pragma\" entry.");
+			addErrorMessage("Expected a \"function\", \"entry\", or \"pragma\" entry.");
 			return false;
 		}
 	}
@@ -560,12 +569,12 @@ public class ScriptParser extends Lexer.Parser
 			"{" <StatementList> "}"
 			<StatementClause> ";"
 	 */
-	private boolean parseStatementBody(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
+	private boolean parseStatementBody(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
 		// start statement list?
 		if (matchType(ScriptKernel.TYPE_LBRACE))
 		{
-			if (!parseStatementList(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
+			if (!parseStatementList(currentScript, breakLabel, continueLabel, checkEndLabel, currentCheckDepth, fullCheckDepth))
 				return false;
 			
 			if (!matchType(ScriptKernel.TYPE_RBRACE))
@@ -579,7 +588,7 @@ public class ScriptParser extends Lexer.Parser
 		// standard statement?
 		else if (isStatementStart(currentToken().getType()))
 		{
-			if (!parseStatementClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
+			if (!parseStatementClause(currentScript, breakLabel, continueLabel, checkEndLabel, currentCheckDepth, fullCheckDepth))
 				return false;
 			
 			if (!matchType(ScriptKernel.TYPE_SEMICOLON))
@@ -593,7 +602,7 @@ public class ScriptParser extends Lexer.Parser
 		// control statement?
 		else if (isControlStatementStart(currentToken().getType()))
 		{
-			return parseControlClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth);
+			return parseControlClause(currentScript, breakLabel, continueLabel, checkEndLabel, currentCheckDepth, fullCheckDepth);
 		}
 		else
 		{
@@ -607,7 +616,7 @@ public class ScriptParser extends Lexer.Parser
 		<ScriptEntry> := 
 			<ScriptName> "(" <ScriptEntryArgumentList> ")" "{" <StatementList> "}"
 	 */
-	private boolean parseNamedEntry(Script currentScript)
+	private boolean parseNamedEntry(Script currentScript, boolean checkMode)
 	{
 		if (!currentType(ScriptKernel.TYPE_IDENTIFIER, ScriptKernel.TYPE_NUMBER, ScriptKernel.TYPE_STRING))
 		{
@@ -667,23 +676,19 @@ public class ScriptParser extends Lexer.Parser
 			return false;
 		}
 	
-		// start statement list?
-		if (!matchType(ScriptKernel.TYPE_LBRACE))
+		if (checkMode)
 		{
-			addErrorMessage("Expected \"{\" to start \"entry\" body.");
-			return false;
+			if (!parseCheckBody(currentScript, null, null, 0, 0))
+				return false;
 		}
-		
-		if (!parseStatementList(currentScript, null, null, null, 0))
-			return false;
-		
-		if (!matchType(ScriptKernel.TYPE_RBRACE))
+		else
 		{
-			addErrorMessage("Expected \"}\" to close \"entry\" body.");
-			return false;
+			if (!parseStatementBody(currentScript, null, null, null, 0, 0))
+				return false;
+
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 		}
-	
-		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
+
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
 		return true;
 	}
@@ -707,14 +712,14 @@ public class ScriptParser extends Lexer.Parser
 			<StatementClause> ";" <StatementList>
 			[e]
 	 */
-	private boolean parseStatementList(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
+	private boolean parseStatementList(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
 		while (isStatementStart(currentToken().getType()) || isControlStatementStart(currentToken().getType()))
 		{
 			// standard statement?
 			if (isStatementStart(currentToken().getType()))
 			{
-				if (!parseStatementClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
+				if (!parseStatementClause(currentScript, breakLabel, continueLabel, checkEndLabel, currentCheckDepth, fullCheckDepth))
 					return false;
 				
 				if (!matchType(ScriptKernel.TYPE_SEMICOLON))
@@ -726,7 +731,7 @@ public class ScriptParser extends Lexer.Parser
 			// control statement?
 			else if (isControlStatementStart(currentToken().getType()))
 			{
-				if (!parseControlClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
+				if (!parseControlClause(currentScript, breakLabel, continueLabel, checkEndLabel, currentCheckDepth, fullCheckDepth))
 					return false;
 			}
 		}
@@ -736,37 +741,38 @@ public class ScriptParser extends Lexer.Parser
 
 	/*
 		<ControlClause> :=
-			<IF> "(" <Expression> ")" <StatementBody> <ElseClause>
-			<WHILE> "(" <Expression> ")" <StatementBody>
-			<FOR> "(" <Statement> ";" <Expression> ";" <Statement> ")" <StatementBody>
-			<EACH>
+			<IF> <IfClause>
+			<WHILE> <WhileClause>
+			<FOR> <ForClause>
+			<EACH> <EachClause>
+			<CHECK> <CheckClause>
 	 */
-	private boolean parseControlClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
+	private boolean parseControlClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
 		// if control clause.
 		if (matchType(ScriptKernel.TYPE_IF))
 		{
-			return parseIfClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth);
+			return parseIfClause(currentScript, breakLabel, continueLabel, checkEndLabel, currentCheckDepth, fullCheckDepth);
 		}
 		// while control clause.
 		else if (matchType(ScriptKernel.TYPE_WHILE))
 		{
-			return parseWhileClause(currentScript, checkEndLabel, checkBlockDepth);
+			return parseWhileClause(currentScript, checkEndLabel, currentCheckDepth, fullCheckDepth);
 		}
 		// for control clause.
 		else if (matchType(ScriptKernel.TYPE_FOR))
 		{
-			return parseForClause(currentScript, checkEndLabel, checkBlockDepth);
+			return parseForClause(currentScript, checkEndLabel, currentCheckDepth, fullCheckDepth);
 		}
 		// each iterator clause.
 		else if (matchType(ScriptKernel.TYPE_EACH))
 		{
-			return parseEachClause(currentScript, checkEndLabel, checkBlockDepth);
+			return parseEachClause(currentScript, checkEndLabel, currentCheckDepth, fullCheckDepth);
 		}
 		// catch error
 		else if (matchType(ScriptKernel.TYPE_CHECK))
 		{
-			return parseCheckClause(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth);
+			return parseCheckClause(currentScript, breakLabel, continueLabel, checkEndLabel, currentCheckDepth, fullCheckDepth);
 		}
 		else
 		{
@@ -784,7 +790,7 @@ public class ScriptParser extends Lexer.Parser
 			<CHECK>
 	 */
 	// the breaklabel or continuelabel can both be null.
-	private boolean parseStatementClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
+	private boolean parseStatementClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
 		// empty statement
 		if (currentType(ScriptKernel.TYPE_SEMICOLON))
@@ -802,8 +808,8 @@ public class ScriptParser extends Lexer.Parser
 			}
 			
 			// if breaking out inside a check block...
-			if (checkBlockDepth > 0)
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SENTINEL, checkBlockDepth));
+			if (currentCheckDepth > 0)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_CHECK, currentCheckDepth, false));
 			
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, breakLabel));
 			return true;
@@ -818,8 +824,8 @@ public class ScriptParser extends Lexer.Parser
 			}
 			
 			// if breaking out inside a check block...
-			if (checkBlockDepth > 0)
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SENTINEL, checkBlockDepth));
+			if (currentCheckDepth > 0)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_CHECK, currentCheckDepth, false));
 
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, continueLabel));
 			return true;
@@ -830,11 +836,12 @@ public class ScriptParser extends Lexer.Parser
 			// if no return, return null.
 			if (currentType(ScriptKernel.TYPE_SEMICOLON))
 			{
-				// if breaking out inside a check block...
-				if (checkBlockDepth > 0)
-					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SENTINEL, checkBlockDepth));
-
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
+
+				// if breaking out inside a check block...
+				if (fullCheckDepth > 0)
+					currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_CHECK, fullCheckDepth, true));
+
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
 				return true;
 			}
@@ -843,8 +850,8 @@ public class ScriptParser extends Lexer.Parser
 				return false;
 			
 			// if breaking out inside a check block...
-			if (checkBlockDepth > 0)
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SENTINEL, checkBlockDepth));
+			if (fullCheckDepth > 0)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_CHECK, fullCheckDepth, true));
 
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
 			return true;
@@ -1133,7 +1140,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 	
 	// 	<IF> "(" <Expression> ")" <StatementBody> <ElseClause>
-	private boolean parseIfClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
+	private boolean parseIfClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
@@ -1159,7 +1166,7 @@ public class ScriptParser extends Lexer.Parser
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_FALSE, failLabel));
 	
 		mark(currentScript, successLabel);
-		if (!parseStatementBody(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
+		if (!parseStatementBody(currentScript, breakLabel, continueLabel, checkEndLabel, currentCheckDepth, fullCheckDepth))
 			return false;
 	
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, endLabel));
@@ -1169,7 +1176,7 @@ public class ScriptParser extends Lexer.Parser
 		if (currentType(ScriptKernel.TYPE_ELSE))
 		{
 			nextToken();
-			if (!parseStatementBody(currentScript, breakLabel, continueLabel, checkEndLabel, checkBlockDepth))
+			if (!parseStatementBody(currentScript, breakLabel, continueLabel, checkEndLabel, currentCheckDepth, fullCheckDepth))
 				return false;
 	
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, endLabel));
@@ -1180,7 +1187,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// <WHILE> "(" <Expression> ")" <StatementBody>
-	private boolean parseWhileClause(Script currentScript, String checkEndLabel, int checkBlockDepth)
+	private boolean parseWhileClause(Script currentScript, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
@@ -1205,7 +1212,7 @@ public class ScriptParser extends Lexer.Parser
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_FALSE, endLabel));
 	
 		mark(currentScript, successLabel);
-		if (!parseStatementBody(currentScript, endLabel, condLabel, checkEndLabel, 0))
+		if (!parseStatementBody(currentScript, endLabel, condLabel, checkEndLabel, 0, fullCheckDepth))
 			return false;
 
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, condLabel));
@@ -1215,7 +1222,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// <FOR> "(" <Statement> ";" <Expression> ";" <Statement> ")" <StatementBody>
-	private boolean parseForClause(Script currentScript, String checkEndLabel, int checkBlockDepth)
+	private boolean parseForClause(Script currentScript, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
@@ -1230,7 +1237,7 @@ public class ScriptParser extends Lexer.Parser
 		String endLabel = currentScript.getNextGeneratedLabel(LABEL_FOR_END); 
 		
 		mark(currentScript, initLabel);
-		if (!parseStatementClause(currentScript, null, null, checkEndLabel, checkBlockDepth))
+		if (!parseStatementClause(currentScript, null, null, checkEndLabel, currentCheckDepth, fullCheckDepth))
 			return false;
 
 		if (!matchType(ScriptKernel.TYPE_SEMICOLON))
@@ -1252,7 +1259,7 @@ public class ScriptParser extends Lexer.Parser
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP_BRANCH, successLabel, endLabel));
 
 		mark(currentScript, stepLabel);
-		if (!parseStatementClause(currentScript, null, null, checkEndLabel, checkBlockDepth))
+		if (!parseStatementClause(currentScript, null, null, checkEndLabel, currentCheckDepth, fullCheckDepth))
 			return false;
 
 		if (!matchType(ScriptKernel.TYPE_RPAREN))
@@ -1264,7 +1271,7 @@ public class ScriptParser extends Lexer.Parser
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, condLabel));
 
 		mark(currentScript, successLabel);
-		if (!parseStatementBody(currentScript, endLabel, stepLabel, checkEndLabel, 0))
+		if (!parseStatementBody(currentScript, endLabel, stepLabel, checkEndLabel, 0, fullCheckDepth))
 			return false;
 
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, stepLabel));
@@ -1274,7 +1281,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// <EACH> "(" <IdentifierAssignment> <IdentifierAssignment'> ":" <Expression> ")" <StatementBody>
-	private boolean parseEachClause(Script currentScript, String checkEndLabel, int checkBlockDepth)
+	private boolean parseEachClause(Script currentScript, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
@@ -1305,14 +1312,14 @@ public class ScriptParser extends Lexer.Parser
 		boolean keyval = false; 
 		
 		// key or value
-		if (!parseEachClauseVariable(currentScript, checkEndLabel, checkBlockDepth))
+		if (!parseEachClauseVariable(currentScript, checkEndLabel, currentCheckDepth, fullCheckDepth))
 			return false;
 		
 		// if comma, parse value variable (previous is now key).
 		if (matchType(ScriptKernel.TYPE_COMMA))
 		{
 			keyval = true; 
-			if (!parseEachClauseVariable(currentScript, checkEndLabel, checkBlockDepth))
+			if (!parseEachClauseVariable(currentScript, checkEndLabel, currentCheckDepth, fullCheckDepth))
 				return false;
 		}
 
@@ -1344,7 +1351,7 @@ public class ScriptParser extends Lexer.Parser
 
 		mark(currentScript, bodyLabel);
 
-		if (!parseStatementBody(currentScript, endLabel, stepLabel, checkEndLabel, 0))
+		if (!parseStatementBody(currentScript, endLabel, stepLabel, checkEndLabel, 0, fullCheckDepth))
 			return false;
 
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, stepLabel));
@@ -1354,7 +1361,7 @@ public class ScriptParser extends Lexer.Parser
 	}
 	
 	// Parses a single each clause variable.
-	private boolean parseEachClauseVariable(Script currentScript, String checkEndLabel, int checkBlockDepth)
+	private boolean parseEachClauseVariable(Script currentScript, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
 		String lexeme = currentToken().getLexeme();
 		nextToken();
@@ -1363,13 +1370,8 @@ public class ScriptParser extends Lexer.Parser
 	}
 	
 	// <CHECK> "(" <IDENTIFIER> ")" <StatementBody>
-	private boolean parseCheckClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int checkBlockDepth)
+	private boolean parseCheckClause(Script currentScript, String breakLabel, String continueLabel, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
-		String startLabel = currentScript.getNextGeneratedLabel(LABEL_CHECK_START); 
-		String endLabel = currentScript.getNextGeneratedLabel(LABEL_CHECK_END); 
-		
-		mark(currentScript, startLabel);
-		
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
 			addErrorMessage("Expected \"(\" to start \"check\" block.");
@@ -1391,16 +1393,31 @@ public class ScriptParser extends Lexer.Parser
 			return false;
 		}
 
-		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SENTINEL));
-
-		if (!parseStatementBody(currentScript, breakLabel, continueLabel, endLabel, checkBlockDepth + 1))
+		if (!parseCheckBody(currentScript, breakLabel, continueLabel, currentCheckDepth, fullCheckDepth))
 			return false;
-
-		mark(currentScript, endLabel);
 		
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_VARIABLE, errorVariable));
-		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_SENTINEL, 1));
+		return true;
+	}
+
+	// parses a body in a check.
+	private boolean parseCheckBody(Script currentScript, String breakLabel, String continueLabel, int currentCheckDepth, int fullCheckDepth) 
+	{
+		String startLabel = currentScript.getNextGeneratedLabel(LABEL_CHECK_START); 
+		String endLabel = currentScript.getNextGeneratedLabel(LABEL_CHECK_END); 
 		
+		mark(currentScript, startLabel);
+		
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_CHECK));
+		
+		if (!parseStatementBody(currentScript, breakLabel, continueLabel, endLabel, currentCheckDepth + 1, fullCheckDepth + 1))
+			return false;
+
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
+		
+		mark(currentScript, endLabel);
+		
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_CHECK, 1L, true));
 		return true;
 	}
 
@@ -2234,6 +2251,7 @@ public class ScriptParser extends Lexer.Parser
 		{
 			default:
 				return false;
+			case ScriptKernel.TYPE_CHECK:
 			case ScriptKernel.TYPE_FUNCTION:
 			case ScriptKernel.TYPE_ENTRY:
 			case ScriptKernel.TYPE_PRAGMA:
@@ -2254,7 +2272,6 @@ public class ScriptParser extends Lexer.Parser
 			case ScriptKernel.TYPE_RETURN:
 			case ScriptKernel.TYPE_IDENTIFIER:
 			case ScriptKernel.TYPE_LPAREN:
-			case ScriptKernel.TYPE_CHECK:
 				return true;
 		}
 	}

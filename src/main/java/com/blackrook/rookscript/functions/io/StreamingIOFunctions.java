@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.functions;
+package com.blackrook.rookscript.functions.io;
 
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptIteratorType;
@@ -46,7 +46,7 @@ import java.nio.charset.UnsupportedCharsetException;
  * Script common functions for data streaming.
  * @author Matthew Tropiano
  */
-public enum StreamFunctions implements ScriptFunctionType
+public enum StreamingIOFunctions implements ScriptFunctionType
 {
 	SKIP(2)
 	{
@@ -1079,7 +1079,7 @@ public enum StreamFunctions implements ScriptFunctionType
 	
 	private final int parameterCount;
 	private Usage usage;
-	private StreamFunctions(int parameterCount)
+	private StreamingIOFunctions(int parameterCount)
 	{
 		this.parameterCount = parameterCount;
 		this.usage = null;
@@ -1090,7 +1090,7 @@ public enum StreamFunctions implements ScriptFunctionType
 	 */
 	public static final ScriptFunctionResolver createResolver()
 	{
-		return new EnumFunctionResolver(StreamFunctions.values());
+		return new EnumFunctionResolver(StreamingIOFunctions.values());
 	}
 
 	@Override

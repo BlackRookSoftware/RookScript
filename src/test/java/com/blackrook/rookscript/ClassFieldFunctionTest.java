@@ -11,7 +11,7 @@ import java.io.File;
 
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.MathFunctions;
-import com.blackrook.rookscript.functions.StandardIOFunctions;
+import com.blackrook.rookscript.functions.PrintFunctions;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.resolvers.hostfunction.ClassMemberFunctionResolver;
 import com.blackrook.rookscript.struct.Utils;
@@ -46,7 +46,7 @@ public class ClassFieldFunctionTest
 			.withSource(fileName, Utils.openResource(fileName))
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
 			.withFunctionResolver(CommonFunctions.createResolver())
-				.andFunctionResolver(StandardIOFunctions.createResolver())
+				.andFunctionResolver(PrintFunctions.createResolver())
 				.andFunctionResolver(MathFunctions.createResolver())
 				.andFunctionResolver(fileResolver)
 			.withScriptStack(16, 512)

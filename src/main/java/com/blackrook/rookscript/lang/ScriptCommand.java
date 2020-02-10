@@ -123,6 +123,30 @@ public final class ScriptCommand
 	 * @param operand2 the second operand.
 	 * @return a new script directive.
 	 */
+	public static ScriptCommand create(ScriptCommandType type, Integer operand1, boolean operand2)
+	{
+		return create(type, (long)operand1, operand2);
+	}
+	
+	/**
+	 * Creates a new script directive.
+	 * @param type the directive type.
+	 * @param operand1 the first operand.
+	 * @param operand2 the second operand.
+	 * @return a new script directive.
+	 */
+	public static ScriptCommand create(ScriptCommandType type, Long operand1, boolean operand2)
+	{
+		return new ScriptCommand(type, operand1, operand2);
+	}
+	
+	/**
+	 * Creates a new script directive.
+	 * @param type the directive type.
+	 * @param operand1 the first operand.
+	 * @param operand2 the second operand.
+	 * @return a new script directive.
+	 */
 	public static ScriptCommand create(ScriptCommandType type, String operand1, long operand2)
 	{
 		return new ScriptCommand(type, operand1, operand2);

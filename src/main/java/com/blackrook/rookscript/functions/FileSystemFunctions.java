@@ -25,7 +25,7 @@ import java.io.IOException;
  * Script common functions for files.
  * @author Matthew Tropiano
  */
-public enum FileFunctions implements ScriptFunctionType
+public enum FileSystemFunctions implements ScriptFunctionType
 {
 	FILE(1)
 	{
@@ -865,7 +865,7 @@ public enum FileFunctions implements ScriptFunctionType
 	
 	private final int parameterCount;
 	private Usage usage;
-	private FileFunctions(int parameterCount)
+	private FileSystemFunctions(int parameterCount)
 	{
 		this.parameterCount = parameterCount;
 		this.usage = null;
@@ -876,7 +876,7 @@ public enum FileFunctions implements ScriptFunctionType
 	 */
 	public static final ScriptFunctionResolver createResolver()
 	{
-		return new EnumFunctionResolver(FileFunctions.values());
+		return new EnumFunctionResolver(FileSystemFunctions.values());
 	}
 
 	@Override

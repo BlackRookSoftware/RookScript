@@ -12,17 +12,17 @@ import java.util.List;
 
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.RegexFunctions;
-import com.blackrook.rookscript.functions.DataIOFunctions;
-import com.blackrook.rookscript.functions.FileFunctions;
-import com.blackrook.rookscript.functions.FileIOFunctions;
-import com.blackrook.rookscript.functions.StandardIOFunctions;
-import com.blackrook.rookscript.functions.StreamFunctions;
+import com.blackrook.rookscript.functions.FileSystemFunctions;
+import com.blackrook.rookscript.functions.PrintFunctions;
 import com.blackrook.rookscript.functions.common.BufferFunctions;
 import com.blackrook.rookscript.functions.common.ErrorFunctions;
 import com.blackrook.rookscript.functions.common.ListFunctions;
 import com.blackrook.rookscript.functions.common.MapFunctions;
 import com.blackrook.rookscript.functions.common.MiscFunctions;
 import com.blackrook.rookscript.functions.common.StringFunctions;
+import com.blackrook.rookscript.functions.io.DataIOFunctions;
+import com.blackrook.rookscript.functions.io.FileIOFunctions;
+import com.blackrook.rookscript.functions.io.StreamingIOFunctions;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionType.Usage;
 import com.blackrook.rookscript.lang.ScriptFunctionType.Usage.ParameterUsage;
@@ -95,8 +95,8 @@ public class ScriptFunctionDescriptorTest
 	{
 		printHeader(System.out, "Common");
 		printUsages(System.out, MiscFunctions.createResolver());
-		printHeader(System.out, "Standard I/O");
-		printUsages(System.out, StandardIOFunctions.createResolver());
+		printHeader(System.out, "Printing/Logging");
+		printUsages(System.out, PrintFunctions.createResolver());
 		printHeader(System.out, "String");
 		printUsages(System.out, StringFunctions.createResolver());
 		printHeader(System.out, "List / Set");
@@ -111,12 +111,12 @@ public class ScriptFunctionDescriptorTest
 		printUsages(System.out, MathFunctions.createResolver());
 		printHeader(System.out, "RegEx");
 		printUsages(System.out, RegexFunctions.createResolver());
-		printHeader(System.out, "Files");
-		printUsages(System.out, FileFunctions.createResolver());
+		printHeader(System.out, "File System");
+		printUsages(System.out, FileSystemFunctions.createResolver());
 		printHeader(System.out, "File I/O");
 		printUsages(System.out, FileIOFunctions.createResolver());
 		printHeader(System.out, "Stream I/O");
-		printUsages(System.out, StreamFunctions.createResolver());
+		printUsages(System.out, StreamingIOFunctions.createResolver());
 		printHeader(System.out, "Data I/O");
 		printUsages(System.out, DataIOFunctions.createResolver());
 	}

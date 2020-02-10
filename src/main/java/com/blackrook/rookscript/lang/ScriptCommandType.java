@@ -180,12 +180,7 @@ public enum ScriptCommandType
 			{
 				scriptInstance.popStackValue(sv);
 				labelName = sv.asBoolean() ? String.valueOf(operand1) : String.valueOf(operand2);
-				
-				int index = scriptInstance.getCommandIndex(labelName);
-				if (index < 0)
-					throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-				scriptInstance.setCurrentCommandIndex(index);
-				return true;
+				return JUMP.execute(scriptInstance, labelName, null);
 			} 
 			finally 
 			{
@@ -208,16 +203,10 @@ public enum ScriptCommandType
 			try 
 			{
 				scriptInstance.popStackValue(sv);
-				boolean b = sv.asBoolean();
-				if (b)
-				{
-					String labelName =  String.valueOf(operand1);
-					int index = scriptInstance.getCommandIndex(labelName);
-					if (index < 0)
-						throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-					scriptInstance.setCurrentCommandIndex(index);
-				}
-				return true;
+				if (sv.asBoolean())
+					return JUMP.execute(scriptInstance, operand1, null);
+				else
+					return true;
 			} 
 			finally
 			{
@@ -241,14 +230,9 @@ public enum ScriptCommandType
 			{
 				scriptInstance.popStackValue(sv);
 				if (!sv.asBoolean())
-				{
-					String labelName =  String.valueOf(operand1);
-					int index = scriptInstance.getCommandIndex(labelName);
-					if (index < 0)
-						throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-					scriptInstance.setCurrentCommandIndex(index);
-				}
-				return true;
+					return JUMP.execute(scriptInstance, operand1, null);
+				else
+					return true;
 			} 
 			finally
 			{
@@ -271,17 +255,15 @@ public enum ScriptCommandType
 			try 
 			{
 				scriptInstance.getStackValue(0, sv);
-				if (!sv.asBoolean())
-					scriptInstance.popStackValue();
+				if (sv.asBoolean())
+				{
+					return JUMP.execute(scriptInstance, operand1, null);
+				}
 				else
 				{
-					String labelName =  String.valueOf(operand1);
-					int index = scriptInstance.getCommandIndex(labelName);
-					if (index < 0)
-						throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-					scriptInstance.setCurrentCommandIndex(index);
+					scriptInstance.popStackValue();
+					return true;
 				}
-				return true;
 			} 
 			finally 
 			{
@@ -304,17 +286,15 @@ public enum ScriptCommandType
 			try 
 			{
 				scriptInstance.getStackValue(0, sv);
-				if (sv.isNull())
-					scriptInstance.popStackValue();
+				if (!sv.isNull())
+				{
+					return JUMP.execute(scriptInstance, operand1, null);
+				}
 				else
 				{
-					String labelName =  String.valueOf(operand1);
-					int index = scriptInstance.getCommandIndex(labelName);
-					if (index < 0)
-						throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-					scriptInstance.setCurrentCommandIndex(index);
+					scriptInstance.popStackValue();
+					return true;
 				}
-				return true;
 			} 
 			finally 
 			{
@@ -355,17 +335,13 @@ public enum ScriptCommandType
 					scriptInstance.pushStackValue(pair.getValue());
 					if ((Boolean)operand2) // true = push key as well.
 						scriptInstance.pushStackValue(pair.getKey());
+					return true;
 				}
 				else
 				{
 					scriptInstance.popStackValue();
-					String labelName =  String.valueOf(operand1);
-					int index = scriptInstance.getCommandIndex(labelName);
-					if (index < 0)
-						throw new ScriptExecutionException("label "+labelName+" does not correspond to an index");
-					scriptInstance.setCurrentCommandIndex(index);
+					return JUMP.execute(scriptInstance, operand1, null);
 				}
-				return true;
 			} 
 			finally 
 			{
@@ -823,11 +799,11 @@ public enum ScriptCommandType
 	},
 	
 	/**
-	 * Pushes a Sentinel Object onto the stack.
+	 * Pushes a Check Sentinel Object onto the stack.
 	 * Pushes one value onto stack.
 	 * No operands.
 	 */
-	PUSH_SENTINEL
+	PUSH_CHECK
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
@@ -835,7 +811,7 @@ public enum ScriptCommandType
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
-				scriptInstance.pushStackValue(new SentinelObject());
+				scriptInstance.pushStackValue(new CheckSentinelObject());
 				return true;
 			}
 			finally
@@ -995,29 +971,41 @@ public enum ScriptCommandType
 	},
 	
 	/**
-	 * POPs values until the sentinel was popped.
+	 * Optionally preserves the topmost stack value, then POPs values until the [amount]'th sentinel was popped,
+	 * then pushes the preserved value onto the stack.
 	 * Operand1 is amount of sentinel objects to pop.
+	 * Operand2 is the preserve top flag (true = do it, false = don't).
 	 */
-	POP_SENTINEL
+	POP_CHECK
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
+			ScriptValue top = CACHEVALUE2.get();
 			try 
 			{
+				boolean preserve = (Boolean)operand2;
+				
+				if (preserve)
+					scriptInstance.popStackValue(top);
+				
 				long amount = (Long)operand1;
 				while (amount > 0)
 				{
 					scriptInstance.popStackValue(temp);
-					if (temp.isObjectRef(SentinelObject.class))
+					if (temp.isObjectRef(CheckSentinelObject.class))
 						amount--;
 				}
+
+				if (preserve)
+					scriptInstance.pushStackValue(top);
 				return true;
 			}
 			finally
 			{
 				temp.setNull();
+				top.setNull();
 			}
 		}
 	},
@@ -1846,10 +1834,16 @@ public enum ScriptCommandType
 	 */
 	public abstract boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2);
 
-	// Sentinel object for PUSH/POP Sentinel
-	private static class SentinelObject
+	// Sentinel object for PUSH/POP Check
+	private static class CheckSentinelObject
 	{
-		private SentinelObject() {}
+		private CheckSentinelObject() {}
+		
+		@Override
+		public String toString() 
+		{
+			return "CHECK_SENTINEL";
+		}
 	}
 	
 	// Threadlocal "stack" values.

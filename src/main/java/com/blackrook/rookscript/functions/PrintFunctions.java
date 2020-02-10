@@ -21,7 +21,7 @@ import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
  * Script common functions for standard input/output.
  * @author Matthew Tropiano
  */
-public enum StandardIOFunctions implements ScriptFunctionType
+public enum PrintFunctions implements ScriptFunctionType
 {
 	PRINT(1)
 	{
@@ -169,7 +169,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	
 	private final int parameterCount;
 	private Usage usage;
-	private StandardIOFunctions(int parameterCount)
+	private PrintFunctions(int parameterCount)
 	{
 		this.parameterCount = parameterCount;
 		this.usage = null;
@@ -180,7 +180,7 @@ public enum StandardIOFunctions implements ScriptFunctionType
 	 */
 	public static final ScriptFunctionResolver createResolver()
 	{
-		return new EnumFunctionResolver(StandardIOFunctions.values());
+		return new EnumFunctionResolver(PrintFunctions.values());
 	}
 
 	@Override

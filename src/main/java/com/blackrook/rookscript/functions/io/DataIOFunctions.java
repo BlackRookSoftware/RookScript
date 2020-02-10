@@ -5,7 +5,7 @@
  * which accompanies this distribution, and is available at
  * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
  ******************************************************************************/
-package com.blackrook.rookscript.functions;
+package com.blackrook.rookscript.functions.io;
 
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
@@ -46,8 +46,8 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
 				)
 				.returns(
-					type(Type.NULL, "If the end-of-stream was reached at the time of read."),
 					type(Type.INTEGER, "The read byte (0 - 255)."),
+					type(Type.ERROR, "DataUnderflow", "If no bytes to read."),
 					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
 					type(Type.ERROR, "IOError", "If a read error occurs.")
 				)
@@ -75,7 +75,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 					return true;
 				}
 				if (b < 0)
-					returnValue.setNull();
+					returnValue.setError("DataUnderflow", "End-of-stream reached.");
 				else
 					returnValue.set(b & 0x0ff);
 				return true;
@@ -104,10 +104,9 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.BOOLEAN, "True - big endian, false - little endian.")
 				)
 				.returns(
-					type(Type.NULL, "If the end-of-stream was reached at the time of read."),
 					type(Type.INTEGER, "The read short (-32768 - 32767)."),
 					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value."),
+					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value, or end-of-stream was reached at the time of read."),
 					type(Type.ERROR, "IOError", "If a read error occurs.")
 				)
 			;
@@ -141,7 +140,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 				}
 
 				if (b < 0)
-					returnValue.setNull();
+					returnValue.setError("DataUnderflow", "End-of-stream reached.");
 				else if (b < 2)
 					returnValue.setError("DataUnderflow", "Not enough bytes for value - read " + b + " bytes.");
 				else
@@ -172,10 +171,9 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.BOOLEAN, "True - big endian, false - little endian.")
 				)
 				.returns(
-					type(Type.NULL, "If the end-of-stream was reached at the time of read."),
 					type(Type.INTEGER, "The read short (0 - 65535)."),
 					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value."),
+					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value, or end-of-stream was reached at the time of read."),
 					type(Type.ERROR, "IOError", "If a read error occurs.")
 				)
 			;
@@ -209,7 +207,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 				}
 
 				if (b < 0)
-					returnValue.setNull();
+					returnValue.setError("DataUnderflow", "End-of-stream reached.");
 				else if (b < 2)
 					returnValue.setError("DataUnderflow", "Not enough bytes for value - read " + b + " bytes.");
 				else
@@ -240,10 +238,9 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.BOOLEAN, "True - big endian, false - little endian.")
 				)
 				.returns(
-					type(Type.NULL, "If the end-of-stream was reached at the time of read."),
 					type(Type.INTEGER, "The read integer (-2^31 - 2^31-1)."),
 					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value."),
+					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value, or end-of-stream was reached at the time of read."),
 					type(Type.ERROR, "IOError", "If a read error occurs.")
 				)
 			;
@@ -277,7 +274,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 				}
 
 				if (b < 0)
-					returnValue.setNull();
+					returnValue.setError("DataUnderflow", "End-of-stream reached.");
 				else if (b < 4)
 					returnValue.setError("DataUnderflow", "Not enough bytes for value - read " + b + " bytes.");
 				else
@@ -308,10 +305,9 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.BOOLEAN, "True - big endian, false - little endian.")
 				)
 				.returns(
-					type(Type.NULL, "If the end-of-stream was reached at the time of read."),
 					type(Type.INTEGER, "The read integer (0 - 2^32-1)."),
 					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value."),
+					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value, or end-of-stream was reached at the time of read."),
 					type(Type.ERROR, "IOError", "If a read error occurs.")
 				)
 			;
@@ -345,7 +341,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 				}
 
 				if (b < 0)
-					returnValue.setNull();
+					returnValue.setError("DataUnderflow", "End-of-stream reached.");
 				else if (b < 4)
 					returnValue.setError("DataUnderflow", "Not enough bytes for value - read " + b + " bytes.");
 				else
@@ -376,10 +372,9 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.BOOLEAN, "True - big endian, false - little endian.")
 				)
 				.returns(
-					type(Type.NULL, "If the end-of-stream was reached at the time of read."),
 					type(Type.FLOAT, "The read float."),
 					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value."),
+					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value, or end-of-stream was reached at the time of read."),
 					type(Type.ERROR, "IOError", "If a read error occurs.")
 				)
 			;
@@ -413,7 +408,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 				}
 
 				if (b < 0)
-					returnValue.setNull();
+					returnValue.setError("DataUnderflow", "End-of-stream reached.");
 				else if (b < 4)
 					returnValue.setError("DataUnderflow", "Not enough bytes for value - read " + b + " bytes.");
 				else
@@ -444,10 +439,9 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.BOOLEAN, "True - big endian, false - little endian.")
 				)
 				.returns(
-					type(Type.NULL, "If the end-of-stream was reached at the time of read."),
-					type(Type.FLOAT, "The read integer (-2^63 - 2^63-1)."),
+					type(Type.INTEGER, "The read integer (-2^63 - 2^63-1)."),
 					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value."),
+					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value, or end-of-stream was reached at the time of read."),
 					type(Type.ERROR, "IOError", "If a read error occurs.")
 				)
 			;
@@ -481,7 +475,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 				}
 
 				if (b < 0)
-					returnValue.setNull();
+					returnValue.setError("DataUnderflow", "End-of-stream reached.");
 				else if (b < 8)
 					returnValue.setError("DataUnderflow", "Not enough bytes for value - read " + b + " bytes.");
 				else
@@ -512,10 +506,9 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.BOOLEAN, "True - big endian, false - little endian.")
 				)
 				.returns(
-					type(Type.NULL, "If the end-of-stream was reached at the time of read."),
 					type(Type.FLOAT, "The read double."),
 					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
-					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value."),
+					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value, or end-of-stream was reached at the time of read."),
 					type(Type.ERROR, "IOError", "If a read error occurs.")
 				)
 			;
@@ -549,7 +542,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 				}
 
 				if (b < 0)
-					returnValue.setNull();
+					returnValue.setError("DataUnderflow", "End-of-stream reached.");
 				else if (b < 8)
 					returnValue.setError("DataUnderflow", "Not enough bytes for value - read " + b + " bytes.");
 				else
@@ -583,11 +576,10 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.STRING, "A charset name.")
 				)
 				.returns(
-					type(Type.NULL, "If the end-of-stream was reached at the time of read."),
 					type(Type.STRING, "The read string."),
 					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
 					type(Type.ERROR, "BadEncoding", "If an unknown encoding was provided."),
-					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value."),
+					type(Type.ERROR, "DataUnderflow", "If not enough bytes for the value, or end-of-stream was reached at the time of read."),
 					type(Type.ERROR, "IOError", "If a read error occurs.")
 				)
 			;
@@ -638,7 +630,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 				}
 
 				if (b < 0)
-					returnValue.setNull();
+					returnValue.setError("DataUnderflow", "End-of-stream reached.");
 				else if (b < length)
 					returnValue.setError("DataUnderflow", "Not enough bytes for value - read " + b + " bytes.");
 				else

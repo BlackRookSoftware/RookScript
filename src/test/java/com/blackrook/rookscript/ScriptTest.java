@@ -16,12 +16,13 @@ import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.RegexFunctions;
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.DateFunctions;
-import com.blackrook.rookscript.functions.FileFunctions;
-import com.blackrook.rookscript.functions.FileIOFunctions;
-import com.blackrook.rookscript.functions.DataIOFunctions;
-import com.blackrook.rookscript.functions.StandardIOFunctions;
-import com.blackrook.rookscript.functions.StreamFunctions;
+import com.blackrook.rookscript.functions.FileSystemFunctions;
+import com.blackrook.rookscript.functions.IOFunctions;
+import com.blackrook.rookscript.functions.PrintFunctions;
 import com.blackrook.rookscript.functions.common.BufferFunctions;
+import com.blackrook.rookscript.functions.io.DataIOFunctions;
+import com.blackrook.rookscript.functions.io.FileIOFunctions;
+import com.blackrook.rookscript.functions.io.StreamingIOFunctions;
 import com.blackrook.rookscript.resolvers.variable.DefaultVariableResolver;
 import com.blackrook.rookscript.struct.Utils;
 
@@ -35,7 +36,31 @@ public class ScriptTest
 		System.out.print(sw);
 	}
 	
-	private static void doStress(ScriptInstance instance, final int times)
+	private static void doStress(ScriptInstance instance, final long time)
+	{
+		ScriptValue out = ScriptValue.create(null);
+		long total = 0L;
+		long min = Long.MAX_VALUE;
+		long max = Long.MIN_VALUE;
+		
+		long endTime = System.currentTimeMillis() + time;
+		
+		long times = 0L;
+		while (System.currentTimeMillis() < endTime)
+		{
+			long nanos = System.nanoTime();
+			instance.call("main");
+			nanos = System.nanoTime() - nanos;
+			total += nanos;
+			min = Math.min(min, nanos);
+			max = Math.max(max, nanos);
+			instance.popStackValue(out);
+			times++;
+		}
+		System.out.printf("%d iterations over %f secs: Min/Avg/Max: %d / %d / %d ns\n", times, (time / 1000.0), min, (total / times), max);
+	}
+	
+	private static void doIterations(ScriptInstance instance, final int times)
 	{
 		ScriptValue out = ScriptValue.create(null);
 		long total = 0L;
@@ -72,20 +97,18 @@ public class ScriptTest
 			.withSource(fileName, Utils.openResource(fileName))
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
 			.withFunctionResolver(CommonFunctions.createResolver())
-				.andFunctionResolver(StandardIOFunctions.createResolver())
+				.andFunctionResolver(PrintFunctions.createResolver())
 				.andFunctionResolver(MathFunctions.createResolver())
 				.andFunctionResolver(RegexFunctions.createResolver())
-				.andFunctionResolver(DataIOFunctions.createResolver())
-				.andFunctionResolver(FileFunctions.createResolver())
-				.andFunctionResolver(FileIOFunctions.createResolver())
+				.andFunctionResolver(FileSystemFunctions.createResolver())
 				.andFunctionResolver(DateFunctions.createResolver())
-				.andFunctionResolver(StreamFunctions.createResolver())
+				.andFunctionResolver(IOFunctions.createResolver())
 			.withScriptStack(16, 512)
 			.withScope("script", new DefaultVariableResolver())
 			.createInstance();
 		
 		doDisassemble(instance);
-		doStress(instance, 1);
+		doIterations(instance, 1);
 	}
 	
 }
