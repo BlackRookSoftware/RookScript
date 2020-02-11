@@ -198,6 +198,146 @@ public enum MiscFunctions implements ScriptFunctionType
 		}
 	},
 
+	TOBOOLEAN(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Converts a value to its boolean value."
+				)
+				.parameter("value", 
+					type("The value to convert.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "The boolean-equivalent value.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.asBoolean());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	TOINT(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Converts a value to an integer value."
+				)
+				.parameter("value", 
+					type("The value to convert.")
+				)
+				.returns(
+					type(Type.INTEGER, "The integer-equivalent value.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.asLong());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	TOFLOAT(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Converts a value to a float value."
+				)
+				.parameter("value", 
+					type("The value to convert.")
+				)
+				.returns(
+					type(Type.FLOAT, "The float-equivalent value.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.asDouble());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	TOSTRING(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Converts a value to a string value."
+				)
+				.parameter("value", 
+					type("The value to convert.")
+				)
+				.returns(
+					type(Type.STRING, "The string-equivalent value.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.asString());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	;
 	
 	private final int parameterCount;
