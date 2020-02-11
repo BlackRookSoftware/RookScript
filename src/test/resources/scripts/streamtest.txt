@@ -1,7 +1,7 @@
 entry main()
 {
-	csr = csropen(sifopen("build.xml"));
-	csw = cswopen(sofopen("build2.xml"));
+	csr = csropen(fisopen("build.xml"));
+	csw = cswopen(fosopen("build2.xml"));
 	
 	line = csreadln(csr);
 	while (line != null)
@@ -12,7 +12,7 @@ entry main()
 	close(csr);
 	close(csw);
 	
-	csr = csropen(sifopen("build2.xml"));
+	csr = csropen(fisopen("build2.xml"));
 	line = csreadln(csr);
 	while (line != null)
 	{

@@ -407,7 +407,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens an InputStream for reading from STDIN (resource is not registered). " +
+					"Opens a data input stream for reading from STDIN (resource is not registered). " +
 					"This will return null if STDIN is not provided to the script's environment!"
 				)
 				.returns(
@@ -420,7 +420,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
-			returnValue.set(scriptInstance.getEnvironment().getStandardIn());
+			returnValue.set(new DataInputStream(scriptInstance.getEnvironment().getStandardIn()));
 			return true;
 		}
 	},
@@ -432,7 +432,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens an OutputStream for writing to STDOUT (resource is not registered). " +
+					"Opens a data output stream for writing to STDOUT (resource is not registered). " +
 					"This will return null if STDOUT is not provided to the script's environment!"
 				)
 				.returns(
@@ -457,7 +457,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens an OutputStream for writing to STDERR (resource is not registered). " +
+					"Opens a data output stream for writing to STDERR (resource is not registered). " +
 					"This will return null if STDERR is not provided to the script's environment!"
 				)
 				.returns(
@@ -477,23 +477,22 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 
 	// =======================================================================
 
-	SIFOPEN(1)
+	FISOPEN(1)
 	{
 		@Override
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens an InputStream for reading from a file (and registers this resource as an open resource)."
+					"Opens a data input stream for reading from a file (and registers this resource as an open resource)."
 				)
 				.parameter("file", 
 					type(Type.STRING, "A path to a file."),
 					type(Type.OBJECTREF, "File", "A path to a file.")
 				)
 				.returns(
-					type(Type.NULL, "If [file] is null."),
-					type(Type.OBJECTREF, "DataInput", "An open input stream to read from."),
-					type(Type.ERROR, "BadParameter", "If [buffersize] <= 0."),
+					type(Type.OBJECTREF, "DataInput", "An open data input stream to read from."),
+					type(Type.ERROR, "BadParameter", "If [file] is null."),
 					type(Type.ERROR, "BadFile", "If [file] could not be found."),
 					type(Type.ERROR, "Security", "If the OS denied opening the file for reading.")
 				)
@@ -510,7 +509,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				
 				if (file == null)
 				{
-					returnValue.setNull();
+					returnValue.setError("BadParameter", "No file provided.");
 					return true;
 				}
 				
@@ -532,14 +531,14 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		}
 	},
 
-	SOFOPEN(2)
+	FOSOPEN(2)
 	{
 		@Override
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens an OutputStream for writing to a file (and registers this resource as an open resource)."
+					"Opens a data output stream for writing to a file (and registers this resource as an open resource)."
 				)
 				.parameter("file", 
 					type(Type.STRING, "A path to a file."),
@@ -549,10 +548,9 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					type(Type.BOOLEAN, "If true, appends to the file instead of overwriting it.")
 				)
 				.returns(
-					type(Type.NULL, "If [file] is null."),
-					type(Type.OBJECTREF, "OutputStream", "An open output stream to write to."),
-					type(Type.ERROR, "BadParameter", "If [buffersize] <= 0."),
-					type(Type.ERROR, "BadFile", "If [file] is a directory, or the file could not be made."),
+					type(Type.OBJECTREF, "DataOutput", "An open data output stream to write to."),
+					type(Type.ERROR, "BadParameter", "If [file] is null."),
+					type(Type.ERROR, "BadFile", "If [file] is null, a directory, or the file could not be made."),
 					type(Type.ERROR, "Security", "If the OS denied opening the file for reading.")
 				)
 			;
@@ -570,7 +568,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				
 				if (file == null)
 				{
-					returnValue.setNull();
+					returnValue.setError("BadParameter", "No file provided.");
 					return true;
 				}
 
@@ -583,6 +581,98 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				} catch (SecurityException e) {
 					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
 				} 
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	// =======================================================================
+
+	BISOPEN(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Opens a data input stream for reading from a buffer from its current cursor position " +
+					"(cursor advances with reading). This is NOT registered as a closeable resource."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.returns(
+					type(Type.OBJECTREF, "DataInput", "An open data input stream to read from."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is null or not a buffer.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "No buffer provided.");
+					return true;
+				}
+				
+				DataInputStream in = new DataInputStream(temp.asObjectType(BufferType.class).getInputStream());
+				scriptInstance.registerCloseable(in);
+				returnValue.set(in);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	BOSOPEN(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Opens a data output stream for writing from a buffer from its current cursor position " +
+					"(cursor advances with writing). This is NOT registered as a closeable resource."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer to use.")
+				)
+				.returns(
+					type(Type.OBJECTREF, "DataOutput", "An open data output stream to write to."),
+					type(Type.ERROR, "BadParameter", "If [buffer] is null or not a buffer.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setError("BadParameter", "No buffer provided.");
+					return true;
+				}
+				
+				DataOutputStream in = new DataOutputStream(temp.asObjectType(BufferType.class).getOutputStream());
+				scriptInstance.registerCloseable(in);
+				returnValue.set(in);
 				return true;
 			}
 			finally
@@ -615,7 +705,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				.returns(
 					type(Type.NULL, "If [instream] is null."),
 					type(Type.OBJECTREF, "Reader", "The Reader to use for reading characters from."),
-					type(Type.ERROR, "BadParameter", "If [instream] is not an InputStream object type."),
+					type(Type.ERROR, "BadParameter", "If [instream] is not a data input stream object type."),
 					type(Type.ERROR, "BadEncoding", "If [encoding] is not a valid charset name.")
 				)
 			;
@@ -637,7 +727,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				}
 				if (!temp.isObjectRef(InputStream.class))
 				{
-					returnValue.setError("BadParameter", "First parameter is not an InputStream type.");
+					returnValue.setError("BadParameter", "First parameter is not a data input stream type.");
 					return true;
 				}
 
@@ -690,7 +780,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				.returns(
 					type(Type.NULL, "If [outstream] is null."),
 					type(Type.OBJECTREF, "Reader", "The Reader to use for reading characters from."),
-					type(Type.ERROR, "BadParameter", "If [outstream] is not an OutputStream object type."),
+					type(Type.ERROR, "BadParameter", "If [outstream] is not a data output stream object type."),
 					type(Type.ERROR, "BadEncoding", "If [encoding] is not a valid charset name.")
 				)
 			;
@@ -712,7 +802,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				}
 				if (!temp.isObjectRef(OutputStream.class))
 				{
-					returnValue.setError("BadParameter", "First parameter is not an OutputStream type.");
+					returnValue.setError("BadParameter", "First parameter is not a data output stream type.");
 					return true;
 				}
 

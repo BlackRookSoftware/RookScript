@@ -1,12 +1,12 @@
 entry main()
 {
-	csr = csropen(sifopen("build.xml"));
+	csr = csropen(fisopen("build.xml"));
 	each (num, line : csiterate(csr))
 		println(num + "\t" + line);
 	close(csr);
 	
-	fin = sifopen("build.xml");
-	fout = sofopen("build2.xml");
+	fin = fisopen("build.xml");
+	fout = fosopen("build2.xml");
 	println(relay(fin, fout));
 	close(fin);
 	close(fout);

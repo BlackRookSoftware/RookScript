@@ -1,0 +1,25 @@
+entry main()
+{
+	b = bufnew(64);
+	bos = bosopen(b);
+	bos
+		->writebyte(128)
+		->writeShort(-1234)
+		->writeUShort(1234)
+		->writeInt(34424)
+		->writeUint(4123412)
+		->writeFloat(0.23)
+		->writeLong(4324312123)
+		->writeDouble(4.5);
+	println(b);
+	bufsetpos(b, 0);
+	bis = bisopen(b);
+	bis->readbyte()->println();
+	bis->readshort()->println();
+	bis->readushort()->println();
+	bis->readint()->println();
+	bis->readuint()->println();
+	bis->readfloat()->println();
+	bis->readlong()->println();
+	bis->readdouble()->println();
+}

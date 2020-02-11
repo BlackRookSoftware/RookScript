@@ -11,6 +11,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
@@ -3122,6 +3123,22 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			return data.length;
 		}
 	
+		/**
+		 * @return an open input stream for reading from the buffer's current cursor.
+		 */
+		public InputStream getInputStream() 
+		{
+			return new BufferInputStream();
+		}
+		
+		/**
+		 * @return an open output stream for writing from the buffer's current cursor.
+		 */
+		public OutputStream getOutputStream()
+		{
+			return new BufferOutputStream();
+		}
+		
 		@Override
 		public String toString() 
 		{
@@ -3177,6 +3194,35 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 				return "BufferTypeIterator:" + cur + "/" + data.length;
 			}
 		}
+		
+		private class BufferInputStream extends InputStream
+		{
+			@Override
+			public int available() throws IOException 
+			{
+				return data.length - position;
+			}
+			
+			@Override
+			public int read() throws IOException
+			{
+				if (available() == 0)
+					return -1;
+				else
+					return getByte(null) & 0x0ff;
+			}
+			
+		}
+		
+		private class BufferOutputStream extends OutputStream
+		{
+			@Override
+			public void write(int b) throws IOException
+			{
+				putByte(null, (byte)b);
+			}
+		}
+		
 	}
 	
 	/**

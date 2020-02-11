@@ -1,6 +1,6 @@
 entry main()
 {
-	sin = sifopen("build.xml");
+	sin = fisopen("build.xml");
 	buf = bufnew(278);
 	println(read(sin, buf, 0));
 	println(buf);

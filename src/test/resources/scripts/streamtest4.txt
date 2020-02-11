@@ -1,6 +1,6 @@
 entry main()
 {
-	sin = sifopen("H:\\Doom\\Iwads\\DOOM2.WAD");
+	sin = fisopen("H:\\Doom\\Iwads\\DOOM2.WAD");
 	
 	// Get WAD Info
 	info = {
