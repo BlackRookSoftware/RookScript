@@ -7,7 +7,16 @@ entry main()
 	println(strlower(s)); 
 	println(strtrim(" apple ")); 
 	println(strchar(s, 7));
+	println(substr(s, 5));
+	println(substr(s, 5, 10));
+	println(substr(s, 5, -2));
 	println(substr(s, 5, 0));
+
+	println(strstartswith(s, "Matt"));
+	println(strstartswith(s, "att", 1));
+	println(strstartswith(s, "Bart"));
+	println(strendswith(s, "piano"));
+	println(strendswith(s, "pianos"));
 	
 	println(strindex(s, "a"));
 	println(strlastindex(s, "a"));

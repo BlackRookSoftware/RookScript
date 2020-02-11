@@ -107,7 +107,7 @@ public class ScriptTest
 			.withScope("script", new DefaultVariableResolver())
 			.createInstance();
 		
-		doDisassemble(instance);
+		//doDisassemble(instance);
 		doIterations(instance, 1);
 	}
 	

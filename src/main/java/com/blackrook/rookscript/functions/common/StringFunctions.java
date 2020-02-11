@@ -100,7 +100,7 @@ public enum StringFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Returns a string trimmed of whitespace at both ends."
+					"Returns a string trimmed of whitespace (0x00 - 0x20, ASCII) at both ends."
 				)
 				.parameter("string", 
 					type(Type.STRING, "The string (if not STRING, will be converted).")
@@ -119,6 +119,41 @@ public enum StringFunctions implements ScriptFunctionType
 			{
 				scriptInstance.popStackValue(arg1);
 				returnValue.set(arg1.asString().trim());
+				return true;
+			}
+			finally
+			{
+				arg1.setNull();
+			}
+		}
+	},
+	
+	STRSTRIP(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a string trimmed of whitespace (all Unicode whitespace) at both ends."
+				)
+				.parameter("string", 
+					type(Type.STRING, "The string (if not STRING, will be converted).")
+				)
+				.returns(
+					type(Type.STRING, "The stripped string.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue arg1 = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(arg1);
+				returnValue.set(arg1.asString().strip());
 				return true;
 			}
 			finally
@@ -186,10 +221,11 @@ public enum StringFunctions implements ScriptFunctionType
 					type(Type.STRING, "The string (if not STRING, will be converted).")
 				)
 				.parameter("start", 
-						type(Type.INTEGER, "The starting index (0-based), inclusive.")
+					type(Type.INTEGER, "The starting index (0-based), inclusive.")
 				)
 				.parameter("end", 
-						type(Type.INTEGER, "The ending index (0-based), exclusive.")
+					type(Type.NULL, "Use string length."),
+					type(Type.INTEGER, "The ending index (0-based), exclusive. If negative, stop at that many characters from the end.")
 				)
 				.returns(
 					type(Type.NULL, "If either index is out-of-bounds or the end index is less than the start index."),
@@ -205,12 +241,18 @@ public enum StringFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				int endIndex = temp.asInt();
+				Integer endIndex = temp.isNull() ? null : temp.asInt();
 				scriptInstance.popStackValue(temp);
 				int startIndex = temp.asInt();
 				scriptInstance.popStackValue(temp);
 				String str = temp.asString();
+				
 				int length = str.length();
+				if (endIndex == null)
+					endIndex = length;
+				else if (endIndex < 0)
+					endIndex = length + endIndex;
+				
 				if (startIndex < 0 || startIndex >= length)
 					returnValue.setNull();
 				else if (endIndex < 0 && endIndex > length)
@@ -330,8 +372,9 @@ public enum StringFunctions implements ScriptFunctionType
 				.instructions(
 					"Joins a list of strings together into one string."
 				)
-				.parameter("string", 
-					type(Type.LIST, "[STRING, ...]", "The list of strings (if not LIST, will return this as string).")
+				.parameter("strings", 
+					type(Type.LIST, "[STRING, ...]", "The list of items to convert to strings and join."),
+					type("Returns this as a string.")
 				)
 				.parameter("joiner", 
 					type(Type.NULL, "Use the empty string."),
@@ -380,7 +423,96 @@ public enum StringFunctions implements ScriptFunctionType
 			}
 		}
 	},
+	
+	STRSTARTSWITH(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a string starts with another substring (case sensitive)."
+				)
+				.parameter("string", 
+					type(Type.STRING, "The string to test (converted to string if not a string).")
+				)
+				.parameter("prefix", 
+					type(Type.STRING, "The substring to test with (converted to string if not a string).")
+				)
+				.parameter("offset", 
+					type(Type.NULL, "Use 0."),
+					type(Type.INTEGER, "The starting offset in characters from the beginning to test from.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True, if [string] (after the first [offset] characters) starts with [prefix], false otherwise.")
+				)
+			;
+		}
 		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				int offset = temp.asInt();
+				scriptInstance.popStackValue(temp);
+				String substr = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				
+				returnValue.set(str.startsWith(substr, offset));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	STRENDSWITH(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a string ends with another substring (case sensitive)."
+				)
+				.parameter("string", 
+					type(Type.STRING, "The string to test (converted to string if not a string).")
+				)
+				.parameter("suffix", 
+					type(Type.STRING, "The substring to test with (converted to string if not a string).")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True, if [string] ends with [suffix], false otherwise.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String substr = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				returnValue.set(str.endsWith(substr));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	;
 	
 	private final int parameterCount;

@@ -1,0 +1,14 @@
+#!/usr/bin/env rookscript -i
+
+entry main()
+{
+	isregex(`\s+`)->println();
+	regexsplit(`\s+`, "Spaghetti and meatballs")->println();
+	regexcontains(`[0-9]+`, "abcde12345")->println();
+	regexcontains(`[0-9]+`, "abcde")->println();
+	regexcontains(`[a-z]+`, "abcde")->println();
+	regexmatches(`[0-9]+`, "abcde12345")->println();
+	regexmatches(`[0-9]+`, "12345")->println();
+	regexfind(`[0-9]+`, "abc123def456ghi789")->println();
+	regexfindall(`[0-9]+`, "abc123def456ghi789")->println();
+}
