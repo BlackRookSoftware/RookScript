@@ -12,6 +12,7 @@ import java.util.List;
 
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.RegexFunctions;
+import com.blackrook.rookscript.functions.ZipFunctions;
 import com.blackrook.rookscript.functions.FileSystemFunctions;
 import com.blackrook.rookscript.functions.PrintFunctions;
 import com.blackrook.rookscript.functions.common.BufferFunctions;
@@ -115,6 +116,8 @@ public class ScriptFunctionDescriptorTest
 		printUsages(System.out, FileSystemFunctions.createResolver());
 		printHeader(System.out, "File I/O");
 		printUsages(System.out, FileIOFunctions.createResolver());
+		printHeader(System.out, "Zip Files");
+		printUsages(System.out, ZipFunctions.createResolver());
 		printHeader(System.out, "Stream I/O");
 		printUsages(System.out, StreamingIOFunctions.createResolver());
 		printHeader(System.out, "Data I/O");

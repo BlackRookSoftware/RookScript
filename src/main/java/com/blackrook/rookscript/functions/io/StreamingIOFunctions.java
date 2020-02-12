@@ -58,7 +58,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					"Skips reading [length] amount of bytes from a readable data input, from the file's " +
 					"current cursor position. The file's cursor will be advanced."
 				)
-				.parameter("rafile", 
+				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
 				)
 				.parameter("length",
@@ -180,10 +180,10 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					"Reads from a data input and writes the data read from it to " +
 					"the data output until the end of the input is reached."
 				)
-				.parameter("instream", 
+				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
 				)
-				.parameter("outstream", 
+				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
 				)
 				.parameter("buffersize", 
@@ -196,7 +196,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				)
 				.returns(
 					type(Type.INTEGER, "The actual amount of bytes moved."),
-					type(Type.ERROR, "BadParameter", "If a valid stream was not provided for [instream] or [outstream]."),
+					type(Type.ERROR, "BadParameter", "If a valid stream was not provided for [input] or [output]."),
 					type(Type.ERROR, "IOError", "If a read or write error occurs.")
 				)
 			;
@@ -258,7 +258,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				.instructions(
 					"Reads [length] amount of bytes from a readable data input, from the file's current cursor position. The file's cursor will be advanced."
 				)
-				.parameter("rafile", 
+				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
 				)
 				.parameter("buffer",
@@ -333,7 +333,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					"Writes [length] amount of bytes to the file, from the file's current cursor " +
 					"position using the bytes in a buffer. The file's cursor will be advanced."
 				)
-				.parameter("rafile", 
+				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
 				)
 				.parameter("buffer",
@@ -400,7 +400,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		}
 	},
 	
-	STDINOPEN(0)
+	STDIN(0)
 	{
 		@Override
 		protected Usage usage()
@@ -425,7 +425,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		}
 	},
 
-	STDOUTOPEN(0)
+	STDOUT(0)
 	{
 		@Override
 		protected Usage usage()
@@ -450,7 +450,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		}
 	},
 
-	STDERROPEN(0)
+	STDERR(0)
 	{
 		@Override
 		protected Usage usage()

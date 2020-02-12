@@ -18,6 +18,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -1787,6 +1788,8 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			return new WrappedGenericIterator(((Iterable<Object>)ref).iterator());
 		else if (isObjectRef(Iterator.class))
 			return new WrappedGenericIterator((Iterator<Object>)ref);
+		else if (isObjectRef(Enumeration.class))
+			return new WrappedGenericIterator(((Enumeration<Object>)ref));
 		else
 			return new ValueIterator(this);
 	}
@@ -2575,7 +2578,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * Iterator Type for OBJECTREFs that return their own iterators.
 	 * This is specifically for other {@link Map} types.
 	 */
-	private static class WrappedMapIterator implements ScriptIteratorType
+	public static class WrappedMapIterator implements ScriptIteratorType
 	{
 		private Iterator<Map.Entry<Object, Object>> wrapped;
 		private IteratorPair pair;
@@ -2610,12 +2613,30 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	/**
 	 * Iterator Type for OBJECTREFs that return their own iterators.
 	 */
-	private static class WrappedGenericIterator implements ScriptIteratorType
+	public static class WrappedGenericIterator implements ScriptIteratorType
 	{
 		private Iterator<?> wrapped;
 		private IteratorPair pair;
 		private int cur;
 
+		private WrappedGenericIterator(final Enumeration<Object> enumer)
+		{
+			this(new Iterator<Object>()
+			{
+				@Override 
+				public boolean hasNext() 
+				{
+					return enumer.hasMoreElements();
+				}
+				
+				@Override 
+				public Object next() 
+				{
+					return enumer.nextElement();
+				}
+			});
+		}
+		
 		private WrappedGenericIterator(Iterator<Object> iter)
 		{
 			this.wrapped = iter;

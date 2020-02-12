@@ -198,6 +198,56 @@ public enum MiscFunctions implements ScriptFunctionType
 		}
 	},
 
+	DONOTCLOSE(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Deregisters an open resource on this instance. BE VERY CAREFUL ABOUT USING THIS! " +
+					"This is intended for scripts that return an open resource to the host after execution."
+				)
+				.parameter("value", 
+					type(Type.NULL, "Do nothing."),
+					type(Type.OBJECTREF, "AutoCloseable", "A closeable resource.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True."),
+					type(Type.ERROR, "BadParameter", "If an AutoCloseable was not provided.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				if (temp.isNull())
+				{
+					returnValue.set(true);
+					return true;
+				}
+				if (!temp.isObjectRef(AutoCloseable.class))
+				{
+					returnValue.setError("BadParameter", "Parameter is not an AutoCloseable.");
+					return true;
+				}
+				
+				scriptInstance.unregisterCloseable(temp.asObjectType(AutoCloseable.class));
+				returnValue.set(true);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
 	TOBOOLEAN(1)
 	{
 		@Override

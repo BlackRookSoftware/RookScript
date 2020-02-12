@@ -1,7 +1,7 @@
 entry main()
 {
-	csr = csropen(stdinopen());
-	csw = cswopen(stdoutopen());
+	csr = csropen(stdin());
+	csw = cswopen(stdout());
 	
 	line = csreadln(csr);
 	while (line != null)

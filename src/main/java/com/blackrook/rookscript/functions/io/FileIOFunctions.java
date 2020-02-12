@@ -52,11 +52,10 @@ public enum FileIOFunctions implements ScriptFunctionType
 					)
 				)
 				.returns(
-					type(Type.NULL, "If [path] is null."),
 					type(Type.OBJECTREF, "RandomAccessFile", "If successfully open/created."),
 					type(Type.ERROR, "BadMode", "If [mode] is an unexpected value."),
 					type(Type.ERROR, "Security", "If the OS denied opening the file for the required permissions."),
-					type(Type.ERROR, "IOError", "If the file could not be opened/found for some reason.")
+					type(Type.ERROR, "IOError", "If [path] is null or the file could not be opened/found for some reason.")
 				)
 			;
 		}
@@ -72,7 +71,7 @@ public enum FileIOFunctions implements ScriptFunctionType
 				File file = popFile(scriptInstance, temp);
 				try {
 					if (file == null)
-						returnValue.setNull();
+						returnValue.setError("IOError", "A file was not provided.");
 					else
 					{
 						RandomAccessFile raf = new RandomAccessFile(file, mode);
