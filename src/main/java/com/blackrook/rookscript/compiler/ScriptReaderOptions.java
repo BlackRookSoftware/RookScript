@@ -20,6 +20,6 @@ public interface ScriptReaderOptions
 	 * Must not return null.
 	 * @return a list of defined tokens.
 	 */
-	public String[] getDefines();
+	String[] getDefines();
 	
 }

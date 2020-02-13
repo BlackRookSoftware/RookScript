@@ -24,17 +24,17 @@ public interface ScriptFunctionType
 	 * This name returned must be a valid name that can be parsed in the script ("identifier" type: starts with letter, alphanumeric plus "_").
 	 * @return the function name.
 	 */
-	public String name();
+	String name();
 	
 	/**
 	 * @return the total amount of parameters this takes.
 	 */
-	public int getParameterCount();
+	int getParameterCount();
 	
 	/**
 	 * @return this function's usage instructions.
 	 */
-	public Usage getUsage();
+	Usage getUsage();
 	
 	/**
 	 * Executes this function. The value in <code>returnValue</code> is automatically pushed onto the stack after the call.
@@ -44,12 +44,12 @@ public interface ScriptFunctionType
 	 * @param returnValue the value pushed to the stack on return.
 	 * @return if false, this halts script execution, else if true, continue.
 	 */
-	public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
+	boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
 
 	/**
 	 * Function usage info.
 	 */
-	public interface Usage
+	interface Usage
 	{
 		/**
 		 * Gets the function usage instructions.
@@ -74,7 +74,7 @@ public interface ScriptFunctionType
 		/**
 		 * A single parameter's usage instructions.
 		 */
-		public interface ParameterUsage
+		interface ParameterUsage
 		{
 			/**
 			 * @return the name of the parameter.
@@ -93,7 +93,7 @@ public interface ScriptFunctionType
 		/**
 		 * Per-relevant-type usage.
 		 */
-		public interface TypeUsage
+		interface TypeUsage
 		{
 			/**
 			 * @return the script value type. If this returns null, it means "any type."

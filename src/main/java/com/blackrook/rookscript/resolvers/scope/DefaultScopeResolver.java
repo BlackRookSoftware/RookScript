@@ -7,8 +7,8 @@
  ******************************************************************************/
 package com.blackrook.rookscript.resolvers.scope;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
@@ -30,7 +30,7 @@ public class DefaultScopeResolver implements ScriptScopeResolver
 	 */
 	public DefaultScopeResolver()
 	{
-		this.scopeMap = new HashMap<String, ScriptVariableResolver>(4);
+		this.scopeMap = new TreeMap<String, ScriptVariableResolver>(String.CASE_INSENSITIVE_ORDER);
 	}
 	
 	/**
@@ -40,7 +40,7 @@ public class DefaultScopeResolver implements ScriptScopeResolver
 	 */
 	public synchronized void addScope(String name, ScriptVariableResolver resolver)
 	{
-		scopeMap.put(name.toLowerCase(), resolver);
+		scopeMap.put(name, resolver);
 	}
 	
 	/**
@@ -54,13 +54,13 @@ public class DefaultScopeResolver implements ScriptScopeResolver
 	@Override
 	public synchronized ScriptVariableResolver getScope(String name)
 	{
-		return scopeMap.get(name.toLowerCase());
+		return scopeMap.get(name);
 	}
 
 	@Override
 	public synchronized boolean containsScope(String name)
 	{
-		return scopeMap.containsKey(name.toLowerCase());
+		return scopeMap.containsKey(name);
 	}
 
 }

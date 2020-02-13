@@ -7,10 +7,12 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.nio.ByteOrder;
@@ -42,6 +44,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<Object[]> OBJECTARRAY1 = ThreadLocal.withInitial(()->new Object[1]);
+	private static final byte[] NO_BYTES = new byte[0];
 
 	public static enum Type
 	{
@@ -300,8 +303,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	}
 
 	/**
-	 * Sets this value using another object, 
-	 * and converts it if possible to the target underlying type.
+	 * Sets this value using another object, and converts it if possible to the target underlying type.
 	 * @param type the target script value type.
 	 * @param value the source value to use.
 	 */
@@ -325,7 +327,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			case BOOLEAN:
 			{
 				if (value instanceof Boolean)
-					set((boolean)value);
+					set((Boolean)value);
 				else if (value instanceof Number)
 				{
 					double d = ((Number)value).doubleValue();
@@ -343,11 +345,11 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			case INTEGER:
 			{
 				if (value instanceof Boolean)
-					set(((boolean)value) ? 1 : 0);
+					set(((Boolean)value) ? 1 : 0);
 				else if (value instanceof Number)
 					set(((Number)value).longValue());
 				else if (value instanceof CharSequence)
-					set(Utils.parseLong((String)value, 0L));
+					set(Utils.parseLong(String.valueOf(value), 0L));
 				else
 					set(value != null ? 1 : 0);
 			}
@@ -356,11 +358,11 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			case FLOAT:
 			{
 				if (value instanceof Boolean)
-					set(((boolean)value) ? 1.0 : 0.0);
+					set(((Boolean)value) ? 1.0 : 0.0);
 				else if (value instanceof Number)
 					set(((Number)value).doubleValue());
 				else if (value instanceof CharSequence)
-					set(Utils.parseDouble((String)value, Double.NaN));
+					set(Utils.parseDouble(String.valueOf(value), Double.NaN));
 				else
 					set(value != null ? 1.0 : 0.0);
 			}
@@ -384,6 +386,33 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 				setEmptyMap();
 				if (value != null)
 					mapExtract(value);
+			}
+			break;
+				
+			case BUFFER:
+			{
+				if (value instanceof Boolean)
+				{
+					setEmptyBuffer(1);
+					asObjectType(BufferType.class).putByte(0, (Boolean)value ? (byte)0x01 : (byte)0x00);
+				}
+				else if (value instanceof Number)
+				{
+					setEmptyBuffer(1);
+					asObjectType(BufferType.class).putByte(0, ((Number)value).byteValue());
+				}
+				else if (value instanceof CharSequence)
+					set(String.valueOf(value).getBytes(Charset.defaultCharset()));
+				else
+				{
+					ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
+					try (ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+						oos.writeObject(value);
+						set(bos.toByteArray());
+					} catch (IOException e) {
+						set(NO_BYTES);
+					}
+				}
 			}
 			break;
 				
@@ -451,6 +480,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			Map<?,?> map = (Map<?, ?>)value;
 			setEmptyMap(map.size());
 			mapExtract(map);
+		}
+		else if (value instanceof byte[])
+		{
+			byte[] b = (byte[])value;
+			setEmptyBuffer(b.length);
+			asObjectType(BufferType.class).readBytes(0, b, 0, b.length);
 		}
 		else if (value instanceof Collection)
 		{
@@ -2845,7 +2880,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		 * @param index the destination index (or null for current position).
 		 * @param value the fill value.
 		 * @param length the amount of bytes to add.
-		 * @return the amount of bytes read (length).
+		 * @return the amount of bytes set (length).
 		 * @throws ArrayIndexOutOfBoundsException if <code>index + length</code> exceeds this buffer's length 
 		 * 		or <code>index + length</code> exceeds the length of the provided buffer. 
 		 */

@@ -24,5 +24,8 @@ import java.lang.annotation.Target;
 @Target({FIELD, METHOD, CONSTRUCTOR})
 public @interface ScriptName
 {
+	/**
+	 * @return the name to use.
+	 */
 	String value() default "";
 }

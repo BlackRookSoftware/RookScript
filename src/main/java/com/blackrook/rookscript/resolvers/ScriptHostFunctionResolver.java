@@ -26,7 +26,7 @@ public interface ScriptHostFunctionResolver
 	 * @return a corresponding function or null for no such function.
 	 * @see #getNamespacedFunction(String, String)
 	 */
-	public boolean containsNamespacedFunction(String namespace, String name);
+	boolean containsNamespacedFunction(String namespace, String name);
 
 	/**
 	 * Attempts to resolve a pertinent function by its calling name.
@@ -39,6 +39,6 @@ public interface ScriptHostFunctionResolver
 	 * @return a corresponding function or null for no such function.
 	 * @see #containsNamespacedFunction(String, String)
 	 */
-	public ScriptFunctionType getNamespacedFunction(String namespace, String name);
+	ScriptFunctionType getNamespacedFunction(String namespace, String name);
 	
 }

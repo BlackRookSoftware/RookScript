@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.ScriptValue.Type;
+import com.blackrook.rookscript.annotations.ScriptValueType;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 import com.blackrook.rookscript.struct.Utils;
 import com.blackrook.rookscript.struct.TypeProfileFactory.Profile;
@@ -23,7 +25,6 @@ import com.blackrook.rookscript.struct.TypeProfileFactory.Profile.MethodInfo;
  * A variable resolver that wraps an object instance's fields and getters/setters
  * as a scope. The "field names" of the fields/methods are used as the variable names. 
  * @author Matthew Tropiano
- * TODO: Obey @ScriptValueType annotation!
  * @param <T> the object type.
  */
 public class ObjectVariableResolver<T> implements ScriptVariableResolver
@@ -59,9 +60,15 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 			else
 				name = pair.getKey();
 			
+			ScriptValueType typeAnno;
+			Type valueType = null;
+			if ((typeAnno = fieldInfo.getField().getAnnotation(ScriptValueType.class)) != null)
+				valueType = typeAnno.value();
+			
 			GetterSetter gs = get(name);
 			gs.type = fieldInfo.getType();
 			gs.field = fieldInfo.getField();
+			gs.valueType = valueType;
 		}
 
 		for (Map.Entry<String, MethodInfo> pair : tp.getGetterMethodsByName().entrySet())
@@ -74,9 +81,15 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 			else
 				name = pair.getKey();
 
+			ScriptValueType typeAnno;
+			Type valueType = null;
+			if ((typeAnno = methodInfo.getMethod().getAnnotation(ScriptValueType.class)) != null)
+				valueType = typeAnno.value();
+			
 			GetterSetter gs = get(name);
 			gs.type = methodInfo.getType();
 			gs.getter = methodInfo.getMethod();
+			gs.valueType = valueType;
 		}
 
 		for (Map.Entry<String, MethodInfo> pair : tp.getSetterMethodsByName().entrySet())
@@ -89,9 +102,15 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 			else
 				name = pair.getKey();
 
+			ScriptValueType typeAnno;
+			Type valueType = null;
+			if ((typeAnno = methodInfo.getMethod().getAnnotation(ScriptValueType.class)) != null)
+				valueType = typeAnno.value();
+			
 			GetterSetter gs = get(name);
 			gs.type = methodInfo.getType();
 			gs.getter = methodInfo.getMethod();
+			gs.valueType = valueType;
 		}
 	}
 	
@@ -115,17 +134,25 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 	public boolean getValue(String name, ScriptValue out)
 	{
 		ScriptValue sv = CACHEVALUE1.get();
-
-		GetterSetter gs;
-		if ((gs = fieldMap.get(name)) == null)
+		try 
 		{
-			out.setNull();
-			return false;
+			GetterSetter gs;
+			if ((gs = fieldMap.get(name)) == null)
+			{
+				out.setNull();
+				return false;
+			}
+			
+			if (gs.valueType != null)
+				sv.set(gs.valueType, gs.get());
+			else
+				sv.set(gs.get());
+			out.set(sv);
+		} 
+		finally 
+		{
+			sv.setNull();
 		}
-		
-		sv.set(gs.get());
-		out.set(sv);
-		sv.setNull();
 		return true;
 	}
 
@@ -170,23 +197,29 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 		private Field field;
 		private Method getter;
 		private Method setter;
+		private ScriptValue.Type valueType;
 		
 		void set(ScriptValue value)
-		{
-			
+		{	
 			if (field != null)
 			{
 				Object[] vbuf = OBJECTARRAY1.get();
-				vbuf[0] = value.createForType(type);
-				Utils.setFieldValue(instance, field, vbuf);
-				vbuf[0] = null; // arrays are shared - purge refs after use.
+				try {
+					vbuf[0] = value.createForType(type);
+					Utils.setFieldValue(instance, field, vbuf);
+				} finally {
+					vbuf[0] = null;
+				}
 			}
 			else if (setter != null)
 			{
 				Object[] vbuf = OBJECTARRAY1.get();
-				vbuf[0] = value.createForType(type);
-				Utils.invokeBlind(setter, instance, vbuf);
-				vbuf[0] = null; // arrays are shared - purge refs after use.
+				try {
+					vbuf[0] = value.createForType(type);
+					Utils.invokeBlind(setter, instance, vbuf);
+				} finally {
+					vbuf[0] = null;
+				}
 			}
 		}
 		

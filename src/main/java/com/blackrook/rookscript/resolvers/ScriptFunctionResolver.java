@@ -23,7 +23,7 @@ public interface ScriptFunctionResolver
 	 * @param name the name to find.
 	 * @return a corresponding function or null for no such function.
 	 */
-	public boolean containsFunction(String name);
+	boolean containsFunction(String name);
 
 	/**
 	 * Attempts to resolve a pertinent function by its calling name.
@@ -34,13 +34,13 @@ public interface ScriptFunctionResolver
 	 * @return a corresponding function or null for no such function.
 	 * @see #containsFunction(String)
 	 */
-	public ScriptFunctionType getFunction(String name);
+	ScriptFunctionType getFunction(String name);
 	
 	/**
 	 * Gets the full list of all script functions.
 	 * Depending on the implementation, this may be an expensive lookup.
 	 * @return a list of all functions.
 	 */
-	public ScriptFunctionType[] getFunctions();
+	ScriptFunctionType[] getFunctions();
 	
 }

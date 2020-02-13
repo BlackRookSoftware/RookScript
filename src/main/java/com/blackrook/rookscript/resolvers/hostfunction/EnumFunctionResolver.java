@@ -32,7 +32,7 @@ public class EnumFunctionResolver implements ScriptFunctionResolver
 	 * @param en the list of enum values (usually Enum.values()).
 	 */
 	@SafeVarargs
-	public EnumFunctionResolver(Enum<? extends ScriptFunctionType> ... en)
+	public EnumFunctionResolver(final Enum<? extends ScriptFunctionType> ... en)
 	{
 		this.map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		List<ScriptFunctionType> funcs = new LinkedList<ScriptFunctionType>();

@@ -24,7 +24,7 @@ public interface ScriptVariableResolver
 	 * @param out the destination variable for the value.
 	 * @return true if a corresponding value was fetched into out, false if not. If false, out is set to the null value.
 	 */
-    public boolean getValue(String name, ScriptValue out);
+    boolean getValue(String name, ScriptValue out);
     
     /**
      * Sets a key-value pair.
@@ -34,31 +34,31 @@ public interface ScriptVariableResolver
 	 * @throws IllegalArgumentException if the provided name refers to a value that is read-only.
 	 * @see #isReadOnly(String)
      */
-    public void setValue(String name, ScriptValue value);
+    void setValue(String name, ScriptValue value);
         
     /**
      * Checks if this contains a value by its variable name.
 	 * @param name the variable name.
 	 * @return true if so, false if not.
      */
-    public boolean containsValue(String name);
+    boolean containsValue(String name);
     
     /**
      * Checks if an existing value is read-only.
 	 * @param name the variable name.
 	 * @return true if so, false if not.
      */
-    public boolean isReadOnly(String name);
+    boolean isReadOnly(String name);
 
     /**
      * Checks if this resolver maintains no values.
      * @return true if so, false if not.
      */
-	public boolean isEmpty();
+	boolean isEmpty();
 
 	/**
 	 * @return the amount of values that this maintains.
 	 */
-	public int size();
+	int size();
 
 }

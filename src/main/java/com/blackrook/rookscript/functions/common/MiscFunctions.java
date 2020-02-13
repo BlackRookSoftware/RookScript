@@ -150,15 +150,16 @@ public enum MiscFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Attempts to close a closeable resource. The resource is deregistered on this instance."
+					"Attempts to close one or more closeable resources. The resource is deregistered on this instance. " +
+					"If the object passed is not an AutoCloseable, nothing happens."
 				)
 				.parameter("value", 
 					type(Type.NULL, "Do nothing."),
-					type(Type.OBJECTREF, "AutoCloseable", "A closeable resource.")
+					type(Type.OBJECTREF, "AutoCloseable", "A closeable resource."),
+					type(Type.LIST, "[OBJECTREF:AutoCloseable, ...]", "A list of closeable resources.")
 				)
 				.returns(
 					type(Type.BOOLEAN, "True."),
-					type(Type.ERROR, "BadParameter", "If an AutoCloseable was not provided."),
 					type(Type.ERROR, "BadClose", "If an Error occurs on close.")
 				)
 			;
@@ -168,6 +169,7 @@ public enum MiscFunctions implements ScriptFunctionType
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
+			ScriptValue temp2 = CACHEVALUE2.get();
 			try
 			{
 				scriptInstance.popStackValue(temp);
@@ -176,24 +178,42 @@ public enum MiscFunctions implements ScriptFunctionType
 					returnValue.set(true);
 					return true;
 				}
-				if (!temp.isObjectRef(AutoCloseable.class))
+
+				if (temp.isList())
 				{
-					returnValue.setError("BadParameter", "Parameter is not an AutoCloseable.");
-					return true;
+					try {
+						for (int i = 0; i < temp.length(); i++)
+						{
+							temp.listGetByIndex(i, temp2);
+							if (temp2.isObjectRef(AutoCloseable.class))
+								temp2.asObjectType(AutoCloseable.class).close();
+						}
+						returnValue.set(true);
+						return true;
+					} catch (Exception e) {
+						returnValue.setError("BadClose", e.getMessage(), e.getLocalizedMessage());
+						return true;
+					}
 				}
 				
-				try {
-					temp.asObjectType(AutoCloseable.class).close();
-					returnValue.set(true);
-					return true;
-				} catch (Exception e) {
-					returnValue.setError("BadClose", e.getMessage(), e.getLocalizedMessage());
-					return true;
+				if (temp.isObjectRef(AutoCloseable.class))
+				{
+					try {
+						temp.asObjectType(AutoCloseable.class).close();
+						returnValue.set(true);
+						return true;
+					} catch (Exception e) {
+						returnValue.setError("BadClose", e.getMessage(), e.getLocalizedMessage());
+						return true;
+					}
 				}
+				
+				return true;
 			}
 			finally
 			{
 				temp.setNull();
+				temp2.setNull();
 			}
 		}
 	},
@@ -427,5 +447,6 @@ public enum MiscFunctions implements ScriptFunctionType
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 
 }
