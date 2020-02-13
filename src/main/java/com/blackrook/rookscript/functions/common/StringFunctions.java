@@ -128,41 +128,6 @@ public enum StringFunctions implements ScriptFunctionType
 		}
 	},
 	
-	STRSTRIP(1)
-	{
-		@Override
-		protected Usage usage()
-		{
-			return ScriptFunctionUsage.create()
-				.instructions(
-					"Returns a string trimmed of whitespace (all Unicode whitespace) at both ends."
-				)
-				.parameter("string", 
-					type(Type.STRING, "The string (if not STRING, will be converted).")
-				)
-				.returns(
-					type(Type.STRING, "The stripped string.")
-				)
-			;
-		}
-		
-		@Override
-		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
-		{
-			ScriptValue arg1 = CACHEVALUE1.get();
-			try
-			{
-				scriptInstance.popStackValue(arg1);
-				returnValue.set(arg1.asString().strip());
-				return true;
-			}
-			finally
-			{
-				arg1.setNull();
-			}
-		}
-	},
-	
 	STRCHAR(2)
 	{
 		@Override
