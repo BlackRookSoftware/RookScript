@@ -552,11 +552,6 @@ public class ScriptParser extends Lexer.Parser
 		{
 			return parseNamedEntry(currentScript, false);
 		}
-		// pragma entry.
-		else if (matchType(ScriptKernel.TYPE_PRAGMA))
-		{
-			return parsePragmaEntry(currentScript);
-		}
 		else
 		{
 			addErrorMessage("Expected a \"function\", \"entry\", or \"pragma\" entry.");
@@ -693,20 +688,6 @@ public class ScriptParser extends Lexer.Parser
 		return true;
 	}
 
-	/* 
-		<PragmaEntry> := ...
-	 */
-	private boolean parsePragmaEntry(Script currentScript)
-	{
-		if (!matchType(ScriptKernel.TYPE_SEMICOLON))
-		{
-			addErrorMessage("Expected \";\" to terminate PRAGMA directive statement.");
-			return false;
-		}
-		
-		return true;
-	}
-	
 	/*
 		<StatementList> :=
 			<StatementClause> ";" <StatementList>
@@ -2254,7 +2235,6 @@ public class ScriptParser extends Lexer.Parser
 			case ScriptKernel.TYPE_CHECK:
 			case ScriptKernel.TYPE_FUNCTION:
 			case ScriptKernel.TYPE_ENTRY:
-			case ScriptKernel.TYPE_PRAGMA:
 				return true;
 		}
 	}

@@ -82,7 +82,6 @@ public class ScriptKernel extends Lexer.Kernel
 	public static final int TYPE_FOR = 111;
 	public static final int TYPE_ENTRY = 112;
 	public static final int TYPE_FUNCTION = 113;
-	public static final int TYPE_PRAGMA = 114;
 	public static final int TYPE_BREAK = 115;
 	public static final int TYPE_CONTINUE = 116;
 	public static final int TYPE_EACH = 117;
@@ -171,7 +170,6 @@ public class ScriptKernel extends Lexer.Kernel
 		addCaseInsensitiveKeyword("function", TYPE_FUNCTION);
 		addCaseInsensitiveKeyword("break", TYPE_BREAK);
 		addCaseInsensitiveKeyword("continue", TYPE_CONTINUE);
-		addCaseInsensitiveKeyword("pragma", TYPE_PRAGMA);
 		addCaseInsensitiveKeyword("check", TYPE_CHECK);
 	}
 }
