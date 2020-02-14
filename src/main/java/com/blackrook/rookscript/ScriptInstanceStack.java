@@ -254,6 +254,7 @@ public class ScriptInstanceStack
 	
 	/**
 	 * Pushes a value onto the stack.
+	 * @param <T> the value type.
 	 * @param value the value to push.
 	 * @throws ScriptStackException if this call would breach the stack capacity. 
 	 */

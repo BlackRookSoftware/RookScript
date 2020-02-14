@@ -714,6 +714,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	
 	/**
 	 * Sets the contents of this list to the provided collection.
+	 * @param <T> the array type.
 	 * @param list the list to set.
 	 * @return true if set, false if not.
 	 */
@@ -1127,7 +1128,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * @param map the source map.
 	 * @return true if this is a map and extraction was successful.
 	 */
-	public <T> boolean mapExtract(Map<?, ?> map)
+	public boolean mapExtract(Map<?, ?> map)
 	{
 		if (!isMap())
 			return false;
@@ -1142,6 +1143,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * This can be expensive, depending on what needs converting. 
 	 * <p>If you are passing an object to a script repeatedly, it may be better to just pass it
 	 * as an object reference, if there are associated host functions that manipulate it.
+	 * @param <T> the object type.
 	 * @param object the source object.
 	 * @return true if this is a map and extraction was successful.
 	 */
@@ -1184,6 +1186,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	/**
 	 * Applies this map to an object's fields/setters.
 	 * This can be expensive, depending on what needs converting. 
+	 * @param <T> the object type.
 	 * @param object the source object.
 	 * @return true if this is a map and application was successful.
 	 */

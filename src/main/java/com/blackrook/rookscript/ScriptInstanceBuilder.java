@@ -432,6 +432,7 @@ public final class ScriptInstanceBuilder
 	 * <p>
 	 * The script instance is lost from this call - only use this if you want to execute and discard the
 	 * execution instance.
+	 * @param <T> the return type.
 	 * @param returnType the return type to get from the script.
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.
