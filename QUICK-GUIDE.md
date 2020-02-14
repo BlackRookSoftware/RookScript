@@ -253,6 +253,23 @@ The following binary operators **short-circuit** their logic:
 ??      // null coalesce - short circuit if left side is not null, return first non-null.
 ```
 
+Assignment operators:
+
+```
+=       // equals
++=      // plus equals
+-=      // minus equals
+*=      // multiply equals
+/=      // divide equals
+%=      // modulo equals
+&=      // bitwise-and equals
+|=      // bitwise-or equals
+>>=     // right-shift equals
+>>>=    // padded right-shift equals
+<<=     // left-shift equals
+```
+
+
 The aforementioned short-circuiters have **lowest** precedence.
 
 ```
