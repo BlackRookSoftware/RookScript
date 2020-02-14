@@ -26,6 +26,6 @@ import com.blackrook.rookscript.ScriptValue;
 @Target({FIELD, METHOD, CONSTRUCTOR})
 public @interface ScriptValueType
 {
-	/** The value to convert to on read. */
+	/** @return the value to convert to on read. */
 	ScriptValue.Type value();
 }
