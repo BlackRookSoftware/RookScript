@@ -37,6 +37,8 @@
 	<patternset id="pattern.documents">
 		<include name="CONTRIBUTING.md" />
 		<include name="LICENSE.txt" />
+		<include name="PHILOSOPHY.md" />
+		<include name="QUICK-GUIDE.md" />
 		<include name="README.md" />
 		<include name="VERSIONING.md" />
 		<include name="docs/*.*" />

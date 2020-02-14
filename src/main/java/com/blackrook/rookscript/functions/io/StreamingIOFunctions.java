@@ -36,6 +36,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
@@ -407,12 +408,11 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens a data input stream for reading from STDIN (resource is not registered). " +
-					"This will return null if STDIN is not provided to the script's environment!"
+					"Opens a data input stream for reading from STDIN (resource is not registered)."
 				)
 				.returns(
-					type(Type.NULL, "If STDIN was not provided to the script's environment."),
-					type(Type.OBJECTREF, "InputStream", "An open input stream for reading STDIN.")
+					type(Type.OBJECTREF, "DataInputStream", "An open input stream for reading STDIN."),
+					type(Type.ERROR, "Unavailable", "If STDIN was not provided to the script's environment.")
 				)
 			;
 		}
@@ -420,7 +420,11 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
-			returnValue.set(new DataInputStream(scriptInstance.getEnvironment().getStandardIn()));
+			InputStream in = scriptInstance.getEnvironment().getStandardIn();
+			if (in == null)
+				returnValue.setError("Unavailable", "STDIN not available.");
+			else
+				returnValue.set(new DataInputStream(in));
 			return true;
 		}
 	},
@@ -432,12 +436,11 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens a data output stream for writing to STDOUT (resource is not registered). " +
-					"This will return null if STDOUT is not provided to the script's environment!"
+					"Opens a data output stream for writing to STDOUT (resource is not registered)."
 				)
 				.returns(
-					type(Type.NULL, "If STDOUT was not provided to the script's environment."),
-					type(Type.OBJECTREF, "OutputStream", "An open output stream for writing to STDOUT.")
+					type(Type.OBJECTREF, "DataOutputStream", "An open output stream for writing to STDOUT."),
+					type(Type.ERROR, "Unavailable", "If STDOUT was not provided to the script's environment.")
 				)
 			;
 		}
@@ -445,7 +448,11 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
-			returnValue.set(scriptInstance.getEnvironment().getStandardOut());
+			PrintStream out = scriptInstance.getEnvironment().getStandardOut();
+			if (out == null)
+				returnValue.setError("Unavailable", "STDOUT not available.");
+			else
+				returnValue.set(new DataOutputStream(out));
 			return true;
 		}
 	},
@@ -457,12 +464,11 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens a data output stream for writing to STDERR (resource is not registered). " +
-					"This will return null if STDERR is not provided to the script's environment!"
+					"Opens a data output stream for writing to STDERR (resource is not registered)."
 				)
 				.returns(
-					type(Type.NULL, "If STDERR was not provided to the script's environment."),
-					type(Type.OBJECTREF, "OutputStream", "An open output stream for writing to STDERR.")
+					type(Type.OBJECTREF, "DataOutputStream", "An open output stream for writing to STDERR."),
+					type(Type.ERROR, "Unavailable", "If STDERR was not provided to the script's environment.")
 				)
 			;
 		}
@@ -470,7 +476,11 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
-			returnValue.set(scriptInstance.getEnvironment().getStandardErr());
+			PrintStream err = scriptInstance.getEnvironment().getStandardErr();
+			if (err == null)
+				returnValue.setError("Unavailable", "STDOUT not available.");
+			else
+				returnValue.set(new DataOutputStream(err));
 			return true;
 		}
 	},

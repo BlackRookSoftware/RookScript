@@ -1,25 +1,31 @@
 # Black Rook RookScript
 
-Copyright (c) 2017-2019 Black Rook Software. All rights reserved.  
-[http://blackrooksoftware.com/projects.htm?name=rookscript](http://blackrooksoftware.com/projects.htm?name=rookscript)  
+Copyright (c) 2017-2020 Black Rook Software. All rights reserved.  
 [https://github.com/BlackRookSoftware/RookScript](https://github.com/BlackRookSoftware/RookScript)
+
+[Latest Release](https://github.com/BlackRookSoftware/RookScript/releases/latest)  
+[Online Javadoc](https://blackrooksoftware.github.io/RookScript/javadoc/)
+
 
 ### NOTICE
 
-This library is currently in **EXPERIMENTAL** status. This library's API
-may change many times in different ways over the course of its development!
+This library's API may change many times in different ways over the course of its development!
+
 
 ### Required Libraries
 
 NONE
 
+
 ### Required Java Modules
 
 [java.base](https://docs.oracle.com/javase/10/docs/api/java.base-summary.html)  
 
+
 ### Introduction
 
-This library assists in compiling/running RookScript, a non-host-specific scripting language.
+This library compiles and runs RookScript, a non-host-specific scripting language.
+
 
 ### Why?
 
@@ -28,10 +34,12 @@ into a world of abuse-able security problems. RookScript is a flexible runtime l
 flexible host interfacing, allowing each script to be as limited or wide in scope as the implementor
 wishes. 
 
+
 ### Library
 
 Contained in this release is a series of classes that should be used for RookScript functions. 
 The javadocs contain basic outlines of each package's contents.
+
 
 ### Compiling with Ant
 
@@ -62,7 +70,38 @@ To compile, JAR, test, and Zip up everything:
 To clean up everything:
 
 	ant clean
-	
+
+
+### Some Examples
+
+Hello World in RookScript.
+
+```
+entry main()
+{
+	println("Hello, world!");
+}
+```
+
+Creating a quick script instance and calling `main()`. 
+
+```Java
+ScriptInstance instance = ScriptInstance.createBuilder()
+	.withSource(new File(fileName))
+	.withEnvironment(ScriptEnvironment.createStandardEnvironment())
+	.withFunctionResolver(CommonFunctions.createResolver())
+	.withScriptStack(16, 512)
+	.createInstance();
+
+Object result = instance.callAndReturnAs(Object.class, "main");
+```
+
+
+### Javadocs
+
+Online Javadocs can be found at: [https://blackrooksoftware.github.io/RookScript/javadoc/](https://blackrooksoftware.github.io/RookScript/javadoc/)
+
+
 ### Other
 
 This program and the accompanying materials
