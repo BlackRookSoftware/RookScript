@@ -1,0 +1,8 @@
+com.blackrook.rookscript
+com.blackrook.rookscript.annotations
+com.blackrook.rookscript.compiler
+com.blackrook.rookscript.exception
+com.blackrook.rookscript.functions
+com.blackrook.rookscript.resolvers
+com.blackrook.rookscript.resolvers.scope
+com.blackrook.rookscript.resolvers.variable
