@@ -1,5 +1,5 @@
-RookScript (C) Black Rook Software 2019 
-=======================================
+RookScript (C) Black Rook Software 
+==================================
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
