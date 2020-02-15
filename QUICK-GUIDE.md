@@ -93,7 +93,7 @@ Maps
 }
 ```
 
-**Buffers**, **Errors**, **Objects**, two additional types, have no literal representation, but are storable as variables.
+**Buffers**, **Errors**, **Objects**, three additional types, have no literal representation, but are storable as variables.
 
 
 ### Logical Equivalence
@@ -249,7 +249,7 @@ The following binary operators **short-circuit** their logic:
 ```
 &&      // logical and - short circuit if left side is false
 ||      // logical or - short circuit if left side is true
-?:      // false coalesce - short circuit if left side is not false, return first non-null.
+?:      // false coalesce - short circuit if left side is not false, return first non-false-equivalent.
 ??      // null coalesce - short circuit if left side is not null, return first non-null.
 ```
 
