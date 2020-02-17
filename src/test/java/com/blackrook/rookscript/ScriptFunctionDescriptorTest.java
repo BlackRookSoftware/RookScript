@@ -116,7 +116,7 @@ public class ScriptFunctionDescriptorTest
 		printUsages(System.out, FileSystemFunctions.createResolver());
 		printHeader(System.out, "File I/O");
 		printUsages(System.out, FileIOFunctions.createResolver());
-		printHeader(System.out, "Zip Files");
+		printHeader(System.out, "Zip Files / GZIP Streams");
 		printUsages(System.out, ZipFunctions.createResolver());
 		printHeader(System.out, "Stream I/O");
 		printUsages(System.out, StreamingIOFunctions.createResolver());

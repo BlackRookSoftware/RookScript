@@ -22,6 +22,20 @@ import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.RegexFunctions;
 import com.blackrook.rookscript.functions.ZipFunctions;
+import com.blackrook.rookscript.functions.common.BufferFunctions;
+import com.blackrook.rookscript.functions.common.ErrorFunctions;
+import com.blackrook.rookscript.functions.common.ListFunctions;
+import com.blackrook.rookscript.functions.common.MapFunctions;
+import com.blackrook.rookscript.functions.common.MiscFunctions;
+import com.blackrook.rookscript.functions.common.StringFunctions;
+import com.blackrook.rookscript.functions.io.DataIOFunctions;
+import com.blackrook.rookscript.functions.io.FileIOFunctions;
+import com.blackrook.rookscript.functions.io.StreamingIOFunctions;
+import com.blackrook.rookscript.lang.ScriptFunctionType;
+import com.blackrook.rookscript.lang.ScriptFunctionType.Usage;
+import com.blackrook.rookscript.lang.ScriptFunctionType.Usage.ParameterUsage;
+import com.blackrook.rookscript.lang.ScriptFunctionType.Usage.TypeUsage;
+import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.DateFunctions;
 import com.blackrook.rookscript.functions.FileSystemFunctions;
@@ -37,6 +51,7 @@ public final class ScriptExecutor
 {
 	private static final String SWITCH_HELP1 = "--help";
 	private static final String SWITCH_HELP2 = "-h";
+	private static final String SWITCH_FUNCHELP1 = "--function-help";
 	private static final String SWITCH_ENTRY1 = "--entry";
 	private static final String SWITCH_DISASSEMBLE1 = "--disassemble";
 	private static final String SWITCH_ACTIVATIONDEPTH1 = "--activation-depth";
@@ -47,7 +62,8 @@ public final class ScriptExecutor
 	{
 		EXECUTE,
 		DISASSEMBLE,
-		HELP;
+		HELP,
+		FUNCTIONHELP;
 	}
 	
 	private Mode mode;
@@ -67,22 +83,17 @@ public final class ScriptExecutor
 		this.argList = new LinkedList<>();
 	}
 
-	private static void doDisassemble(ScriptInstance instance)
-	{
-		StringWriter sw = new StringWriter();
-		try {
-			ScriptAssembler.disassemble(instance.getScript(), new PrintWriter(sw));
-		} catch (IOException e) {
-			// Do nothing.
-		}
-		System.out.print(sw);
-	}
-
 	private int execute()
 	{
 		if (mode == Mode.HELP)
 		{
-			printHelp();
+			printHelp(System.out);
+			return 0;
+		}
+		
+		if (mode == Mode.FUNCTIONHELP)
+		{
+			printFunctionHelp(System.out);
 			return 0;
 		}
 		
@@ -96,7 +107,7 @@ public final class ScriptExecutor
 			System.err.println("ERROR: Script file does not exist: " + scriptFile);
 			return 4;
 		}
-
+	
 		ScriptInstance instance = ScriptInstance.createBuilder()
 			.withSource(scriptFile)
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
@@ -114,10 +125,10 @@ public final class ScriptExecutor
 		if (mode == Mode.DISASSEMBLE)
 		{
 			System.out.println("Disassembly of \"" + scriptFile + "\":");
-			doDisassemble(instance);
+			doDisassemble(System.out, instance);
 			return 0;
 		}
-
+	
 		if (mode == Mode.EXECUTE)
 		{
 			if (entryPoint == null)
@@ -160,28 +171,6 @@ public final class ScriptExecutor
 		return -1;
 	}
 
-	private static void printHelp()
-	{
-		PrintStream out = System.out;
-		out.println("Arguments: [filename] [switches] -- [scriptargs]");
-		out.println();
-		out.println("[filename]:");
-		out.println("    The script filename.");
-		out.println();
-		out.println("[switches]:");
-		out.println("    --help, -h                   Prints this help.");
-		out.println("    --disassemble                Prints the disassembly for this script");
-		out.println("                                     and exits.");
-		out.println("    --entry [name]               Use a different entry point named [name].");
-		out.println("                                     Default: \"main\"");
-		out.println("    --activation-depth [num]     Sets the activation depth to [num].");
-		out.println("                                     Default: 256");
-		out.println("    --stack-depth [num]          Sets the stack value depth to [num].");
-		out.println("                                     Default: 2048");
-		out.println("    --                           Pass parameters as-is after this token");
-		out.println("                                     to the script.");
-	}
-
 	private int parseCommandLine(ScriptExecutor executor, String[] args)
 	{
 		final int STATE_START = 0;
@@ -206,6 +195,8 @@ public final class ScriptExecutor
 					}
 					else if (SWITCH_DISASSEMBLE1.equalsIgnoreCase(arg))
 						mode = Mode.DISASSEMBLE;
+					else if (SWITCH_FUNCHELP1.equalsIgnoreCase(arg))
+						mode = Mode.FUNCTIONHELP;
 					else if (SWITCH_ENTRY1.equalsIgnoreCase(arg))
 						state = STATE_SWITCHES_ENTRY;
 					else if (SWITCH_ACTIVATIONDEPTH1.equalsIgnoreCase(arg))
@@ -279,6 +270,131 @@ public final class ScriptExecutor
 		}
 		
 		return 0;
+	}
+
+	private static void doDisassemble(PrintStream out, ScriptInstance instance)
+	{
+		StringWriter sw = new StringWriter();
+		try {
+			ScriptAssembler.disassemble(instance.getScript(), new PrintWriter(sw));
+		} catch (IOException e) {
+			// Do nothing.
+		}
+		out.print(sw);
+	}
+
+	private static void printHelp(PrintStream out)
+	{
+		out.println("Arguments: [filename] [switches] -- [scriptargs]");
+		out.println();
+		out.println("[filename]:");
+		out.println("    The script filename.");
+		out.println();
+		out.println("[switches]:");
+		out.println("    --help, -h                   Prints this help.");
+		out.println("    --function-help              Prints all available function usages.");
+		out.println("    --disassemble                Prints the disassembly for this script");
+		out.println("                                     and exits.");
+		out.println("    --entry [name]               Use a different entry point named [name].");
+		out.println("                                     Default: \"main\"");
+		out.println("    --activation-depth [num]     Sets the activation depth to [num].");
+		out.println("                                     Default: 256");
+		out.println("    --stack-depth [num]          Sets the stack value depth to [num].");
+		out.println("                                     Default: 2048");
+		out.println("    --                           Pass parameters as-is after this token");
+		out.println("                                     to the script.");
+	}
+
+	public static void printFunctionHeader(PrintStream out, String string)
+	{
+		out.println("=================================================================");
+		out.println("==== " + string);
+		out.println("=================================================================");
+		out.println();
+	}
+	
+	public static void printFunctionUsages(PrintStream out, ScriptFunctionResolver resolver)
+	{
+		for (ScriptFunctionType sft : resolver.getFunctions())
+		{
+			Usage usage = sft.getUsage();
+			if (usage != null)
+				printFunctionUsage(out, sft.name(), usage);
+			else
+				out.println(sft.name() + "(...)");
+			out.println();
+		}
+		out.println();
+	}
+	
+	public static void printFunctionUsage(PrintStream out, String name, Usage usage)
+	{
+		out.append(name).append('(');
+		List<ParameterUsage> pul = usage.getParameterInstructions();
+		for (int i = 0; i < pul.size(); i++)
+		{
+			out.append(pul.get(i).getParameterName());
+			if (i < pul.size() - 1)
+				out.append(", ");
+		}
+		out.append(')').print('\n');
+		
+		out.append("    ").println(usage.getInstructions());
+		if (!pul.isEmpty())
+		{
+			for (ParameterUsage pu : pul)
+			{
+				out.append("    ").append(pu.getParameterName()).println(":");
+				for (TypeUsage tu : pu.getTypes())
+				{
+					out.append("        (").append(tu.getType() != null 
+						? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
+						: "ANY"
+					).append(") ").println(tu.getDescription());
+				}
+			}
+		}
+		out.append("    ").println("Returns:");
+		for (TypeUsage tu : usage.getReturnTypes())
+		{
+			out.append("        (").append(tu.getType() != null 
+				? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
+				: "ANY"
+			).append(") ").println(tu.getDescription());
+			
+		}
+	}
+	
+	private static void printFunctionHelp(PrintStream out)
+	{
+		printFunctionHeader(out, "Common");
+		printFunctionUsages(out, MiscFunctions.createResolver());
+		printFunctionHeader(out, "Printing/Logging");
+		printFunctionUsages(out, PrintFunctions.createResolver());
+		printFunctionHeader(out, "String");
+		printFunctionUsages(out, StringFunctions.createResolver());
+		printFunctionHeader(out, "List / Set");
+		printFunctionUsages(out, ListFunctions.createResolver());
+		printFunctionHeader(out, "Map");
+		printFunctionUsages(out, MapFunctions.createResolver());
+		printFunctionHeader(out, "Buffer");
+		printFunctionUsages(out, BufferFunctions.createResolver());
+		printFunctionHeader(out, "Error");
+		printFunctionUsages(out, ErrorFunctions.createResolver());
+		printFunctionHeader(out, "Math");
+		printFunctionUsages(out, MathFunctions.createResolver());
+		printFunctionHeader(out, "RegEx");
+		printFunctionUsages(out, RegexFunctions.createResolver());
+		printFunctionHeader(out, "File System");
+		printFunctionUsages(out, FileSystemFunctions.createResolver());
+		printFunctionHeader(out, "File I/O");
+		printFunctionUsages(out, FileIOFunctions.createResolver());
+		printFunctionHeader(out, "Zip Files / GZIP Streams");
+		printFunctionUsages(out, ZipFunctions.createResolver());
+		printFunctionHeader(out, "Stream I/O");
+		printFunctionUsages(out, StreamingIOFunctions.createResolver());
+		printFunctionHeader(out, "Data I/O");
+		printFunctionUsages(out, DataIOFunctions.createResolver());
 	}
 	
 	public static void main(String[] args) throws Exception
