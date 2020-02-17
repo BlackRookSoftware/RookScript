@@ -18,10 +18,16 @@ import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
 import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Enumeration;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 /**
@@ -288,6 +294,138 @@ public enum ZipFunctions implements ScriptFunctionType
 			{
 				temp.setNull();
 				temp2.setNull();
+			}
+		}
+	},
+
+	/** @since [NOW] */
+	GZISOPEN(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Opens a data input stream for reading from a GZIP stream (and registers this resource as an open resource)."
+				)
+				.parameter("instream", 
+					type(Type.OBJECTREF, "InputStream", "A valid open input stream.")
+				)
+				.returns(
+					type(Type.OBJECTREF, "DataInput", "An open data input stream to read from."),
+					type(Type.ERROR, "BadParameter", "If an open input stream was not provided."),
+					type(Type.ERROR, "BadStream", "If the provided input stream is not a GZIPped stream of data."),
+					type(Type.ERROR, "IOError", "If a read error occurs, or the provided stream is not open.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try 
+			{
+				scriptInstance.popStackValue(temp);
+				if (temp.isNull())
+				{
+					returnValue.setNull();
+					return true;
+				}
+				if (!temp.isObjectRef(InputStream.class))
+				{
+					returnValue.setError("BadParameter", "First parameter is not an input stream type.");
+					return true;
+				}
+
+				InputStream in = temp.asObjectType(InputStream.class);
+				
+				DataInputStream gzin;
+				try {
+					gzin = new DataInputStream(new GZIPInputStream(in));
+				} catch (ZipException e) {
+					returnValue.setError("BadStream", e.getLocalizedMessage());
+					return true;
+				} catch (IOException e) {
+					returnValue.setError("IOError", e.getLocalizedMessage());
+					return true;
+				}
+
+				if (scriptInstance.closeableIsRegistered(in))
+				{
+					scriptInstance.unregisterCloseable(in);
+					scriptInstance.registerCloseable(gzin);
+				}
+				returnValue.set(gzin);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	/** @since [NOW] */
+	GZOSOPEN(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Opens a data output stream for writing to a GZIP stream (and registers this resource as an open resource)."
+				)
+				.parameter("instream", 
+					type(Type.OBJECTREF, "OutputStream", "A valid open output stream.")
+				)
+				.returns(
+					type(Type.OBJECTREF, "DataOutput", "An open data output stream to read from."),
+					type(Type.ERROR, "BadParameter", "If an open output stream was not provided."),
+					type(Type.ERROR, "IOError", "If a write error occurs, or the provided stream is not open.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try 
+			{
+				scriptInstance.popStackValue(temp);
+				if (temp.isNull())
+				{
+					returnValue.setNull();
+					return true;
+				}
+				if (!temp.isObjectRef(OutputStream.class))
+				{
+					returnValue.setError("BadParameter", "First parameter is not an output stream type.");
+					return true;
+				}
+
+				OutputStream out = temp.asObjectType(OutputStream.class);
+				
+				DataOutputStream gzout;
+				try {
+					gzout = new DataOutputStream(new GZIPOutputStream(out));
+				} catch (IOException e) {
+					returnValue.setError("IOError", e.getLocalizedMessage());
+					return true;
+				}
+
+				if (scriptInstance.closeableIsRegistered(out))
+				{
+					scriptInstance.unregisterCloseable(out);
+					scriptInstance.registerCloseable(gzout);
+				}
+				returnValue.set(gzout);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
 			}
 		}
 	},

@@ -1,0 +1,15 @@
+entry main()
+{
+	fin = fisopen("build.xml");
+	gzos = gzosopen(fosopen("build.xml.gz"));
+	relay(fin, gzos);
+	close([fin, gzos]);
+	
+	gzin = gzisopen(fisopen("build.xml.gz"));
+	fos = fosopen("build2.xml");
+	relay(gzin, fos);
+	close([gzin, fos]);
+	
+	println(filedelete("build.xml.gz"));
+	println(filedelete("build2.xml"));
+}
