@@ -1,0 +1,9 @@
+#!/usr/bin/env rookscript -i
+
+entry main(args)
+{
+	println("Hello, script.");
+	println(args);
+	return 0;
+}
+

@@ -1778,7 +1778,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * If this is a map, this applies its fields to the new object's setter methods and fields.
 	 * @param targetType the target class type to convert to.
 	 * @param <T> the returned type.
-	 * @return a suitable object of type <code>targetType</code>. 
+	 * @return a suitable object of type <code>targetType</code>, or null . 
 	 * @throws ClassCastException if the incoming type cannot be converted.
 	 */
 	public <T> T createForType(Class<T> targetType)
@@ -1798,7 +1798,12 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			case LIST:
 				return Utils.createForType(asObjectType(ListType.class), targetType);
 			case MAP:
-				T out = Utils.create(targetType);
+				T out;
+				try {
+					out = Utils.create(targetType);
+				} catch (Exception e) {
+					throw new ClassCastException("Exception during conversion between " + targetType + " and " + getType());
+				}
 				mapApply(out);
 				return out;
 			default:

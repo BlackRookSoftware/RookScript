@@ -301,6 +301,7 @@ public class ScriptInstance
 	 * @param entryName the entry point name.
 	 * @param parameters the starting parameters to push onto the stack.
 	 * @return the returned value at the end of the script, converted to a specific class type.
+	 * @throws ClassCastException if the conversion could not be done.
 	 * @throws ScriptExecutionException if the provided amount of parameters do not match the amount of parameters that the script requires, 
 	 * 		or the provided entry point does not exist.
 	 * @see #initialize(String, Object...)
