@@ -298,7 +298,7 @@ public enum ZipFunctions implements ScriptFunctionType
 		}
 	},
 
-	/** @since [NOW] */
+	/** @since 1.1.0 */
 	GZISOPEN(1)
 	{
 		@Override
@@ -366,7 +366,7 @@ public enum ZipFunctions implements ScriptFunctionType
 		}
 	},
 
-	/** @since [NOW] */
+	/** @since 1.1.0 */
 	GZOSOPEN(1)
 	{
 		@Override

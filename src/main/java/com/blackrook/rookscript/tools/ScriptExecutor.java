@@ -45,7 +45,7 @@ import com.blackrook.rookscript.functions.PrintFunctions;
 /**
  * A class for executing scripts from command line.
  * @author Matthew Tropiano
- * @since [NOW]
+ * @since 1.1.0
  */
 public final class ScriptExecutor
 {
