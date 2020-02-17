@@ -17,6 +17,7 @@ import com.blackrook.rookscript.functions.RegexFunctions;
 import com.blackrook.rookscript.functions.ZipFunctions;
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.DateFunctions;
+import com.blackrook.rookscript.functions.DigestFunctions;
 import com.blackrook.rookscript.functions.FileSystemFunctions;
 import com.blackrook.rookscript.functions.IOFunctions;
 import com.blackrook.rookscript.functions.PrintFunctions;
@@ -105,6 +106,7 @@ public class ScriptTest
 				.andFunctionResolver(DateFunctions.createResolver())
 				.andFunctionResolver(IOFunctions.createResolver())
 				.andFunctionResolver(ZipFunctions.createResolver())
+				.andFunctionResolver(DigestFunctions.createResolver())
 			.withScriptStack(16, 512)
 			.withScope("script", new DefaultVariableResolver())
 			.createInstance();

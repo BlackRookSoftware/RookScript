@@ -1,0 +1,17 @@
+#!/usr/bin/env rookscript -i
+
+entry main(args)
+{
+	buf = bufnew(4);
+	bufputint(buf, 12345678);
+	println(hashstr(buf));
+	
+	check (err)
+	{ 
+		println(md5(file("build.xml"))->hashstr());
+		println(sha1(file("build.xml"))->hashstr());
+		println(sha256(file("build.xml"))->hashstr());
+	}
+	if (err)
+		println(err);
+}

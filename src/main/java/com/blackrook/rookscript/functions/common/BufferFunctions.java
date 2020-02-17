@@ -749,7 +749,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 0 >= buf.size())
+				if ((i = index == null ? buf.getPosition() : index) >= buf.size())
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " is out of bounds.");
 					return true;
@@ -807,7 +807,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 0 >= buf.size() || i < 0)
+				if ((i = index == null ? buf.getPosition() : index) >= buf.size() || i < 0)
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " is out of bounds.");
 					return true;
@@ -869,7 +869,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 2 >= buf.size())
+				if ((i = index == null ? buf.getPosition() : index) + 2 > buf.size())
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 2 will be out of bounds.");
 					return true;
@@ -927,7 +927,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 2 >= buf.size() || i < 0)
+				if ((i = index == null ? buf.getPosition() : index) + 2 > buf.size() || i < 0)
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 2 will be out of bounds.");
 					return true;
@@ -989,7 +989,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 2 >= buf.size())
+				if ((i = index == null ? buf.getPosition() : index) + 2 > buf.size())
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 2 will be out of bounds.");
 					return true;
@@ -1047,7 +1047,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 2 >= buf.size() || i < 0)
+				if ((i = index == null ? buf.getPosition() : index) + 2 > buf.size() || i < 0)
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 2 will be out of bounds.");
 					return true;
@@ -1109,7 +1109,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size())
+				if ((i = index == null ? buf.getPosition() : index) + 4 > buf.size())
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
 					return true;
@@ -1167,7 +1167,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size() || i < 0)
+				if ((i = index == null ? buf.getPosition() : index) + 4 > buf.size() || i < 0)
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
 					return true;
@@ -1229,7 +1229,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size())
+				if ((i = index == null ? buf.getPosition() : index) + 4 > buf.size())
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
 					return true;
@@ -1287,7 +1287,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size() || i < 0)
+				if ((i = index == null ? buf.getPosition() : index) + 4 > buf.size() || i < 0)
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
 					return true;
@@ -1350,7 +1350,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size())
+				if ((i = index == null ? buf.getPosition() : index) + 4 > buf.size())
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
 					return true;
@@ -1409,7 +1409,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 4 >= buf.size() || i < 0)
+				if ((i = index == null ? buf.getPosition() : index) + 4 > buf.size() || i < 0)
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 4 will be out of bounds.");
 					return true;
@@ -1471,7 +1471,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 8 >= buf.size())
+				if ((i = index == null ? buf.getPosition() : index) + 8 > buf.size())
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 8 will be out of bounds.");
 					return true;
@@ -1529,7 +1529,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 8 >= buf.size() || i < 0)
+				if ((i = index == null ? buf.getPosition() : index) + 8 > buf.size() || i < 0)
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 8 will be out of bounds.");
 					return true;
@@ -1592,7 +1592,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 8 >= buf.size())
+				if ((i = index == null ? buf.getPosition() : index) + 8 > buf.size())
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 8 will be out of bounds.");
 					return true;
@@ -1651,7 +1651,7 @@ public enum BufferFunctions implements ScriptFunctionType
 				
 				BufferType buf = temp.asObjectType(BufferType.class);
 				int i;
-				if ((i = index == null ? buf.getPosition() : index) + 8 >= buf.size() || i < 0)
+				if ((i = index == null ? buf.getPosition() : index) + 8 > buf.size() || i < 0)
 				{
 					returnValue.setError("OutOfBounds", "Index " + i + " + 8 will be out of bounds.");
 					return true;

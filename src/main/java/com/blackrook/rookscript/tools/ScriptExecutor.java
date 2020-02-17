@@ -38,6 +38,7 @@ import com.blackrook.rookscript.lang.ScriptFunctionType.Usage.TypeUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.DateFunctions;
+import com.blackrook.rookscript.functions.DigestFunctions;
 import com.blackrook.rookscript.functions.FileSystemFunctions;
 import com.blackrook.rookscript.functions.IOFunctions;
 import com.blackrook.rookscript.functions.PrintFunctions;
@@ -119,6 +120,7 @@ public final class ScriptExecutor
 				.andFunctionResolver(PrintFunctions.createResolver())
 				.andFunctionResolver(RegexFunctions.createResolver())
 				.andFunctionResolver(ZipFunctions.createResolver())
+				.andFunctionResolver(DigestFunctions.createResolver())
 			.withScriptStack(activationDepth, stackDepth)
 			.createInstance();
 		
@@ -395,6 +397,8 @@ public final class ScriptExecutor
 		printFunctionUsages(out, StreamingIOFunctions.createResolver());
 		printFunctionHeader(out, "Data I/O");
 		printFunctionUsages(out, DataIOFunctions.createResolver());
+		printFunctionHeader(out, "Digest");
+		printFunctionUsages(out, DigestFunctions.createResolver());
 	}
 	
 	public static void main(String[] args) throws Exception

@@ -3,6 +3,13 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.2.0
+----------------
+
+- `Fixed` Buffer bounds checks on all BUF* get/put functions.
+- `Added` DigestFunctions
+
+
 Changed in 1.1.0
 ----------------
 
