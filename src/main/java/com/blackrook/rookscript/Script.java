@@ -92,7 +92,8 @@ public class Script
 	public Entry createFunctionEntry(String name, int parameterCount, int index)
 	{
 		Entry out = new Entry(parameterCount, index);
-		functionLabelMap.put(name.toLowerCase(), out);
+		name = name.toLowerCase();
+		functionLabelMap.put(name, out);
 		setIndex(LABEL_FUNCTION_PREFIX + name, index);
 		return out;
 	}
@@ -119,7 +120,8 @@ public class Script
 	 */
 	public void setScriptEntry(String name, int parameterCount, int index)
 	{
-		scriptLabelMap.put(name.toLowerCase(), new Entry(parameterCount, index));
+		name = name.toLowerCase();
+		scriptLabelMap.put(name, new Entry(parameterCount, index));
 		setIndex(LABEL_ENTRY_PREFIX + name, index);
 	}
 

@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.2.1
+----------------
+
+- `Fixed` Some functions were not treated as case-insensitive.
+
+
 Changed in 1.2.0
 ----------------
 
