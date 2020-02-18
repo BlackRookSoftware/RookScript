@@ -30,7 +30,7 @@ import java.security.NoSuchAlgorithmException;
 /**
  * Script common functions for standard input/output.
  * @author Matthew Tropiano
- * @since [NOW]
+ * @since 1.2.0
  */
 public enum DigestFunctions implements ScriptFunctionType
 {
