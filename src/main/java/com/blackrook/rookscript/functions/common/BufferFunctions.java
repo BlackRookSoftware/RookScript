@@ -1830,6 +1830,57 @@ public enum BufferFunctions implements ScriptFunctionType
 		}
 	},
 	
+	BUFSTR(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Outputs a buffer's contents as a string of hexadecimal digits, from first byte to last byte."
+				)
+				.parameter("buffer", 
+					type(Type.BUFFER, "The buffer.")
+				)
+				.returns(
+					type(Type.NULL, "If the input is not a buffer."),
+					type(Type.STRING, "A contiguous string of hexadecimal characters representing the buffer's contents, two characters per byte.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			StringBuilder sb = STRINGBUILDER.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				if (!temp.isBuffer())
+				{
+					returnValue.setNull();
+					return true;
+				}
+				
+				BufferType buffer = temp.asObjectType(BufferType.class);
+				for (int i = 0; i < buffer.size(); i++)
+				{
+					byte b = buffer.getByte(i);
+					sb.append(HEXALPHABET.charAt((b & 0x0f0) >> 4));
+					sb.append(HEXALPHABET.charAt(b & 0x0f));
+				}
+				returnValue.set(sb.toString());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+				sb.delete(0, sb.length());
+			}
+		}
+	},
+
 	;
 	
 	private final int parameterCount;
@@ -1867,9 +1918,12 @@ public enum BufferFunctions implements ScriptFunctionType
 	@Override
 	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
 
+	private static final String HEXALPHABET = "0123456789abcdef";
+	
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<ScriptValue> CACHEVALUE3 = ThreadLocal.withInitial(()->ScriptValue.create(null));
+	private static final ThreadLocal<StringBuilder> STRINGBUILDER = ThreadLocal.withInitial(()->new StringBuilder(256));
 
 }

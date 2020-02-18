@@ -307,7 +307,7 @@ public final class ScriptExecutor
 		out.println("                                     to the script.");
 	}
 
-	public static void printFunctionHeader(PrintStream out, String string)
+	private static void printFunctionHeader(PrintStream out, String string)
 	{
 		out.println("=================================================================");
 		out.println("==== " + string);
@@ -315,7 +315,7 @@ public final class ScriptExecutor
 		out.println();
 	}
 	
-	public static void printFunctionUsages(PrintStream out, ScriptFunctionResolver resolver)
+	private static void printFunctionUsages(PrintStream out, ScriptFunctionResolver resolver)
 	{
 		for (ScriptFunctionType sft : resolver.getFunctions())
 		{
@@ -329,7 +329,7 @@ public final class ScriptExecutor
 		out.println();
 	}
 	
-	public static void printFunctionUsage(PrintStream out, String name, Usage usage)
+	private static void printFunctionUsage(PrintStream out, String name, Usage usage)
 	{
 		out.append(name).append('(');
 		List<ParameterUsage> pul = usage.getParameterInstructions();

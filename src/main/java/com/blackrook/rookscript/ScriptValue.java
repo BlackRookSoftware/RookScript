@@ -3196,15 +3196,6 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		}
 		
 		/**
-		 * @return an open input stream for reading from the buffer's beginning.
-		 * @since [NOW]
-		 */
-		public InputStream getAbsoluteInputStream() 
-		{
-			return new BufferAbsoluteInputStream();
-		}
-		
-		/**
 		 * @return an open output stream for writing from the buffer's current cursor.
 		 */
 		public OutputStream getOutputStream()
@@ -3266,27 +3257,6 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			{
 				return "BufferTypeIterator:" + cur + "/" + data.length;
 			}
-		}
-		
-		private class BufferAbsoluteInputStream extends InputStream
-		{
-			private int cur = 0;
-			
-			@Override
-			public int available() throws IOException 
-			{
-				return data.length - cur;
-			}
-			
-			@Override
-			public int read() throws IOException
-			{
-				if (available() == 0)
-					return -1;
-				else
-					return getByte(cur++) & 0x0ff;
-			}
-			
 		}
 		
 		private class BufferInputStream extends InputStream

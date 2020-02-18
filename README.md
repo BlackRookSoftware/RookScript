@@ -4,7 +4,8 @@ Copyright (c) 2017-2020 Black Rook Software. All rights reserved.
 [https://github.com/BlackRookSoftware/RookScript](https://github.com/BlackRookSoftware/RookScript)
 
 [Latest Release](https://github.com/BlackRookSoftware/RookScript/releases/latest)  
-[Online Javadoc](https://blackrooksoftware.github.io/RookScript/javadoc/)
+[Online Javadoc](https://blackrooksoftware.github.io/RookScript/javadoc/)  
+[Quick Guide](https://github.com/BlackRookSoftware/RookScript/blob/master/QUICK-GUIDE.md)
 
 
 ### NOTICE

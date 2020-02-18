@@ -3,15 +3,34 @@
 entry main(args)
 {
 	buf = bufnew(4);
-	bufputint(buf, 12345678);
-	println(hashstr(buf));
+	bufputint(buf, 12345678, 0);
+	println(bufstr(buf));
 	
 	check (err)
 	{ 
-		println(md5(file("build.xml"))->hashstr());
-		println(sha1(file("build.xml"))->hashstr());
-		println(sha256(file("build.xml"))->hashstr());
+		println(md5(file("build.xml"))->bufstr());
+		println(sha1(file("build.xml"))->bufstr());
+		println(sha256(file("build.xml"))->bufstr());
 	}
 	if (err)
 		println(err);
+
+	check (err)
+	{
+		d = digeststart("sha1");
+		each (x : filelist("src/main/java/com/blackrook/rookscript"))
+		{
+			if (!fileisdir(x))
+			{
+				fis = fisopen(x);
+				digestupdate(d, fis);
+				close(fis);
+			}
+		}
+		println(digestend(d)->bufstr());
+	}
+	close(fis);
+	if (err)
+		println(err);	
+	
 }
