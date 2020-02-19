@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.2.2
+----------------
+
+- `Changed` Added some stuff to the script executor.
+
+
 Changed in 1.2.1
 ----------------
 
