@@ -53,23 +53,26 @@ public final class ScriptExecutor
 	private static final String SWITCH_HELP1 = "--help";
 	private static final String SWITCH_HELP2 = "-h";
 	private static final String SWITCH_FUNCHELP1 = "--function-help";
-	private static final String SWITCH_ENTRY1 = "--entry";
 	private static final String SWITCH_DISASSEMBLE1 = "--disassemble";
+	private static final String SWITCH_ENTRY1 = "--entry";
+	private static final String SWITCH_RUNAWAYLIMIT1 = "--runaway-limit";
 	private static final String SWITCH_ACTIVATIONDEPTH1 = "--activation-depth";
 	private static final String SWITCH_STACKDEPTH1 = "--stack-depth";
 	private static final String SWITCH_SEPARATOR = "--";
+	private static final String SWITCH_SEPARATORBASH = "--X";
 	
 	private enum Mode
 	{
-		EXECUTE,
-		DISASSEMBLE,
 		HELP,
-		FUNCTIONHELP;
+		FUNCTIONHELP,
+		DISASSEMBLE,
+		EXECUTE;
 	}
 	
 	private Mode mode;
 	private File scriptFile;
 	private String entryPoint;
+	private Integer runawayLimit;
 	private Integer activationDepth;
 	private Integer stackDepth;
 	private List<String> argList;
@@ -79,6 +82,7 @@ public final class ScriptExecutor
 		this.mode = Mode.EXECUTE;
 		this.scriptFile = null;
 		this.entryPoint = "main";
+		this.runawayLimit = 0;
 		this.activationDepth = 256;
 		this.stackDepth = 2048;
 		this.argList = new LinkedList<>();
@@ -122,6 +126,7 @@ public final class ScriptExecutor
 				.andFunctionResolver(ZipFunctions.createResolver())
 				.andFunctionResolver(DigestFunctions.createResolver())
 			.withScriptStack(activationDepth, stackDepth)
+			.withRunawayLimit(runawayLimit)
 			.createInstance();
 		
 		if (mode == Mode.DISASSEMBLE)
@@ -146,6 +151,11 @@ public final class ScriptExecutor
 			if (stackDepth == null)
 			{
 				System.err.println("ERROR: Bad stack depth.");
+				return 4;
+			}
+			if (runawayLimit == null)
+			{
+				System.err.println("ERROR: Bad runaway limit.");
 				return 4;
 			}
 			
@@ -177,10 +187,12 @@ public final class ScriptExecutor
 	{
 		final int STATE_START = 0;
 		final int STATE_ARGS = 1;
+		final int STATE_BASH_FILE = 2;
 		final int SWITCHES = 10;
 		final int STATE_SWITCHES_ENTRY = SWITCHES + 0;
 		final int STATE_SWITCHES_ACTIVATION = SWITCHES + 1;
 		final int STATE_SWITCHES_STACK = SWITCHES + 2;
+		final int STATE_SWITCHES_RUNAWAY = SWITCHES + 3;
 		int state = STATE_START;
 		
 		for (int i = 0; i < args.length; i++)
@@ -201,12 +213,16 @@ public final class ScriptExecutor
 						mode = Mode.FUNCTIONHELP;
 					else if (SWITCH_ENTRY1.equalsIgnoreCase(arg))
 						state = STATE_SWITCHES_ENTRY;
+					else if (SWITCH_RUNAWAYLIMIT1.equalsIgnoreCase(arg))
+						state = STATE_SWITCHES_RUNAWAY;
 					else if (SWITCH_ACTIVATIONDEPTH1.equalsIgnoreCase(arg))
 						state = STATE_SWITCHES_ACTIVATION;
 					else if (SWITCH_STACKDEPTH1.equalsIgnoreCase(arg))
 						state = STATE_SWITCHES_STACK;
 					else if (SWITCH_SEPARATOR.equalsIgnoreCase(arg))
 						state = STATE_ARGS;
+					else if (SWITCH_SEPARATORBASH.equalsIgnoreCase(arg))
+						state = STATE_BASH_FILE;
 					else
 						scriptFile = new File(arg);
 				}
@@ -247,9 +263,30 @@ public final class ScriptExecutor
 				}
 				break;
 				
+				case STATE_SWITCHES_RUNAWAY:
+				{
+					int n;
+					try {
+						n = Integer.parseInt(arg);
+						runawayLimit = n > 0 ? n : null;
+					} catch (NumberFormatException e) {
+						runawayLimit = null;
+						return 2;
+					}
+					state = STATE_START;
+				}
+				break;
+				
 				case STATE_ARGS:
 				{
 					argList.add(arg);
+				}
+				break;
+
+				case STATE_BASH_FILE:
+				{
+					scriptFile = new File(arg);
+					state = STATE_ARGS;
 				}
 				break;			
 			}
@@ -268,6 +305,11 @@ public final class ScriptExecutor
 		if (state == STATE_SWITCHES_STACK)
 		{
 			System.err.println("ERROR: Expected number after stack depth switch.");
+			return 3;
+		}
+		if (state == STATE_SWITCHES_RUNAWAY)
+		{
+			System.err.println("ERROR: Expected number after runaway limit switch.");
 			return 3;
 		}
 		
@@ -299,12 +341,20 @@ public final class ScriptExecutor
 		out.println("                                     and exits.");
 		out.println("    --entry [name]               Use a different entry point named [name].");
 		out.println("                                     Default: \"main\"");
+		out.println("    --runaway-limit [num]        Sets the runaway limit (in operations)");
+		out.println("                                     before the soft protection on infinite");
+		out.println("                                     loops triggers. 0 is no limit.");
+		out.println("                                     Default: 0");
 		out.println("    --activation-depth [num]     Sets the activation depth to [num].");
 		out.println("                                     Default: 256");
 		out.println("    --stack-depth [num]          Sets the stack value depth to [num].");
 		out.println("                                     Default: 2048");
 		out.println("    --                           Pass parameters as-is after this token");
 		out.println("                                     to the script.");
+		out.println("    --X                          Bash script special: First argument after");
+		out.println("                                     this is the script file, and every");
+		out.println("                                     argument after are args to pass to the");
+		out.println("                                     script.");
 	}
 
 	private static void printFunctionHeader(PrintStream out, String string)
