@@ -8,11 +8,6 @@ Copyright (c) 2017-2020 Black Rook Software. All rights reserved.
 [Quick Guide](https://github.com/BlackRookSoftware/RookScript/blob/master/QUICK-GUIDE.md)
 
 
-### NOTICE
-
-This library's API may change many times in different ways over the course of its development!
-
-
 ### Required Libraries
 
 NONE
