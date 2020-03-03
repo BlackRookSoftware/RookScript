@@ -1,6 +1,6 @@
 # Black Rook RookScript
 
-Copyright (c) 2017-2020 Black Rook Software. All rights reserved.  
+Copyright (c) 2017-2020 Black Rook Software.  
 [https://github.com/BlackRookSoftware/RookScript](https://github.com/BlackRookSoftware/RookScript)
 
 [Latest Release](https://github.com/BlackRookSoftware/RookScript/releases/latest)  
