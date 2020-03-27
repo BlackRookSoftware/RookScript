@@ -501,7 +501,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "File", "A path to a file.")
 				)
 				.returns(
-					type(Type.OBJECTREF, "DataInput", "An open data input stream to read from."),
+					type(Type.OBJECTREF, "DataInputStream", "An open data input stream to read from."),
 					type(Type.ERROR, "BadParameter", "If [file] is null."),
 					type(Type.ERROR, "BadFile", "If [file] could not be found."),
 					type(Type.ERROR, "Security", "If the OS denied opening the file for reading.")
@@ -616,7 +616,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					type(Type.BUFFER, "The buffer to use.")
 				)
 				.returns(
-					type(Type.OBJECTREF, "DataInput", "An open data input stream to read from."),
+					type(Type.OBJECTREF, "DataInputStream", "An open data input stream to read from."),
 					type(Type.ERROR, "BadParameter", "If [buffer] is null or not a buffer.")
 				)
 			;

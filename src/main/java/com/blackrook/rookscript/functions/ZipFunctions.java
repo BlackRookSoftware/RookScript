@@ -231,7 +231,7 @@ public enum ZipFunctions implements ScriptFunctionType
 					type(Type.MAP, "{... name:STRING ...}", "A map of zip entry info containing the name of the entry.")
 				)
 				.returns(
-					type(Type.OBJECTREF, "DataInput", "An open data input stream to read from."),
+					type(Type.OBJECTREF, "DataInputStream", "An open data input stream to read from."),
 					type(Type.ERROR, "BadParameter", "If an open zip file was not provided, or [entry] is null or [entry].name is null."),
 					type(Type.ERROR, "BadEntry", "If [entry] could not be found in the zip."),
 					type(Type.ERROR, "IOError", "If a read error occurs, or the zip is not open.")
@@ -312,7 +312,7 @@ public enum ZipFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "InputStream", "A valid open input stream.")
 				)
 				.returns(
-					type(Type.OBJECTREF, "DataInput", "An open data input stream to read from."),
+					type(Type.OBJECTREF, "DataInputStream", "An open data input stream to read from."),
 					type(Type.ERROR, "BadParameter", "If an open input stream was not provided."),
 					type(Type.ERROR, "BadStream", "If the provided input stream is not a GZIPped stream of data."),
 					type(Type.ERROR, "IOError", "If a read error occurs, or the provided stream is not open.")

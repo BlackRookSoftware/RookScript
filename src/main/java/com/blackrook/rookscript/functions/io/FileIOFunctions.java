@@ -52,7 +52,7 @@ public enum FileIOFunctions implements ScriptFunctionType
 					)
 				)
 				.returns(
-					type(Type.OBJECTREF, "RandomAccessFile", "If successfully open/created."),
+					type(Type.OBJECTREF, "RandomAccessFile", "If successfully open/created (NOTE: This is also a DataInput/DataOutput)."),
 					type(Type.ERROR, "BadMode", "If [mode] is an unexpected value."),
 					type(Type.ERROR, "Security", "If the OS denied opening the file for the required permissions."),
 					type(Type.ERROR, "IOError", "If [path] is null or the file could not be opened/found for some reason.")
