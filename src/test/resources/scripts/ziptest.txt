@@ -3,7 +3,7 @@
 entry main()
 {
 	zip = zfopen("H:\\Doom\\Iwads\\square1.pk3");
-	each (e : zip->zfentries())
-		println(e);
+	each (n, e : zip->zfiterate())
+		println(n);
 	close(zip);
 }

@@ -199,6 +199,46 @@ public enum FileSystemFunctions implements ScriptFunctionType
 		}
 	},
 
+	FILEPATH(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns the path used to open the file."
+				)
+				.parameter("path", 
+					type(Type.STRING, "A file path to inspect."),
+					type(Type.OBJECTREF, "File", "A file path to inspect.")
+				)
+				.returns(
+					type(Type.NULL, "If [file] is null."),
+					type(Type.STRING, "The file's path.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				File file = popFile(scriptInstance, temp);
+				if (file != null)
+					returnValue.set(file.getPath());
+				else
+					returnValue.setNull();
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
 	FILENAME(1)
 	{
 		@Override
@@ -239,22 +279,27 @@ public enum FileSystemFunctions implements ScriptFunctionType
 		}
 	},
 
-	FILEPATH(1)
+	/** @since 1.3.0 */
+	FILENAMENOEXT(2)
 	{
 		@Override
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Returns the path used to open the file."
+					"Returns the name of a file, without extension."
 				)
 				.parameter("path", 
 					type(Type.STRING, "A file path to inspect."),
 					type(Type.OBJECTREF, "File", "A file path to inspect.")
 				)
+				.parameter("extension", 
+					type(Type.NULL, "Use \".\""),
+					type(Type.STRING, "The file extension separator string.")
+				)
 				.returns(
 					type(Type.NULL, "If [file] is null."),
-					type(Type.STRING, "The file's path.")
+					type(Type.STRING, "The file's name without its extension.")
 				)
 			;
 		}
@@ -265,9 +310,11 @@ public enum FileSystemFunctions implements ScriptFunctionType
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
+				scriptInstance.popStackValue(temp);
+				String ext = temp.isNull() ? "." : temp.asString();
 				File file = popFile(scriptInstance, temp);
 				if (file != null)
-					returnValue.set(file.getPath());
+					returnValue.set(Utils.getFileNameWithoutExtension(file, ext));
 				else
 					returnValue.setNull();
 				return true;

@@ -55,8 +55,9 @@ public interface ScriptIteratorType extends Iterator<ScriptIteratorType.Iterator
 		
 		/**
 		 * @return the pair key.
+		 * @since 1.3.0, returns {@link ScriptValue}, not {@link Object}.
 		 */
-		public Object getKey() 
+		public ScriptValue getKey() 
 		{
 			return key;
 		}

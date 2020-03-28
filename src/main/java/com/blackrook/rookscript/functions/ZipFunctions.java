@@ -8,6 +8,7 @@
 package com.blackrook.rookscript.functions;
 
 import com.blackrook.rookscript.ScriptInstance;
+import com.blackrook.rookscript.ScriptIteratorType;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
@@ -214,6 +215,77 @@ public enum ZipFunctions implements ScriptFunctionType
 		}
 	},
 
+	/** @since 1.3.0 */
+	ZFITERATE(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a list of all of the entries in an open Zip File."
+				)
+				.parameter("zip", 
+					type(Type.OBJECTREF, "Script", "The open zip file.")
+				)
+				.returns(
+					type(Type.OBJECTREF, "ScriptIteratorType", "An iterator for each entry - Key: name:STRING, value: MAP{name:STRING, dir:BOOLEAN, size:INTEGER, time:INTEGER, comment:STRING, compressedsize:INTEGER, crc:INTEGER, creationtime:INTEGER, lastaccesstime:INTEGER, lastmodifiedtime:INTEGER}."),
+					type(Type.ERROR, "BadParameter", "If an open zip file was not provided."),
+					type(Type.ERROR, "IOError", "If a read error occurs, or the zip is not open.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try 
+			{
+				scriptInstance.popStackValue(temp);
+				if (!temp.isObjectType(ZipFile.class))
+				{
+					returnValue.setError("BadParameter", "First parameter is not an open zip file.");
+					return true;
+				}
+
+				final Enumeration<? extends ZipEntry> entryEnum;
+				try {
+					entryEnum = temp.asObjectType(ZipFile.class).entries();
+				} catch (IllegalStateException e) {
+					returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());
+					return true;
+				}
+				
+				returnValue.set(new ScriptIteratorType() 
+				{
+					private final IteratorPair pair = new IteratorPair();
+					private final Enumeration<? extends ZipEntry> en = entryEnum;
+					
+					@Override
+					public IteratorPair next() 
+					{
+						ZipEntry ze = en.nextElement();
+						pair.set(ze.getName(), null);
+						setEntryInfo(ze, pair.getValue());
+						return pair;
+					}
+					
+					@Override
+					public boolean hasNext()
+					{
+						return en.hasMoreElements();
+					}
+				});
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	ZFEOPEN(2)
 	{
 		@Override

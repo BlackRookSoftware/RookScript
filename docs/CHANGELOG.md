@@ -3,9 +3,11 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
-Changed in [NOW]
+Changed in 1.3.0
 ----------------
 
+- `Added` ZipFunctions: ZFITERATE
+- `Added` FileSystemFunctions: FILENAMENOEXT
 - `Changed` Modified some function documentation.
 
 
