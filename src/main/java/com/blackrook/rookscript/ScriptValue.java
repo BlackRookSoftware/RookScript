@@ -1285,7 +1285,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 
 	/**
 	 * @return true if this value is an integer type.
-	 * @since [NOW]
+	 * @since 1.3.0
 	 */
 	public boolean isInteger()
 	{
@@ -1294,7 +1294,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 
 	/**
 	 * @return true if this value is a floating-point type.
-	 * @since [NOW]
+	 * @since 1.3.0
 	 */
 	public boolean isFloat()
 	{
