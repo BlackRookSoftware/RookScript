@@ -3,12 +3,18 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.3.1
+----------------
+
+- `Added` ScriptValue: isInteger(), isFloat().
+- `Changed` Modified some more function documentation.
+
+
 Changed in 1.3.0
 ----------------
 
 - `Added` ZipFunctions: ZFITERATE
 - `Added` FileSystemFunctions: FILENAMENOEXT
-- `Added` ScriptValue: isInteger(), isFloat().
 - `Changed` Modified some function documentation.
 
 
