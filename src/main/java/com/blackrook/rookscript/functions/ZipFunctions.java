@@ -223,7 +223,10 @@ public enum ZipFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Returns a list of all of the entries in an open Zip File."
+					"Returns a list of all of the entries in an open Zip File. " +
+					"The value that this produces can be used in an each(...) loop. The keys are entry names, and " +
+					"values are maps of entry info (a la ZFENTRY). If you need to scan through a Zip with many " +
+					"entries, this may be a less memory-intense way to do it."
 				)
 				.parameter("zip", 
 					type(Type.OBJECTREF, "Script", "The open zip file.")
@@ -300,7 +303,7 @@ public enum ZipFunctions implements ScriptFunctionType
 				)
 				.parameter("entry", 
 					type(Type.STRING, "The entry name."),
-					type(Type.MAP, "{... name:STRING ...}", "A map of zip entry info containing the name of the entry.")
+					type(Type.MAP, "{... name:STRING ...}", "A map of zip entry info containing at least the name of the entry.")
 				)
 				.returns(
 					type(Type.OBJECTREF, "DataInputStream", "An open data input stream to read from."),

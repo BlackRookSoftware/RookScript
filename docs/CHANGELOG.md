@@ -8,6 +8,7 @@ Changed in 1.3.0
 
 - `Added` ZipFunctions: ZFITERATE
 - `Added` FileSystemFunctions: FILENAMENOEXT
+- `Added` ScriptValue: isInteger(), isFloat().
 - `Changed` Modified some function documentation.
 
 

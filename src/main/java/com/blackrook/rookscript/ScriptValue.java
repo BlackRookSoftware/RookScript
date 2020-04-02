@@ -1284,7 +1284,25 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	}
 
 	/**
-	 * @return true if this value is a numeric type.
+	 * @return true if this value is an integer type.
+	 * @since [NOW]
+	 */
+	public boolean isInteger()
+	{
+		return getType() == Type.INTEGER;
+	}
+
+	/**
+	 * @return true if this value is a floating-point type.
+	 * @since [NOW]
+	 */
+	public boolean isFloat()
+	{
+		return getType() == Type.FLOAT;
+	}
+
+	/**
+	 * @return true if this value is a numeric type (float or integer).
 	 */
 	public boolean isNumeric()
 	{
