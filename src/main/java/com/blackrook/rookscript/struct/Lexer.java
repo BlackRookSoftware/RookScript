@@ -386,11 +386,6 @@ public class Lexer
 						setDelimBreak(c);
 						breakloop = true;
 					}
-					else if (isDigit(c))
-					{
-						setState(Kernel.TYPE_FLOAT);
-						saveChar(c);
-					}
 					else
 					{
 						setState(Kernel.TYPE_DELIMITER);

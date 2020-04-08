@@ -1,0 +1,32 @@
+#!/usr/bin/env rookscript -i
+
+entry main()
+{
+	m = {};
+	m.x = 5;
+	m."x" = 3;
+	n = {
+		"first name": "Bob", 
+		"last name": "Smith",
+		0: "Zero", 
+		1: "One", 
+		2: "Two"
+	};
+	println(m.X);
+	println(m."x".5.2);
+	mapset(m, true, 1234);
+
+	println(m.true);
+	
+	each (x : [1,2,3,4,5,6])
+		m->mapset(x, x * 2); 
+	
+	println(mapvalue(m, 2));
+	println(mapget(m, 7));
+	println(mapvalue(m, 7, 14));
+	println(m);
+	println(n);
+	p = mapmerge(m, n);
+	println(mapmerge(m, n));
+	println(mapkeys(p));
+}

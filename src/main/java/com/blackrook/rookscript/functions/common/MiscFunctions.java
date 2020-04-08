@@ -75,8 +75,13 @@ public enum MiscFunctions implements ScriptFunctionType
 				)
 				.returns(
 					type(Type.INTEGER, 
-						"If value is: STRING, the length in characters. LIST, the length in elements." +
-						"MAP, the amount of keys. BUFFER, the size in bytes. OBJECTREF, if Collection, returns size(). Others, 1."
+						"If value is:" + 
+						"\nSTRING, the length in characters." + 
+						"\nLIST, the length in elements." +
+						"\nMAP, the amount of keys." + 
+						"\nBUFFER, the size in bytes." + 
+						"\nOBJECTREF, if Collection, returns size()." + 
+						"\nOthers, 1."
 					)
 				)
 			;
@@ -113,14 +118,15 @@ public enum MiscFunctions implements ScriptFunctionType
 				)
 				.returns(
 					type(Type.INTEGER,
-						"Returns true if: NULL." +
-						"OBJECTREF: is a Collection and isEmpty() returns true. "+
-						"BOOLEAN: is false. "+
-						"INTEGER or FLOAT: is 0 or NaN. "+
-						"STRING: length = 0. "+
-						"BUFFER: length = 0. "+
-						"LIST: length = 0. "+
-						"MAP: length = 0."
+						"Returns true if:" +
+						"\nNULL." +
+						"\nOBJECTREF: is a Collection and isEmpty() returns true."+
+						"\nBOOLEAN: is false."+
+						"\nINTEGER or FLOAT: is 0 or NaN."+
+						"\nSTRING: length = 0."+
+						"\nBUFFER: length = 0."+
+						"\nLIST: length = 0."+
+						"\nMAP: length = 0."
 					)
 				)
 			;

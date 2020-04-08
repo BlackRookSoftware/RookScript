@@ -391,7 +391,9 @@ public final class ScriptExecutor
 		}
 		out.append(')').print('\n');
 		
-		out.append("    ").println(usage.getInstructions());
+		final String NEWLINE_INDENT = "\n            ";
+		
+		out.append("    ").println(usage.getInstructions().replace("\n", NEWLINE_INDENT));
 		if (!pul.isEmpty())
 		{
 			for (ParameterUsage pu : pul)
@@ -402,7 +404,7 @@ public final class ScriptExecutor
 					out.append("        (").append(tu.getType() != null 
 						? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
 						: "ANY"
-					).append(") ").println(tu.getDescription());
+					).append(") ").println(tu.getDescription().replace("\n", NEWLINE_INDENT));
 				}
 			}
 		}
@@ -412,7 +414,7 @@ public final class ScriptExecutor
 			out.append("        (").append(tu.getType() != null 
 				? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
 				: "ANY"
-			).append(") ").println(tu.getDescription());
+			).append(") ").println(tu.getDescription().replace("\n", NEWLINE_INDENT));
 			
 		}
 	}

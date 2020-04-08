@@ -42,7 +42,7 @@ Integers (64-bit)
 0x00fd34dd  // hexadecimal notation
 ```
 
-Floating-point (64-bit)
+Floating-point (64-bit, must start with a number)
 
 ```
 0.0
@@ -90,6 +90,18 @@ Maps
     likes: ["Golf", "Baseball"],
     dislikes: ["Writing documentation", "Cold weather", "mean people"],
     rating: 9.5
+}
+```
+
+Map keys do not need to be identifier names - they can also be numbers or string literals. 
+
+```
+{
+    "first name": "Bob", 
+    "last name": "Smith",
+    0: "Zero", 
+    1: "One", 
+    2: "Two"
 }
 ```
 

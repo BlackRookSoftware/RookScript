@@ -75,24 +75,114 @@ public enum MapFunctions implements ScriptFunctionType
 		}
 	},
 	
-	MAPVALUE(2)
+	/**@since [NOW] */
+	MAPGET(2)
 	{
 		@Override
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Returns a value that corresponds to a key in the map."
+					"Returns a value that corresponds to a key in the map, or a default value if not found. " +
+					"Keys are resolved case-insensitively."
 				)
 				.parameter("map", 
 					type(Type.MAP, "The map.")
 				)
 				.parameter("key", 
-					type(Type.STRING, "The key.")
+					type(Type.STRING, "The key (converted to string).")
 				)
 				.returns(
-					type(Type.NULL, "If not a map or no value for that key."),
-					type("The corresponding value, if found.")
+					type("The corresponding value, if found, or null, if no value for that key.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			scriptInstance.pushStackValue(null);
+			return MAPVALUE.execute(scriptInstance, returnValue);
+		}
+	},
+	
+	/**@since [NOW] */
+	MAPSET(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Sets a value that corresponds to a key in the map. " + 
+					"If the first parameter is not a map, nothing happens. " +
+					"Keys are resolved case-insensitively."
+				)
+				.parameter("map", 
+					type(Type.MAP, "The map.")
+				)
+				.parameter("key", 
+					type(Type.NULL, "Do nothing."),
+					type(Type.STRING, "The key (converted to string).")
+				)
+				.parameter("value", 
+					type("The corresponding value to assign.")
+				)
+				.returns(
+					type("map.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			ScriptValue value = CACHEVALUE1.get();
+			ScriptValue key = CACHEVALUE2.get();
+			ScriptValue map = CACHEVALUE3.get();
+			try 
+			{
+				scriptInstance.popStackValue(value);
+				scriptInstance.popStackValue(key);
+				scriptInstance.popStackValue(map);
+				
+				if (!key.isNull())
+					map.mapSet(key.asString(), value);
+				
+				returnValue.set(map);
+				return true;
+			}
+			finally
+			{
+				value.setNull();
+				key.setNull();
+				map.setNull();
+			}
+		}
+	},
+	
+	/**@since [NOW], added "default" parameter. */
+	MAPVALUE(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a value that corresponds to a key in the map, or a default value if not found. " +
+					"Keys are resolved case-insensitively."
+				)
+				.parameter("map", 
+					type(Type.MAP, "The map.")
+				)
+				.parameter("key", 
+					type(Type.STRING, "The key (converted to string).")
+				)
+				.parameter("default", 
+					type("The value to return if not found.")
+				)
+				.returns(
+					type("The corresponding value, if found, or [default], if no value for that key.")
 				)
 			;
 		}
@@ -105,20 +195,17 @@ public enum MapFunctions implements ScriptFunctionType
 			ScriptValue out = CACHEVALUE3.get();
 			try 
 			{
+				scriptInstance.popStackValue(out);
 				scriptInstance.popStackValue(keyValue);
 				scriptInstance.popStackValue(map);
 
-				if (!map.isMap())
-				{
-					returnValue.setNull();
-					return true;
-				}
-				else
-				{
-					map.mapGet(keyValue.asString(), out);
+				String key = keyValue.asString();
+				
+				if (!map.mapContains(key))
 					returnValue.set(out);
-					return true;
-				}
+				else
+					map.mapGet(key, returnValue);
+				return true;
 			}
 			finally
 			{
@@ -138,7 +225,8 @@ public enum MapFunctions implements ScriptFunctionType
 				.instructions(
 					"Returns a new map that is the result of taking the first map and adding all " + 
 					"of the keys of the second, replacing the keys that exist in the first. " + 
-					"The copies are shallow - references are preserved."
+					"The copies are shallow - references are preserved. " +
+					"Keys are matched/resolved case-insensitively."
 				)
 				.parameter("map1", 
 					type(Type.MAP, "The first map."),
@@ -173,7 +261,7 @@ public enum MapFunctions implements ScriptFunctionType
 				}
 				
 				for (IteratorPair e : map1.asObjectType(MapType.class))
-					out.mapSet(String.valueOf(e.getKey()), e.getValue());
+					out.mapSet(e.getKey().asString(), e.getValue());
 				
 				if (!map2.isMap())
 				{
@@ -182,7 +270,7 @@ public enum MapFunctions implements ScriptFunctionType
 				}
 
 				for (IteratorPair e : map2.asObjectType(MapType.class))
-					out.mapSet(String.valueOf(e.getKey()), e.getValue());
+					out.mapSet(e.getKey().asString(), e.getValue());
 				
 				returnValue.set(out);
 				return true;

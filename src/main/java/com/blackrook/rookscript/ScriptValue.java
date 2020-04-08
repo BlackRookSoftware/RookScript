@@ -1060,6 +1060,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 
 	/**
 	 * If this is a map, sets a key on it to a value.
+	 * Keys are case-insensitive.
 	 * @param key the key. 
 	 * @param value the associated value.
 	 * @return true if this is a map and the value was assigned, false otherwise.
@@ -1088,6 +1089,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * If this is a map, gets the value that corresponds to a provided key.
 	 * Changing the returned value does not change the value, unless it is a reference type
 	 * like a map or list.
+	 * Keys are case-insensitive.
 	 * @param key the key. 
 	 * @param out the destination variable for the value.
 	 * @return true if a corresponding value was replaced, false if not or this is not a map. If false, out is set to the null value.
@@ -1106,7 +1108,25 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	}
 	
 	/**
+	 * If this is a map, checks if it contains the provided key.
+	 * Keys are case-insensitive.
+	 * @param key the key. 
+	 * @return true if the key is present, false if not.
+	 * @see #isMap()
+	 * @since [NOW]
+	 */
+	public boolean mapContains(String key)
+	{
+		if (!isMap())
+			return false;
+		
+		MapType map = (MapType)ref;
+		return map.containsValue(key);
+	}
+
+	/**
 	 * If this is a map, removes the value that corresponds to a provided key.
+	 * Keys are case-insensitive.
 	 * @param key the key. 
 	 * @return true if the value existed and was removed, false otherwise.
 	 * @see #isMap()

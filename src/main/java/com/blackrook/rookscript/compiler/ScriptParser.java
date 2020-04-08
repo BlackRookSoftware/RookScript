@@ -1067,9 +1067,9 @@ public class ScriptParser extends Lexer.Parser
 			else if (currentType(ScriptKernel.TYPE_PERIOD))
 			{
 				nextToken();
-				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+				if (!currentType(ScriptKernel.TYPE_IDENTIFIER, ScriptKernel.TYPE_NUMBER, ScriptKernel.TYPE_STRING, ScriptKernel.TYPE_TRUE, ScriptKernel.TYPE_FALSE))
 				{
-					addErrorMessage("Expected map key identifier.");
+					addErrorMessage("Expected map key (identifier, boolean, number, or string literal).");
 					return null;
 				}
 				
@@ -1780,9 +1780,9 @@ public class ScriptParser extends Lexer.Parser
 			else if (currentType(ScriptKernel.TYPE_PERIOD))
 			{
 				nextToken();
-				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+				if (!currentType(ScriptKernel.TYPE_IDENTIFIER, ScriptKernel.TYPE_NUMBER, ScriptKernel.TYPE_STRING, ScriptKernel.TYPE_TRUE, ScriptKernel.TYPE_FALSE))
 				{
-					addErrorMessage("Expected map key identifier.");
+					addErrorMessage("Expected map key (identifier, boolean, number, or string literal).");
 					return false;
 				}
 				
@@ -1881,9 +1881,9 @@ public class ScriptParser extends Lexer.Parser
 	private boolean parseMapField(Script currentScript, String checkEndLabel)
 	{
 		// if no map fields.
-		if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+		if (!currentType(ScriptKernel.TYPE_IDENTIFIER, ScriptKernel.TYPE_NUMBER, ScriptKernel.TYPE_STRING, ScriptKernel.TYPE_TRUE, ScriptKernel.TYPE_FALSE))
 		{
-			addErrorMessage("Expected map key (identifier) or '}' to end map literal.");
+			addErrorMessage("Expected map key (identifier, boolean, number, or string literal) or '}' to end map literal.");
 			return false;
 		}
 		

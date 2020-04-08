@@ -3,6 +3,13 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in [NOW]
+----------------
+
+- `Added` Feature: Maps can now use numeric, boolean, and string literals as keys (they are converted to strings).
+- `Changed` How AbstractVariableResolver are exported as strings (equivalent to map literals).
+
+
 Changed in 1.3.1
 ----------------
 
