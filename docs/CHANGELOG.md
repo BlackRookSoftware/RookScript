@@ -3,7 +3,7 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
-Changed in [NOW]
+Changed in 1.4.0
 ----------------
 
 - `Added` Feature: Maps can now use numeric, boolean, and string literals as keys (they are converted to strings).

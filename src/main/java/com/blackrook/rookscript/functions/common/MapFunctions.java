@@ -75,7 +75,7 @@ public enum MapFunctions implements ScriptFunctionType
 		}
 	},
 	
-	/**@since [NOW] */
+	/**@since 1.4.0 */
 	MAPGET(2)
 	{
 		@Override
@@ -106,7 +106,7 @@ public enum MapFunctions implements ScriptFunctionType
 		}
 	},
 	
-	/**@since [NOW] */
+	/**@since 1.4.0 */
 	MAPSET(3)
 	{
 		@Override
@@ -161,7 +161,7 @@ public enum MapFunctions implements ScriptFunctionType
 		}
 	},
 	
-	/**@since [NOW], added "default" parameter. */
+	/**@since 1.4.0, added "default" parameter. */
 	MAPVALUE(3)
 	{
 		@Override

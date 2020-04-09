@@ -1113,7 +1113,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * @param key the key. 
 	 * @return true if the key is present, false if not.
 	 * @see #isMap()
-	 * @since [NOW]
+	 * @since 1.4.0
 	 */
 	public boolean mapContains(String key)
 	{
