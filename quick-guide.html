@@ -1,0 +1,553 @@
+<article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-rookscript-language-quick-guide" class="anchor" aria-hidden="true" href="#rookscript-language-quick-guide"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Rookscript Language Quick Guide</h1>
+<h3><a id="user-content-comments" class="anchor" aria-hidden="true" href="#comments"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Comments</h3>
+<pre><code>// This is a single-line comment.
+/*
+    This is a multi
+    line comment.
+*/
+/* You can even write them like this. */
+</code></pre>
+<p>All comments are ignored, and are not preserved after compilation.</p>
+<h3><a id="user-content-value-types" class="anchor" aria-hidden="true" href="#value-types"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Value Types</h3>
+<p>Null</p>
+<pre><code>null
+</code></pre>
+<p>Booleans</p>
+<pre><code>true
+false
+</code></pre>
+<p>Integers (64-bit)</p>
+<pre><code>0
+5
+34
+0xff        // hexadecimal notation
+0X0ff       // hexadecimal notation
+0x6767      // hexadecimal notation
+0x00fd34dd  // hexadecimal notation
+</code></pre>
+<p>Floating-point (64-bit, must start with a number)</p>
+<pre><code>0.0
+0.456
+1.467
+1e2         // exponent notation
+0.5e6       // exponent notation
+1.545E7     // exponent notation
+4.605e-7    // exponent notation
+0.44444e+3  // exponent notation
+infinity    // floating-point, IEEE positive infinity
+NaN         // floating-point, IEEE not-a-number ("nan" also works - it is case-insensitive)
+</code></pre>
+<p>Strings (wrapped in double quotes)</p>
+<pre><code>""
+"apple"
+"104"
+"Matt Tropiano"
+"abracadabra"
+</code></pre>
+<p>Lists</p>
+<pre><code>[]            // empty list
+[5]           // one element
+[1, 2, 3]
+["apple", "orange", "pear", "kumquat"]
+[1, 1.0, "apple", false, null]            // can hold multiple types
+[[1,2,3],[4,5,6]]                        // can hold nested lists
+</code></pre>
+<p>Maps</p>
+<pre><code>{}              // empty map
+{x: 5, y: 6}    // map with two fields
+{               // map with several fields and types (values can be any type)
+    name: "Bob", 
+    age: 23,
+    gender: "Male",
+    likes: ["Golf", "Baseball"],
+    dislikes: ["Writing documentation", "Cold weather", "mean people"],
+    rating: 9.5
+}
+</code></pre>
+<p>Map keys do not need to be identifier names - they can also be numbers or string literals.</p>
+<pre><code>{
+    "first name": "Bob", 
+    "last name": "Smith",
+    0: "Zero", 
+    1: "One", 
+    2: "Two"
+}
+</code></pre>
+<p><strong>Buffers</strong>, <strong>Errors</strong>, <strong>Objects</strong>, three additional types, have no literal representation, but are storable as variables.</p>
+<h3><a id="user-content-logical-equivalence" class="anchor" aria-hidden="true" href="#logical-equivalence"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Logical Equivalence</h3>
+<p>Some parts of Rookscript evaluate values logically. For those cases, the following values are considered <code>false</code>:</p>
+<pre><code>null
+false
+0
+0.0
+NaN
+""      // empty string
+[]      // empty list
+{}      // empty map
+// Plus empty Buffers
+</code></pre>
+<p>Everything else is considered <code>true</code>.</p>
+<h3><a id="user-content-variables" class="anchor" aria-hidden="true" href="#variables"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Variables</h3>
+<p>All variables/identifiers must not start with a number (since numbers do), and must be comprised
+of alphanumeric characters plus the underscore <code>_</code>.</p>
+<pre><code>x
+arg0
+VARNAME
+this_is_a_variable_too
+</code></pre>
+<p>List contents are read via 0-based index:</p>
+<pre><code>x = [4,5,6,7]
+x[0]            //  4
+x[1]            //  5
+x[2]            //  6
+x[3]            //  7
+x[3.5]          //  7 (3.5 is chopped to 3)
+x[-1]           //  null (values outside of a list are null)
+x[4]            //  null (values outside of a list are null)
+</code></pre>
+<p>Map contents are read via the <code>.</code> operator:</p>
+<pre><code>m = {x: 5, y: -3}
+m.x     // 5
+m.y     // -3
+m.z     // null (invalid key)
+</code></pre>
+<h3><a id="user-content-statements" class="anchor" aria-hidden="true" href="#statements"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Statements</h3>
+<p>Each script is a series of <strong>statements</strong>. Statements are usually function calls or expressions that assign values to variables. All statements are terminated with a semicolon (<code>;</code>).</p>
+<p>Some statements look like this:</p>
+<pre><code>y = 9;                      // assigns 9 to y
+age = 24;                   // assigns 24 to age
+x = 4.0 + 5.0;              // assigns 9.0 to x
+b = double(4);              // calls the function "double" with 4 as its only parameter, and assigns the result to b.
+tagPerson("Bob", "old");    // calls the function "tagPerson" with "Bob" and "old" as parameters.
+doWork();                   // calls the function "doWork" with no parameters.
+</code></pre>
+<p>A <em>block</em> of statements, executed in the order written, are placed between <em>braces</em>:</p>
+<pre><code>{
+    x = 24;         // assign 24 to x
+    y = 9;          // assign 9 to y
+    z = x + y;      // assign the result of x + y (33) to z
+}
+</code></pre>
+<h3><a id="user-content-expressions" class="anchor" aria-hidden="true" href="#expressions"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Expressions</h3>
+<p>Expressions are infix-notated (like how humans write it) and are comprised of values and operators.</p>
+<pre><code>5 + 4
+x - 3 / 6
+9 + -4 - (x * 3.0)
+!false
+"apple" + "sauce"
+</code></pre>
+<p>There are <strong>unary</strong> operators:</p>
+<pre><code>!       // logical not     (!false !4.0)
+~       // bitwise not     (~5)
+-       // negation        (-3)
++       // absolute        (+(-16) +9.02)
+</code></pre>
+<p>and there are <strong>binary</strong> operators:</p>
+<pre><code>+       // addition
+-       // subtraction
+*       // multiplication
+/       // division
+%       // modulo division
+&amp;       // bitwise and
+|       // bitwise or
+^       // bitwise xor
+==      // logical equals
+===     // logical strict equals (type and value)
+!=      // logical not equal
+!==     // logical strict not equals (type and value)
+&lt;       // logical less than
+&gt;       // logical greater than
+&lt;=      // logical less than or equal
+&gt;=      // logical greater than or equal
+&lt;&lt;      // left bit shift
+&gt;&gt;      // right bit shift
+&gt;&gt;&gt;     // right bit shift (zero-padded)
+</code></pre>
+<p>All operators have a defined precedence:</p>
+<pre><code>4 + 5 * 3       // equals 19, not 27
+</code></pre>
+<p>In order of precedence (same row is same precedence):</p>
+<pre><code>Unary
+    ! ~ - +        // logical not, bitwise not, negate, absolute
+
+Binary
+    * / %          // multiply, divide, modulo
+    + -            // add, subtract
+    &gt;&gt; &gt;&gt;&gt; &lt;&lt;      // right shift, padded right shift, left shift
+    &gt; &gt;= &lt; &lt;=      // greater, greater-equal, less, less-equal
+    == === != !==  // equal, strict equal, not equal, strict not equal
+    &amp;              // bitwise and
+    ^              // exclusive or
+    |              // bitwise or
+</code></pre>
+<p>The following binary operators <strong>short-circuit</strong> their logic:</p>
+<pre><code>&amp;&amp;      // logical and - short circuit if left side is false
+||      // logical or - short circuit if left side is true
+?:      // false coalesce - short circuit if left side is not false, return first non-false-equivalent.
+??      // null coalesce - short circuit if left side is not null, return first non-null.
+</code></pre>
+<p>Assignment operators:</p>
+<pre><code>=       // equals
++=      // plus equals
+-=      // minus equals
+*=      // multiply equals
+/=      // divide equals
+%=      // modulo equals
+&amp;=      // bitwise-and equals
+|=      // bitwise-or equals
+&gt;&gt;=     // right-shift equals
+&gt;&gt;&gt;=    // padded right-shift equals
+&lt;&lt;=     // left-shift equals
+</code></pre>
+<p>The aforementioned short-circuiters have <strong>lowest</strong> precedence.</p>
+<pre><code>4 + 7 &amp;&amp; 3 - 3 &amp;&amp; 12.0     // returns false (11 &amp;&amp; 0). 0 is false-equivalent. 12.0 is not even evaluated.
+</code></pre>
+<p>Precedence can be altered using parenthesis - these essentially create sub-expressions within expressions:</p>
+<pre><code>4 + 5 * 3       // equals 19, not 27
+4 + (5 * 3)     // equals 19, not 27
+(4 + 5) * 3     // equals 27, not 19
+</code></pre>
+<p>When using operators, some either result in implicit type promotion, or reduction. This is critical to think about for comparisions later!</p>
+<pre><code>4 + 5.0         // result is 9.0 - floating-point
+!3              // result is false - boolean
+</code></pre>
+<p>There is also a <strong>ternary</strong> operator:</p>
+<pre><code>? :         // if before the '?' is true-equivalent, evaluate before the colon, else after.
+
+x ? 5 : 7   // returns 5 if x is true-equivalent, else returns 7
+</code></pre>
+<h3><a id="user-content-control-statements" class="anchor" aria-hidden="true" href="#control-statements"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Control Statements</h3>
+<p>There are a few special types of statements that control execution.</p>
+<h4><a id="user-content-the-if-statement" class="anchor" aria-hidden="true" href="#the-if-statement"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>The "If" Statement</h4>
+<p>"If" statements represent a branch in logic - if the expression in the parenthesis evaluates to <code>true</code>, the subsequent block is executed.</p>
+<pre><code>if (x == 4)
+{
+    println("x is 4!");
+}
+</code></pre>
+<p>If an "if" statement is followed up by an "else" block, that block will be executed instead.</p>
+<pre><code>if (x == 4)
+{
+    println("x is 4!");
+}
+else
+{
+    println("x is not 4!");
+}
+</code></pre>
+<p>A block of statements can have the braces omitted if it is just one statement (this is also true for all control statements expecting a block of statements).</p>
+<pre><code>if (x == 4)
+    println("x is 4!");
+else
+    println("x is not 4!");
+</code></pre>
+<p>For this reason, you can chain together if-elses...</p>
+<pre><code>if (x == 4)
+{
+    println("x is 4!");
+}
+else if (x == 5)
+{
+    println("x is 5!");
+}
+else
+{
+    println("x is neither 4 nor 5!");
+}
+</code></pre>
+<p>...since this is equivalent:</p>
+<pre><code>if (x == 4)
+{
+    println("x is 4!");
+}
+else 
+{
+    if (x == 5)
+    {
+        println("x is 5!");
+    }
+    else
+    {
+        println("x is neither 4 nor 5!");
+    }
+}
+</code></pre>
+<h4><a id="user-content-the-while-loop" class="anchor" aria-hidden="true" href="#the-while-loop"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>The "While" Loop</h4>
+<p>"While" loops execute the following block of statements as long as the conditional expression in the parenthesis still evaluates <code>true</code> after the block completes.</p>
+<pre><code>x = 5;
+// This code will loop 5 times.
+while (x &gt; 0)
+{
+    println("x is " + x);
+    x = x - 1;
+}
+</code></pre>
+<h4><a id="user-content-the-for-loop" class="anchor" aria-hidden="true" href="#the-for-loop"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>The "For" Loop</h4>
+<p>"For" loops execute the following block of statements as long as the conditional expression is still evaluates <code>true</code> after the block completes.</p>
+<p><em>For</em> loops have an <em>initializer</em>, <em>conditional</em>, and <em>step</em> part enclosed in parenthesis that drives the loop. Each of these parts are separated by a semicolon (<code>;</code>), except for the last part.</p>
+<pre><code>// This code will loop 10 times.
+for (x = 0; x &lt; 10; x += 1)
+{
+    println("x is " + x);
+}
+</code></pre>
+<p>Each part can be left out of a <em>for</em> loop, except for the conditional. The previous loop can be rewritten as:</p>
+<pre><code>x = 10;
+for (; x &lt; 10;)
+{
+    println("x is " + x);
+    x += 1;
+}
+</code></pre>
+<h4><a id="user-content-the-each-loop" class="anchor" aria-hidden="true" href="#the-each-loop"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>The "Each" Loop</h4>
+<p>"Each" loops iterate linearly through a values that are collections of values. All value types can be iterated through (with varying usefulness).</p>
+<pre><code>numbers = [1, 2, 3, 4, 5];
+// will print each number in "numbers" on its own line.
+each (x : numbers)
+{
+    println(x);
+}
+</code></pre>
+<p>Maps and other map-like objects can have their entries iterated through, as well.</p>
+<pre><code>triple = { x: 3, y: 4, z: -2 };
+// will print each key and value in "triple" on its own line.
+each (k, v : triple)
+{
+    println(k + " is " + v);
+}
+</code></pre>
+<p>Performing a key-value iteration on lists will fill the key with the index:</p>
+<pre><code>numbers = [1, 2, 3, 4, 5];
+// will print each index and value in "numbers" on its own line.
+each (k, v : numbers)
+{
+    println("numbers[" + k + "] is " + v);
+}
+</code></pre>
+<p>Attempting to iterate on a single value will only run the loop once, though:</p>
+<pre><code>a = 3;
+// will just print "3"
+each (x : a)
+{
+    println(x);
+}
+</code></pre>
+<p>A key-value iteration on a single value will return <code>null</code> as the key, and the value as the value.</p>
+<p>Iterators are also smart enough to iterate through Java-native collections that are not RookScript values - any OBJECTREF type that implements Map or Iterable will work!</p>
+<h3><a id="user-content-entry-points" class="anchor" aria-hidden="true" href="#entry-points"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Entry Points</h3>
+<p>All starting points in a script's execution are called <em>entry points</em> and are declared as such:</p>
+<pre><code>entry start()
+{
+    // ... statements go here
+}
+</code></pre>
+<p>...this declares an entry point called <code>start</code> that has no parameters.</p>
+<p>Entry points can declare any number of parameters, declared as identifiers that hold the values that are passed in when they are called from the host. The <code>return</code> keyword returns execution to the host plus a value result, if any.</p>
+<h3><a id="user-content-functions" class="anchor" aria-hidden="true" href="#functions"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Functions</h3>
+<h4><a id="user-content-local-functions" class="anchor" aria-hidden="true" href="#local-functions"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Local Functions</h4>
+<p><em>Local Functions</em> are simple subroutines. They are declared in the script like so:</p>
+<pre><code>function name(parameter0, parameter1)
+{
+    // ... code
+}
+</code></pre>
+<p>Like <em>entry points</em>, they can declare any number of parameters, declared as identifiers that hold the values that are passed in when they are called. The <code>return</code> keyword returns execution to the caller plus a value result. <em>All local functions return a value.</em> If it never hits a <code>return</code> statement, they return <code>null</code>. <strong>It is good practice to ensure that a function hits a <code>return</code> at every branch in execution if it is supposed to return a value!</strong></p>
+<p>Functions, however, <strong>cannot</strong> be the start of a script's execution, like <em>entry points</em>.</p>
+<p>This is a function that doubles a value and returns it:</p>
+<pre><code>function double(x)
+{
+    return x * 2;
+}
+</code></pre>
+<p>This is a function that calls other functions (and returns <code>null</code>):</p>
+<pre><code>// println is a function that prints a newline-terminated message to STDOUT.
+
+function printUppercase(message)
+{
+    u = strupper(message);
+    println(u);
+}
+</code></pre>
+<p>Functions in Rookscript support <em>recursion</em>, or functions that call themselves.</p>
+<pre><code>function factorial(x)
+{
+    if (x &lt;= 0)
+        return 1;
+    else
+        return x * factorial(x - 1);
+}
+</code></pre>
+<p>If a function is called with less parameters than required, the remaining parameters are filled with <code>null</code>.</p>
+<pre><code>// println is a function that prints a newline-terminated message to STDOUT.
+
+function printStuff(p1, p2, p3)
+{
+    println("p1 is " + p1);
+    println("p2 is " + p2);
+    println("p3 is " + p3);
+}
+
+entry main()
+{
+    printStuff(1, 2);
+    
+    /*
+        Will print:
+        p1 is 1
+        p2 is 2
+        p3 is null
+    */
+}
+</code></pre>
+<h4><a id="user-content-host-functions" class="anchor" aria-hidden="true" href="#host-functions"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Host Functions</h4>
+<p><em>Host Functions</em> are functions that are provided by the host implementation. They are not declared in the script. They are called like local functions, and are null-filled like local functions. Also, like local functions, <em>all host functions return a value.</em></p>
+<pre><code>// println is a function that prints a newline-terminated message to STDOUT.
+
+entry main()
+{
+    println("Hello, world!");
+}
+</code></pre>
+<p>Sometimes, a host function is available within a <em>namespace</em>. These functions need to have a prefix before them:</p>
+<pre><code>// println is a function that prints a newline-terminated message to STDOUT, in the std namespace:
+
+entry main()
+{
+    std::println("Hello, world!");    // works.
+    println("Hello, world!");         // does not compile - not found!
+}
+</code></pre>
+<p>How these functions are set up is up to the hosting program that provides them. Host functions (and namespaces) are resolved at compile-time, and must be provided to the script compiler via function resolvers before script compile.</p>
+<h4><a id="user-content-function-chains" class="anchor" aria-hidden="true" href="#function-chains"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Function Chains</h4>
+<p><em>Function Chains</em> are function calls that use the return value of one function to be used as the <em>first parameter</em> of the next function called. The return of that function can also be used as the first parameter of the next function, etc.</p>
+<p>This makes functions that return the object that it operates on more useful, as well as functions that use that object as the first parameter.</p>
+<p>The function chain operator (a.k.a. the "partial application" operator) is <code>-&gt;</code>. You must also omit the first parameter of the function being called.</p>
+<pre><code>function double(i)
+{
+    return 2 * i;
+}
+
+// println is a function that prints a newline-terminated message to STDOUT.
+
+entry main()
+{
+    x = 2;
+    println(double(x));               // prints "4"
+    println(x-&gt;double());             // also prints "4"
+    println(x-&gt;double()-&gt;double());     // prints "8"
+}
+</code></pre>
+<p>You may use literals as the start of the chain, provided that they are enclosed in parenthesis:</p>
+<pre><code>function double(i)
+{
+    return 2 * i;
+}
+
+// println is a function that prints a newline-terminated message to STDOUT.
+
+entry main()
+{
+    println((double(2));              // prints "4"
+    println((2)-&gt;double());           // also prints "4"
+    println((2)-&gt;double()-&gt;double()); // prints "8"
+    ("Math is fun!")-&gt;println();      // prints "Math is fun!"
+}
+</code></pre>
+<p>It can be really useful!</p>
+<pre><code>function vec2(x, y)
+{
+    return {x: x, y: y};
+}
+
+// Adds components to a vector.
+function vec2Add(v2, x, y)
+{
+    v2.x += x;
+    v2.y += y;
+    return v2;
+}
+
+// Negates a vector.
+function vec2Negate(v2)
+{
+    v2.x = -v2.x;
+    v2.y = -v2.y;
+    return v2;
+}
+
+// println is a function that prints a newline-terminated message to STDOUT.
+
+entry main()
+{
+    v = vec2(0, 0)-&gt;vec2Add(3, 4)-&gt;vec2Negate();
+    println(v);  // prints "{x: -3, y: -4}"
+}
+</code></pre>
+<h3><a id="user-content-scopes" class="anchor" aria-hidden="true" href="#scopes"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Scopes</h3>
+<p>The host implementation may provide one or more special namespaces that contain variables that scripts can manipulate called <em>Scopes</em>. Scopes are useful when you want a script to manipulate a state, send several pieces of data to the host implementation, or make a lot of values available to the calling script. Some variables in a scope can be read-only, and will not be changed if a script attempts to set or redefine them. Some scopes allow scripts to add variables to them.</p>
+<pre><code>// "data" is the name of a scope provided to the script.
+
+entry setData()
+{
+    data::x = 4;
+    data::y = 8 + data::x;
+}
+</code></pre>
+<p>What is available and what is changeable is entirely up to the host. Scopes are resolved at compile-time, and must be provided to the script compiler before script compile.</p>
+<p><strong>Note</strong> that the same operator <code>::</code> is used for resolving scope variables and host function namespaces. The compiler differentates this by checking whether a function call is being made or not:</p>
+<pre><code>io::file    // "io" is a scope
+io::file()  // "io" is a namespace for a function, "file"
+</code></pre>
+<h3><a id="user-content-error-handling" class="anchor" aria-hidden="true" href="#error-handling"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Error Handling</h3>
+<p>Errors happen. Sometimes they happen when you don't expect them to. But you can <code>check</code> for them:</p>
+<pre><code>entry main()
+{
+    check (err)
+    {
+        fis = fisopen("stuff.txt");
+        fos = fosopen("stuff2.txt");
+        relay(fis, fos);
+    }
+    close(fis);
+    close(fos);
+    if (iserror(err))
+        println("ERROR: " + err);
+    else
+        println("Copied file successfully.");
+}
+</code></pre>
+<p>If an <code>Error</code> type is returned for any of the function calls in the <code>check</code> block, the block is broken out of, and the provided variable, <code>err</code>, is set to the error returned. Otherwise, if no error occurs, <code>err</code> will be set to null once execution leaves the block.</p>
+<p>Since <code>check</code> can work on a single line/statement block, checking one line looks like:</p>
+<pre><code>check (err) relay(fis, fos);
+</code></pre>
+<p>Same effects apply.</p>
+<p>You can mark a whole function/entry point as checked - it will return the error if one occurs:</p>
+<pre><code>check function fileContents(fis, len)
+{
+    out = bufnew(len);
+    bos = bosopen(out);
+    relay(fis, bos, 8192, len);
+    return out;
+}
+
+entry main()
+{
+    filename = "stuff.txt";
+    check (err) 
+    { 
+        fis = fisopen(filename);
+        databuf = fileContents(fis, filelen(filename));
+    }
+    close(fis);
+
+    if (err != null)
+        println("ERROR: " + data);
+    else
+        println("Read " + length(databuf) + " bytes");
+}
+</code></pre>
+<p>In this situation, either the <code>fileContents</code> function call will return a buffer on success, or an <code>Error</code> type on error.</p>
+<h4><a id="user-content-some-technical-caveats" class="anchor" aria-hidden="true" href="#some-technical-caveats"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Some Technical Caveats</h4>
+<p>The <code>check</code> functionality does not have a way to automatically free resources (like how some languages have <code>finally</code>) - you will have to ensure that happens given your program's flow.</p>
+<p>Checking for errors also adds a little overhead to a script (roughly +7% throughput). A check is made each function call and entering/leaving a <code>check</code> block pushes/pops some more objects in/out of the stack. Use discretion with your automatic error detection, especially in real-time applications that call a script constantly!</p>
+</article>
