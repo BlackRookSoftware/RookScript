@@ -6,7 +6,7 @@ by Matt Tropiano et al. (see AUTHORS.txt)
 Changed in 1.4.1
 ----------------
 
-- `Changed` Built-in function neatening.
+- `Changed` Built-in function neatening, and reducing memory leak chances.
 
 
 Changed in 1.4.0
