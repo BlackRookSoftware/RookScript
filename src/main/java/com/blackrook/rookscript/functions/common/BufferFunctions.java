@@ -1913,10 +1913,10 @@ public enum BufferFunctions implements ScriptFunctionType
 		return usage;
 	}
 	
-	protected abstract Usage usage();
-
 	@Override
 	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
+
+	protected abstract Usage usage();
 
 	private static final String HEXALPHABET = "0123456789abcdef";
 	

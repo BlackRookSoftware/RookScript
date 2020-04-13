@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.4.1
+----------------
+
+- `Changed` Built-in function neatening.
+
+
 Changed in 1.4.0
 ----------------
 

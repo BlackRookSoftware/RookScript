@@ -260,26 +260,7 @@ public enum ZipFunctions implements ScriptFunctionType
 					return true;
 				}
 				
-				returnValue.set(new ScriptIteratorType() 
-				{
-					private final IteratorPair pair = new IteratorPair();
-					private final Enumeration<? extends ZipEntry> en = entryEnum;
-					
-					@Override
-					public IteratorPair next() 
-					{
-						ZipEntry ze = en.nextElement();
-						pair.set(ze.getName(), null);
-						setEntryInfo(ze, pair.getValue());
-						return pair;
-					}
-					
-					@Override
-					public boolean hasNext()
-					{
-						return en.hasMoreElements();
-					}
-				});
+				returnValue.set(new ZipIteratorType(entryEnum));
 				return true;
 			}
 			finally
@@ -548,7 +529,7 @@ public enum ZipFunctions implements ScriptFunctionType
 	 * @param temp the temporary script value.
 	 * @return a File object.
 	 */
-	protected File popFile(ScriptInstance scriptInstance, ScriptValue temp) 
+	private static File popFile(ScriptInstance scriptInstance, ScriptValue temp) 
 	{
 		scriptInstance.popStackValue(temp);
 		if (temp.isNull())
@@ -564,7 +545,7 @@ public enum ZipFunctions implements ScriptFunctionType
 	 * @param entry the zip entry.
 	 * @param out the value to change.
 	 */
-	protected void setEntryInfo(ZipEntry entry, ScriptValue out) 
+	private static void setEntryInfo(ZipEntry entry, ScriptValue out) 
 	{
 		out.setEmptyMap(8);
 		
@@ -590,6 +571,36 @@ public enum ZipFunctions implements ScriptFunctionType
 			out.mapSet("size", entry.getSize());
 		if (entry.getTime() >= 0)
 			out.mapSet("time", entry.getTime());
+	}
+	
+	/**
+	 * Zip entry iterator.
+	 */
+	private static class ZipIteratorType implements ScriptIteratorType
+	{
+		private IteratorPair pair;
+		private Enumeration<? extends ZipEntry> en;
+		
+		private ZipIteratorType(Enumeration<? extends ZipEntry> en)
+		{
+			this.pair = new IteratorPair();
+			this.en = en;
+		}
+		
+		@Override
+		public IteratorPair next() 
+		{
+			ZipEntry ze = en.nextElement();
+			pair.set(ze.getName(), null);
+			setEntryInfo(ze, pair.getValue());
+			return pair;
+		}
+		
+		@Override
+		public boolean hasNext()
+		{
+			return en.hasMoreElements();
+		}
 	}
 	
 	// Threadlocal "stack" values.

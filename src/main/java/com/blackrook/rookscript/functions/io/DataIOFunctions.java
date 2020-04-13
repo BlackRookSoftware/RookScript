@@ -19,7 +19,6 @@ import com.blackrook.rookscript.struct.Utils;
 import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
 
 import java.io.DataInput;
-import java.io.File;
 import java.io.IOException;
 import java.io.DataOutput;
 import java.nio.ByteOrder;
@@ -1271,29 +1270,17 @@ public enum DataIOFunctions implements ScriptFunctionType
 		return usage;
 	}
 	
-	/**
-	 * Pops a variable off the stack and, using a temp variable, extracts a File/String.
-	 * @param scriptInstance the script instance.
-	 * @param temp the temporary script value.
-	 * @return a File object.
-	 */
-	protected File popFile(ScriptInstance scriptInstance, ScriptValue temp) 
-	{
-		scriptInstance.popStackValue(temp);
-		if (temp.isNull())
-			return null;
-		else if (temp.isObjectRef(File.class))
-			return temp.asObjectType(File.class);
-		else
-			return new File(temp.asString());
-	}
-	
+	@Override
+	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
+
+	protected abstract Usage usage();
+
 	/**
 	 * Gets or resizes the byte array for serial reads.
 	 * @param wantedlength the desired length. 
 	 * @return the byte array to use.
 	 */
-	protected byte[] getByteArray(int wantedlength) 
+	private static byte[] getByteArray(int wantedlength) 
 	{
 		byte[] out = BYTEARRAY.get();
 		if (out.length < wantedlength)
@@ -1301,11 +1288,6 @@ public enum DataIOFunctions implements ScriptFunctionType
 		return out;
 	}
 	
-	@Override
-	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
-
-	protected abstract Usage usage();
-
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<byte[]> BYTEARRAY = ThreadLocal.withInitial(()->new byte[8]);

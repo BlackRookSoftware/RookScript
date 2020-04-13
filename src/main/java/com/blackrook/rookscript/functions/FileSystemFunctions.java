@@ -940,13 +940,18 @@ public enum FileSystemFunctions implements ScriptFunctionType
 		return usage;
 	}
 	
+	@Override
+	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
+
+	protected abstract Usage usage();
+
 	/**
 	 * Pops a variable off the stack and, using a temp variable, extracts a File/String.
 	 * @param scriptInstance the script instance.
 	 * @param temp the temporary script value.
 	 * @return a File object.
 	 */
-	protected File popFile(ScriptInstance scriptInstance, ScriptValue temp) 
+	private static File popFile(ScriptInstance scriptInstance, ScriptValue temp) 
 	{
 		scriptInstance.popStackValue(temp);
 		if (temp.isNull())
@@ -957,11 +962,6 @@ public enum FileSystemFunctions implements ScriptFunctionType
 			return new File(temp.asString());
 	}
 	
-	@Override
-	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
-
-	protected abstract Usage usage();
-
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 

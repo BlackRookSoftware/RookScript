@@ -325,10 +325,10 @@ public enum ErrorFunctions implements ScriptFunctionType
 		return usage;
 	}
 	
-	protected abstract Usage usage();
-
 	@Override
 	public abstract boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue);
+
+	protected abstract Usage usage();
 
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));

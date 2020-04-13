@@ -998,55 +998,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					return true;
 				}
 
-				final Reader reader = temp.asObjectType(Reader.class);
-				ScriptIteratorType out = new ScriptIteratorType()
-				{
-					private boolean loaded = false;
-					private String nextLine = null;
-					private IOException exception = null;
-					
-					private StringBuilder sb = new StringBuilder(512);
-					private IteratorPair pair = new IteratorPair();
-					private int cur = 0;
-
-					private void readNext()
-					{
-						sb.delete(0, sb.length());
-						nextLine = null;
-						exception = null;
-						try {
-							nextLine = readLine(reader, sb);
-						} catch (IOException e) {
-							exception = e;
-						}
-						loaded = true;
-					}
-					
-					@Override
-					public boolean hasNext() 
-					{
-						if (!loaded)
-							readNext();
-						return nextLine != null || exception != null;
-					}
-
-					@Override
-					public IteratorPair next() 
-					{
-						if (!loaded)
-							readNext();
-						
-						if (nextLine != null)
-							pair.set(++cur, nextLine);
-						else if (exception != null)
-							pair.set(++cur, exception);
-							
-						loaded = false;
-						return pair;
-					}
-				};
-				
-				returnValue.set(out);
+				returnValue.set(new ReaderIterator(temp.asObjectType(Reader.class)));
 				return true;
 			}
 			finally
@@ -1218,7 +1170,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 	 * @param temp the temporary script value.
 	 * @return a File object.
 	 */
-	protected File popFile(ScriptInstance scriptInstance, ScriptValue temp) 
+	private static File popFile(ScriptInstance scriptInstance, ScriptValue temp) 
 	{
 		scriptInstance.popStackValue(temp);
 		if (temp.isNull())
@@ -1229,7 +1181,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 			return new File(temp.asString());
 	}
 
-	protected String readLine(Reader reader, StringBuilder sb) throws IOException
+	private static String readLine(Reader reader, StringBuilder sb) throws IOException
 	{
 		int readchar = -1;
 		final int STATE_START = 0;
@@ -1272,22 +1224,69 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 	}
 	
 	/**
-	 * Gets or resizes the byte array for serial reads.
-	 * @param wantedlength the desired length. 
-	 * @return the byte array to use.
+	 * An iterator that iterates through a Reader line by line until the end is reached. 
 	 */
-	protected byte[] getByteArray(int wantedlength) 
+	private static class ReaderIterator implements ScriptIteratorType
 	{
-		byte[] out = BYTEARRAY.get();
-		if (out.length < wantedlength)
-			BYTEARRAY.set(out = new byte[wantedlength]);
-		return out;
+		private Reader reader;
+		private boolean loaded;
+		private String nextLine;
+		private IOException exception;
+		
+		private StringBuilder sb;
+		private IteratorPair pair;
+		private int cur;
+
+		private ReaderIterator(Reader reader)
+		{
+			this.reader = reader;
+			this.loaded = false;
+			this.nextLine = null;
+			this.exception = null;
+			this.sb = new StringBuilder(512);
+			this.pair = new IteratorPair();
+			this.cur = 0;
+		}
+		
+		private void readNext()
+		{
+			sb.delete(0, sb.length());
+			nextLine = null;
+			exception = null;
+			try {
+				nextLine = readLine(reader, sb);
+			} catch (IOException e) {
+				exception = e;
+			}
+			loaded = true;
+		}
+		
+		@Override
+		public boolean hasNext() 
+		{
+			if (!loaded)
+				readNext();
+			return nextLine != null || exception != null;
+		}
+
+		@Override
+		public IteratorPair next() 
+		{
+			if (!loaded)
+				readNext();
+			
+			if (nextLine != null)
+				pair.set(++cur, nextLine);
+			else if (exception != null)
+				pair.set(++cur, exception);
+				
+			loaded = false;
+			return pair;
+		}
 	}
 	
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<StringBuilder> STRINGBUILDER = ThreadLocal.withInitial(()->new StringBuilder(1024));
-	private static final ThreadLocal<byte[]> BYTEARRAY = ThreadLocal.withInitial(()->new byte[8]);
-
 }
