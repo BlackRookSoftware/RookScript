@@ -3321,7 +3321,11 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			@Override
 			public void write(int b) throws IOException
 			{
-				putByte(null, (byte)b);
+				try {
+					putByte(null, (byte)b);
+				} catch (IndexOutOfBoundsException e) {
+					throw new IOException("buffer overflow. attempted to write byte " + data.length);
+				}
 			}
 		}
 		

@@ -32,6 +32,9 @@ import java.nio.charset.UnsupportedCharsetException;
  */
 public enum DataIOFunctions implements ScriptFunctionType
 {
+	/**
+	 * @since 1.4.1, this does not return a DataUnderflow error.
+	 */
 	READBYTE(1)
 	{
 		@Override
@@ -39,14 +42,13 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a byte from an open file, from the file's current cursor position. The file's cursor will be advanced."
+					"Reads a byte from a readable data input. The file's cursor will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
 				)
 				.returns(
-					type(Type.INTEGER, "The read byte (0 - 255)."),
-					type(Type.ERROR, "DataUnderflow", "If no bytes to read."),
+					type(Type.INTEGER, "The read byte (0 - 255), or -1 if at the end of the stream."),
 					type(Type.ERROR, "BadParameter", "If a file handle was not provided."),
 					type(Type.ERROR, "IOError", "If a read error occurs.")
 				)
@@ -74,7 +76,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 					return true;
 				}
 				if (b < 0)
-					returnValue.setError("DataUnderflow", "End-of-stream reached.");
+					returnValue.set(-1);
 				else
 					returnValue.set(b & 0x0ff);
 				return true;
@@ -93,7 +95,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a short (2 bytes) from an open file, from the file's current cursor position. The file's cursor will be advanced."
+					"Reads a short (2 bytes) from a readable data input. The file's cursor will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -160,7 +162,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads an unsigned short (2 bytes) from an open file, from the file's current cursor position. The file's cursor will be advanced."
+					"Reads an unsigned short (2 bytes) from a readable data input. The file's cursor will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -227,7 +229,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads an integer (4 bytes) from an open file, from the file's current cursor position. The file's cursor will be advanced."
+					"Reads an integer (4 bytes) from a readable data input. The file's cursor will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -294,7 +296,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads an unsigned integer (4 bytes) from an open file, from the file's current cursor position. The file's cursor will be advanced."
+					"Reads an unsigned integer (4 bytes) from a readable data input. The file's cursor will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -361,7 +363,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a 32-bit float (4 bytes) from an open file, from the file's current cursor position. The file's cursor will be advanced."
+					"Reads a 32-bit float (4 bytes) from a readable data input. The file's cursor will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -428,7 +430,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a long integer (8 bytes) from an open file, from the file's current cursor position. The file's cursor will be advanced."
+					"Reads a long integer (8 bytes) from a readable data input. The file's cursor will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -495,7 +497,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a 64-bit float (8 bytes) from an open file, from the file's current cursor position. The file's cursor will be advanced."
+					"Reads a 64-bit float (8 bytes) from a readable data input. The file's cursor will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -562,7 +564,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a set of bytes from an open file, from the file's current cursor position, and converts it into a string."
+					"Reads a set of bytes from a readable data input, and converts it into a string."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")

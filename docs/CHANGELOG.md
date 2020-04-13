@@ -7,6 +7,7 @@ Changed in 1.4.1
 ----------------
 
 - `Changed` Built-in function neatening, and reducing memory leak chances.
+- `Changed` Built-in function READBYTE(): This does not return a DataUnderflow error.
 
 
 Changed in 1.4.0
