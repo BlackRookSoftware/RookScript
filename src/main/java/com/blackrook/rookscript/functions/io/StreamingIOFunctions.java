@@ -558,7 +558,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					type(Type.BOOLEAN, "If true, appends to the file instead of overwriting it.")
 				)
 				.returns(
-					type(Type.OBJECTREF, "DataOutput", "An open data output stream to write to."),
+					type(Type.OBJECTREF, "DataOutputStream", "An open data output stream to write to."),
 					type(Type.ERROR, "BadParameter", "If [file] is null."),
 					type(Type.ERROR, "BadFile", "If [file] is null, a directory, or the file could not be made."),
 					type(Type.ERROR, "Security", "If the OS denied opening the file for reading.")
@@ -661,7 +661,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					type(Type.BUFFER, "The buffer to use.")
 				)
 				.returns(
-					type(Type.OBJECTREF, "DataOutput", "An open data output stream to write to."),
+					type(Type.OBJECTREF, "DataOutputStream", "An open data output stream to write to."),
 					type(Type.ERROR, "BadParameter", "If [buffer] is null or not a buffer.")
 				)
 			;
