@@ -3,15 +3,10 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
-Changed in [NOW]
-----------------
-
-- `Changed` Changed some function documentation.
-
-
 Changed in 1.4.1
 ----------------
 
+- `Changed` Changed some function documentation.
 - `Changed` Built-in function neatening, and reducing memory leak chances.
 - `Changed` Built-in function READBYTE(): This does not return a DataUnderflow error.
 
