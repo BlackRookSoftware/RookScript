@@ -51,33 +51,29 @@ public enum ListFunctions implements ScriptFunctionType
 		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
 		{
 			ScriptValue value = CACHEVALUE1.get();
-			ScriptValue newlist = CACHEVALUE2.get();
-			ScriptValue temp = CACHEVALUE3.get();
+			ScriptValue temp = CACHEVALUE2.get();
 			try
 			{
 				scriptInstance.popStackValue(value);
 				if (value.isList())
 				{
-					newlist.setEmptyList(value.length());
+					returnValue.setEmptyList(value.length());
 					for (int i = 0; i < value.length(); i++)
 					{
 						value.listGetByIndex(i, temp);
-						newlist.listSetByIndex(i, temp);
+						returnValue.listSetByIndex(i, temp);
 					}
-					returnValue.set(newlist);
 				}
 				else
 				{
-					newlist.setEmptyList(4);
-					newlist.listSetByIndex(0, value);
-					returnValue.set(newlist);
+					returnValue.setEmptyList(4);
+					returnValue.listSetByIndex(0, value);
 				}
 				return true;
 			}
 			finally
 			{
 				value.setNull();
-				newlist.setNull();
 				temp.setNull();
 			}
 		}
@@ -434,6 +430,83 @@ public enum ListFunctions implements ScriptFunctionType
 			finally
 			{
 				item.setNull();
+				list.setNull();
+			}
+		}
+	},
+	
+	/** @since 1.4.3 */
+	SUBLIST(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Creates a new list from a larger list using a range of contiguous list indices."
+				)
+				.parameter("list", 
+					type(Type.LIST, "The list to use.")
+				)
+				.parameter("start", 
+					type(Type.INTEGER, "The starting index (0-based), inclusive.")
+				)
+				.parameter("end", 
+					type(Type.NULL, "Use list length."),
+					type(Type.INTEGER, "The ending index (0-based), exclusive. If negative, stop at that many elements from the end.")
+				)
+				.returns(
+					type(Type.NULL, "If either index is out-of-bounds or the end index is less than the start index."),
+					type(Type.LIST, "The substring returned.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			ScriptValue list = CACHEVALUE2.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				Integer endIndex = temp.isNull() ? null : temp.asInt();
+				scriptInstance.popStackValue(temp);
+				int startIndex = temp.asInt();
+				scriptInstance.popStackValue(list);
+				
+				if (!list.isList())
+				{
+					returnValue.setNull();
+					return true;
+				}
+				
+				int length = list.length();
+				if (endIndex == null)
+					endIndex = length;
+				else if (endIndex < 0)
+					endIndex = length + endIndex;
+				
+				if (startIndex < 0 || startIndex >= length)
+					returnValue.setNull();
+				else if (endIndex < 0 && endIndex > length)
+					returnValue.setNull();
+				else if (endIndex < startIndex)
+					returnValue.setNull();
+				else
+				{
+					returnValue.setEmptyList(Math.max(endIndex - startIndex, 1));
+					for (int i = startIndex; i < endIndex; i++)
+					{
+						list.listGetByIndex(i, temp);
+						returnValue.listAdd(temp);
+					}
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
 				list.setNull();
 			}
 		}
