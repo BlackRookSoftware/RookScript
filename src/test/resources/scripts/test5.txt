@@ -1,0 +1,16 @@
+#!/usr/bin/env rookscript -i
+
+entry main()
+{
+	a = [null];
+	a[0] = {x: 5, y: 7};
+	a[0].x = 20;
+	
+	println({x:5}.x);			// 5
+	println([1,2,3,4,5][0]);	// 1
+	println([1,2,3,4,5][0]);	// 1
+	println([a][0][0].y);		// 7
+	println([a][0][0]."x");		// 20
+	println((6.5).6);			// null
+	println(6.5[0]);			// null
+}

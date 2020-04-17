@@ -15,6 +15,7 @@ import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.ScriptAssembler;
 import com.blackrook.rookscript.ScriptEnvironment;
 import com.blackrook.rookscript.ScriptInstance;
@@ -71,7 +72,7 @@ public final class ScriptExecutor
 	
 	private Mode mode;
 	private File scriptFile;
-	private String entryPoint;
+	private String entryPointName;
 	private Integer runawayLimit;
 	private Integer activationDepth;
 	private Integer stackDepth;
@@ -81,7 +82,7 @@ public final class ScriptExecutor
 	{
 		this.mode = Mode.EXECUTE;
 		this.scriptFile = null;
-		this.entryPoint = "main";
+		this.entryPointName = "main";
 		this.runawayLimit = 0;
 		this.activationDepth = 256;
 		this.stackDepth = 2048;
@@ -112,7 +113,7 @@ public final class ScriptExecutor
 			System.err.println("ERROR: Script file does not exist: " + scriptFile);
 			return 4;
 		}
-	
+		
 		ScriptInstance instance = ScriptInstance.createBuilder()
 			.withSource(scriptFile)
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
@@ -138,7 +139,7 @@ public final class ScriptExecutor
 	
 		if (mode == Mode.EXECUTE)
 		{
-			if (entryPoint == null)
+			if (entryPointName == null)
 			{
 				System.err.println("ERROR: Bad entry point.");
 				return 4;
@@ -158,17 +159,23 @@ public final class ScriptExecutor
 				System.err.println("ERROR: Bad runaway limit.");
 				return 4;
 			}
+		
+			Script.Entry entryPoint;
 			
-			if (instance.getScript().getScriptEntry(entryPoint) == null)
+			if ((entryPoint = instance.getScript().getScriptEntry(entryPointName)) == null)
 			{
-				System.err.println("ERROR: Entry point not found: " + entryPoint);
+				System.err.println("ERROR: Entry point not found: " + entryPointName);
 				return 5;
 			}
 			
 			Object[] args = new Object[argList.size()];
 			argList.toArray(args);
 			try {
-				Integer ret = instance.callAndReturnAs(Integer.class, entryPoint, new Object[]{args});
+				Integer ret;
+				if (entryPoint.getParameterCount() > 0)
+					ret = instance.callAndReturnAs(Integer.class, entryPointName, new Object[]{args});
+				else
+					ret = instance.callAndReturnAs(Integer.class, entryPointName);
 				return ret != null ? ret : 0;
 			} catch (ScriptExecutionException e) {
 				System.err.println("Script ERROR: " + e.getLocalizedMessage());
@@ -231,7 +238,7 @@ public final class ScriptExecutor
 				case STATE_SWITCHES_ENTRY:
 				{
 					arg = arg.trim();
-					entryPoint = arg.length() > 0 ? arg : null;
+					entryPointName = arg.length() > 0 ? arg : null;
 				}
 				break;
 				

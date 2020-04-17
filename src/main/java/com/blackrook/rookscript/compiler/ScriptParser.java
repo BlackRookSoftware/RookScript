@@ -574,7 +574,7 @@ public class ScriptParser extends Lexer.Parser
 			
 			if (!matchType(ScriptKernel.TYPE_RBRACE))
 			{
-				addErrorMessage("Expected \"}\" to terminate statement list.");
+				addErrorMessage("Expected \"}\" to terminate statement list, or bad statement start.");
 				return false;
 			}
 	
@@ -588,7 +588,7 @@ public class ScriptParser extends Lexer.Parser
 			
 			if (!matchType(ScriptKernel.TYPE_SEMICOLON))
 			{
-				addErrorMessage("Expected \";\" to terminate statement.");
+				addErrorMessage("Expected \";\" to terminate statement, or previous statement is missing a \";\" at its end.");
 				return false;
 			}
 	
@@ -1473,6 +1473,12 @@ public class ScriptParser extends Lexer.Parser
 					
 					lastWasValue = true;
 				}
+				// array resolution or map deref?
+				else if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
+				{
+					if (!parseListMapDerefChain(currentScript, checkEndLabel))
+						return false;
+				}
 				// logical and: short circuit
 				else if (matchType(ScriptKernel.TYPE_DOUBLEAMPERSAND))
 				{
@@ -1763,9 +1769,8 @@ public class ScriptParser extends Lexer.Parser
 	{
 		while (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 		{
-			if (currentType(ScriptKernel.TYPE_LBRACK))
+			if (matchType(ScriptKernel.TYPE_LBRACK))
 			{
-				nextToken();
 				if (!parseExpression(currentScript, checkEndLabel))
 					return false;
 
@@ -1777,9 +1782,8 @@ public class ScriptParser extends Lexer.Parser
 
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_LIST_INDEX));
 			}
-			else if (currentType(ScriptKernel.TYPE_PERIOD))
+			else if (matchType(ScriptKernel.TYPE_PERIOD))
 			{
-				nextToken();
 				if (!currentType(ScriptKernel.TYPE_IDENTIFIER, ScriptKernel.TYPE_NUMBER, ScriptKernel.TYPE_STRING, ScriptKernel.TYPE_TRUE, ScriptKernel.TYPE_FALSE))
 				{
 					addErrorMessage("Expected map key (identifier, boolean, number, or string literal).");

@@ -3,6 +3,13 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.4.2
+----------------
+
+- `Changed` List / Map deref did not parse after expression values. Now they do.
+- `Changed` The ScriptExecutor application will not attempt to pass command line arguments to an entry point without a parameter.
+
+
 Changed in 1.4.1
 ----------------
 
