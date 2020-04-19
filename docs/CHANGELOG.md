@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.4.4
+----------------
+
+- `Changed` Some better error message wording.
+
+
 Changed in 1.4.3
 ----------------
 

@@ -254,18 +254,22 @@ public class ScriptParser extends Lexer.Parser
 		Entry functionEntry;
 		if ((functionType = currentScript.getHostFunctionResolver().getNamespacedFunction(functionNamespace, functionName)) != null)
 		{
+			int paramCount = functionType.getParameterCount() - (partial ? 1 : 0);
 			int parsedCount;
-			if ((parsedCount = parseHostFunctionCall(currentScript, checkEndLabel, functionType, partial)) == PARSEFUNCTIONCALL_FALSE)
+			if ((parsedCount = parseFunctionParameters(currentScript, checkEndLabel, paramCount)) == PARSEFUNCTIONCALL_FALSE)
 				return false;
 							
 			if (!matchType(ScriptKernel.TYPE_RPAREN))
 			{
-				addErrorMessage("Expected \")\" after a host function call's parameters.");
+				if (paramCount == parsedCount)
+					addErrorMessage("Expected \")\". The maximum amount of parameters on this host function call was reached.");
+				else
+					addErrorMessage("Expected \")\" after a host function call's parameters.");
 				return false;
 			}
 			
 			// fill last arguments left with null.
-			while (functionType.getParameterCount() - (parsedCount++) > 0)
+			while (paramCount - (parsedCount++) > 0)
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 			
 			if (functionNamespace != null)
@@ -280,16 +284,19 @@ public class ScriptParser extends Lexer.Parser
 		}
 		else if (functionNamespace == null && (functionEntry = currentScript.getFunctionEntry(functionName)) != null)
 		{
-			int paramCount = functionEntry.getParameterCount();
+			int paramCount = functionEntry.getParameterCount() - (partial ? 1 : 0);
 			int parsedCount;
-			if ((parsedCount = parseLocalFunctionCall(currentScript, checkEndLabel, paramCount - (partial ? 1 : 0))) == PARSEFUNCTIONCALL_FALSE)
+			if ((parsedCount = parseFunctionParameters(currentScript, checkEndLabel, paramCount)) == PARSEFUNCTIONCALL_FALSE)
 				return false;
 			if (partial)
 				parsedCount++;
 							
 			if (!matchType(ScriptKernel.TYPE_RPAREN))
 			{
-				addErrorMessage("Expected \")\" after a function call's parameters.");
+				if (paramCount == parsedCount)
+					addErrorMessage("Expected \")\". The maximum amount of parameters on this function call was reached.");
+				else
+					addErrorMessage("Expected \")\" after a function call's parameters.");
 				return false;
 			}
 			
@@ -1478,6 +1485,8 @@ public class ScriptParser extends Lexer.Parser
 				{
 					if (!parseListMapDerefChain(currentScript, checkEndLabel))
 						return false;
+
+					lastWasValue = true;
 				}
 				// logical and: short circuit
 				else if (matchType(ScriptKernel.TYPE_DOUBLEAMPERSAND))
@@ -1938,7 +1947,7 @@ public class ScriptParser extends Lexer.Parser
 	// Parses a function call.
 	// 		( .... , .... )
 	// Returns amount of arguments parsed.
-	private int parseLocalFunctionCall(Script currentScript, String checkEndLabel, int paramCount)
+	private int parseFunctionParameters(Script currentScript, String checkEndLabel, int paramCount)
 	{
 		int parsed = 0;
 		if (currentType(ScriptKernel.TYPE_RPAREN))
@@ -1960,34 +1969,6 @@ public class ScriptParser extends Lexer.Parser
 		return parsed;
 	}
 
-	// Parses a host function call.
-	// 		( .... , .... )
-	// Returns amount of arguments parsed.
-	private int parseHostFunctionCall(Script currentScript, String checkEndLabel, ScriptFunctionType functionType, boolean partial)
-	{
-		int paramCount = functionType.getParameterCount() - (partial ? 1 : 0);
-		int parsed = partial ? 1 : 0;
-		if (currentType(ScriptKernel.TYPE_RPAREN))
-			return parsed;
-		while (paramCount-- > 0)
-		{
-			if (!parseExpression(currentScript, checkEndLabel))
-				return PARSEFUNCTIONCALL_FALSE;
-			
-			parsed++;
-			
-			if (paramCount > 0)
-			{
-				if (!matchType(ScriptKernel.TYPE_COMMA))
-					return parsed; 
-			}
-		}
-	
-		return parsed;
-	}
-
-	// <ExpressionValue> :
-	//		
 	// If null, bad parse.
 	private boolean parseSingleValue(Script currentScript)
 	{
