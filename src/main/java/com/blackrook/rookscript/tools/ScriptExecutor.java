@@ -37,6 +37,7 @@ import com.blackrook.rookscript.lang.ScriptFunctionType.Usage;
 import com.blackrook.rookscript.lang.ScriptFunctionType.Usage.ParameterUsage;
 import com.blackrook.rookscript.lang.ScriptFunctionType.Usage.TypeUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
+
 import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.DateFunctions;
 import com.blackrook.rookscript.functions.DigestFunctions;
@@ -54,6 +55,7 @@ public final class ScriptExecutor
 	private static final String SWITCH_HELP1 = "--help";
 	private static final String SWITCH_HELP2 = "-h";
 	private static final String SWITCH_FUNCHELP1 = "--function-help";
+	private static final String SWITCH_FUNCHELP2 = "--function-help-markdown";
 	private static final String SWITCH_DISASSEMBLE1 = "--disassemble";
 	private static final String SWITCH_ENTRY1 = "--entry";
 	private static final String SWITCH_RUNAWAYLIMIT1 = "--runaway-limit";
@@ -66,8 +68,144 @@ public final class ScriptExecutor
 	{
 		HELP,
 		FUNCTIONHELP,
+		FUNCTIONHELP_MARKDOWN,
 		DISASSEMBLE,
 		EXECUTE;
+	}
+	
+	private enum UsageRenderer
+	{
+		TEXT
+		{
+			final String NEWLINE_INDENT = "\n            ";
+			
+			@Override
+			protected void renderSection(PrintStream out, String title) 
+			{
+				out.println("=================================================================");
+				out.println("==== " + title);
+				out.println("=================================================================");
+				out.println();
+			}
+
+			private void renderTypeUsage(PrintStream out, TypeUsage tu)
+			{
+				out.append("        (").append(tu.getType() != null 
+						? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
+						: "ANY"
+					).append(") ").println(tu.getDescription().replace("\n", NEWLINE_INDENT));
+			}
+
+			@Override
+			protected void renderUsage(PrintStream out, String functionName, Usage usage)
+			{
+				if (usage == null)
+				{
+					out.println(functionName + "(...)");
+					out.println();
+					return;
+				}
+				
+				out.append(functionName).append('(');
+				List<ParameterUsage> pul = usage.getParameterInstructions();
+				for (int i = 0; i < pul.size(); i++)
+				{
+					out.append(pul.get(i).getParameterName());
+					if (i < pul.size() - 1)
+						out.append(", ");
+				}
+				out.append(')').print('\n');
+				
+				out.append("    ").println(usage.getInstructions().replace("\n", NEWLINE_INDENT));
+				if (!pul.isEmpty()) for (ParameterUsage pu : pul)
+				{
+					out.append("    ").append(pu.getParameterName()).println(":");
+					for (TypeUsage tu : pu.getTypes())
+						renderTypeUsage(out, tu);
+				}
+				
+				out.append("    ").println("Returns:");
+				for (TypeUsage tu : usage.getReturnTypes())
+					renderTypeUsage(out, tu);
+				out.println();
+			}
+			
+		},
+		
+		MARKDOWN
+		{
+			final String NEWLINE_INDENT = "\n        - ";
+
+			@Override
+			protected void renderSection(PrintStream out, String title) 
+			{
+				out.append("# ").println(title);
+				out.println();
+			}
+			
+			private void renderTypeUsage(PrintStream out, TypeUsage tu)
+			{
+				out.append("- `").append(tu.getType() != null ? tu.getType().name() : "ANY").append("` ");
+				out.append((tu.getSubType() != null ? "*" + tu.getSubType() + "*" : ""));
+				out.println();
+				out.append("    - ").println(tu.getDescription().replace("\n", NEWLINE_INDENT));
+			}
+			
+			@Override
+			protected void renderUsage(PrintStream out, String functionName, Usage usage)
+			{
+				out.append("## ").append(functionName).append('(');
+				List<ParameterUsage> pul = usage.getParameterInstructions();
+				for (int i = 0; i < pul.size(); i++)
+				{
+					out.append(pul.get(i).getParameterName());
+					if (i < pul.size() - 1)
+						out.append(", ");
+				}
+				out.append(')').print('\n');
+				out.println();
+				
+				out.println(usage.getInstructions().replace("\n", NEWLINE_INDENT));
+				out.println();
+				if (!pul.isEmpty())
+				{
+					for (ParameterUsage pu : pul)
+					{
+						out.append("**").append(pu.getParameterName()).append("**").println(":");
+						out.println();
+						for (TypeUsage tu : pu.getTypes())
+							renderTypeUsage(out, tu);
+						out.println();
+					}
+					out.println();
+				}
+
+				out.append("**Returns**").println(":");
+				out.println();
+				for (TypeUsage tu : usage.getReturnTypes())
+					renderTypeUsage(out, tu);
+				out.println();
+				out.println();
+			}
+			
+		}
+		
+		;
+		
+		/**
+		 * Renders a section break.
+		 * @param out the output stream.
+		 * @param title the section title.
+		 */
+		protected abstract void renderSection(PrintStream out, String title);
+
+		/**
+		 * Renders a single function usage doc.
+		 * @param out the output stream.
+		 * @param functionName the function name.
+		 * @param usage the usage to render (can be null).
+		 */
+		protected abstract void renderUsage(PrintStream out, String functionName, Usage usage);
 	}
 	
 	private Mode mode;
@@ -99,7 +237,13 @@ public final class ScriptExecutor
 		
 		if (mode == Mode.FUNCTIONHELP)
 		{
-			printFunctionHelp(System.out);
+			printFunctionHelp(System.out, UsageRenderer.TEXT);
+			return 0;
+		}
+		
+		if (mode == Mode.FUNCTIONHELP_MARKDOWN)
+		{
+			printFunctionHelp(System.out, UsageRenderer.MARKDOWN);
 			return 0;
 		}
 		
@@ -218,6 +362,8 @@ public final class ScriptExecutor
 						mode = Mode.DISASSEMBLE;
 					else if (SWITCH_FUNCHELP1.equalsIgnoreCase(arg))
 						mode = Mode.FUNCTIONHELP;
+					else if (SWITCH_FUNCHELP2.equalsIgnoreCase(arg))
+						mode = Mode.FUNCTIONHELP_MARKDOWN;
 					else if (SWITCH_ENTRY1.equalsIgnoreCase(arg))
 						state = STATE_SWITCHES_ENTRY;
 					else if (SWITCH_RUNAWAYLIMIT1.equalsIgnoreCase(arg))
@@ -337,6 +483,9 @@ public final class ScriptExecutor
 	private static void printHelp(PrintStream out)
 	{
 		out.println("Arguments: [filename] [switches] -- [scriptargs]");
+		out.println("           [--help | -h]");
+		out.println("           [--function-help | --function-help-markdown]");
+		out.println("           [--disassemble] [filename]");
 		out.println();
 		out.println("[filename]:");
 		out.println("    The script filename.");
@@ -344,6 +493,8 @@ public final class ScriptExecutor
 		out.println("[switches]:");
 		out.println("    --help, -h                   Prints this help.");
 		out.println("    --function-help              Prints all available function usages.");
+		out.println("    --function-help-markdown     Prints all available function usages in");
+		out.println("                                     Markdown format.");
 		out.println("    --disassemble                Prints the disassembly for this script");
 		out.println("                                     and exits.");
 		out.println("    --entry [name]               Use a different entry point named [name].");
@@ -364,100 +515,45 @@ public final class ScriptExecutor
 		out.println("                                     script.");
 	}
 
-	private static void printFunctionHeader(PrintStream out, String string)
-	{
-		out.println("=================================================================");
-		out.println("==== " + string);
-		out.println("=================================================================");
-		out.println();
-	}
-	
-	private static void printFunctionUsages(PrintStream out, ScriptFunctionResolver resolver)
+	private static void printFunctionUsages(PrintStream out, UsageRenderer renderer, ScriptFunctionResolver resolver)
 	{
 		for (ScriptFunctionType sft : resolver.getFunctions())
-		{
-			Usage usage = sft.getUsage();
-			if (usage != null)
-				printFunctionUsage(out, sft.name(), usage);
-			else
-				out.println(sft.name() + "(...)");
-			out.println();
-		}
+			renderer.renderUsage(out, sft.name(), sft.getUsage());
 		out.println();
 	}
 	
-	private static void printFunctionUsage(PrintStream out, String name, Usage usage)
+	private static void printFunctionHelp(PrintStream out, UsageRenderer renderer)
 	{
-		out.append(name).append('(');
-		List<ParameterUsage> pul = usage.getParameterInstructions();
-		for (int i = 0; i < pul.size(); i++)
-		{
-			out.append(pul.get(i).getParameterName());
-			if (i < pul.size() - 1)
-				out.append(", ");
-		}
-		out.append(')').print('\n');
-		
-		final String NEWLINE_INDENT = "\n            ";
-		
-		out.append("    ").println(usage.getInstructions().replace("\n", NEWLINE_INDENT));
-		if (!pul.isEmpty())
-		{
-			for (ParameterUsage pu : pul)
-			{
-				out.append("    ").append(pu.getParameterName()).println(":");
-				for (TypeUsage tu : pu.getTypes())
-				{
-					out.append("        (").append(tu.getType() != null 
-						? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
-						: "ANY"
-					).append(") ").println(tu.getDescription().replace("\n", NEWLINE_INDENT));
-				}
-			}
-		}
-		out.append("    ").println("Returns:");
-		for (TypeUsage tu : usage.getReturnTypes())
-		{
-			out.append("        (").append(tu.getType() != null 
-				? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
-				: "ANY"
-			).append(") ").println(tu.getDescription().replace("\n", NEWLINE_INDENT));
-			
-		}
-	}
-	
-	private static void printFunctionHelp(PrintStream out)
-	{
-		printFunctionHeader(out, "Common");
-		printFunctionUsages(out, MiscFunctions.createResolver());
-		printFunctionHeader(out, "Printing/Logging");
-		printFunctionUsages(out, PrintFunctions.createResolver());
-		printFunctionHeader(out, "String");
-		printFunctionUsages(out, StringFunctions.createResolver());
-		printFunctionHeader(out, "List / Set");
-		printFunctionUsages(out, ListFunctions.createResolver());
-		printFunctionHeader(out, "Map");
-		printFunctionUsages(out, MapFunctions.createResolver());
-		printFunctionHeader(out, "Buffer");
-		printFunctionUsages(out, BufferFunctions.createResolver());
-		printFunctionHeader(out, "Error");
-		printFunctionUsages(out, ErrorFunctions.createResolver());
-		printFunctionHeader(out, "Math");
-		printFunctionUsages(out, MathFunctions.createResolver());
-		printFunctionHeader(out, "RegEx");
-		printFunctionUsages(out, RegexFunctions.createResolver());
-		printFunctionHeader(out, "File System");
-		printFunctionUsages(out, FileSystemFunctions.createResolver());
-		printFunctionHeader(out, "File I/O");
-		printFunctionUsages(out, FileIOFunctions.createResolver());
-		printFunctionHeader(out, "Zip Files / GZIP Streams");
-		printFunctionUsages(out, ZipFunctions.createResolver());
-		printFunctionHeader(out, "Stream I/O");
-		printFunctionUsages(out, StreamingIOFunctions.createResolver());
-		printFunctionHeader(out, "Data I/O");
-		printFunctionUsages(out, DataIOFunctions.createResolver());
-		printFunctionHeader(out, "Digest");
-		printFunctionUsages(out, DigestFunctions.createResolver());
+		renderer.renderSection(out, "Common");
+		printFunctionUsages(out, renderer, MiscFunctions.createResolver());
+		renderer.renderSection(out, "Printing/Logging");
+		printFunctionUsages(out, renderer, PrintFunctions.createResolver());
+		renderer.renderSection(out, "String");
+		printFunctionUsages(out, renderer, StringFunctions.createResolver());
+		renderer.renderSection(out, "List / Set");
+		printFunctionUsages(out, renderer, ListFunctions.createResolver());
+		renderer.renderSection(out, "Map");
+		printFunctionUsages(out, renderer, MapFunctions.createResolver());
+		renderer.renderSection(out, "Buffer");
+		printFunctionUsages(out, renderer, BufferFunctions.createResolver());
+		renderer.renderSection(out, "Error");
+		printFunctionUsages(out, renderer, ErrorFunctions.createResolver());
+		renderer.renderSection(out, "Math");
+		printFunctionUsages(out, renderer, MathFunctions.createResolver());
+		renderer.renderSection(out, "RegEx");
+		printFunctionUsages(out, renderer, RegexFunctions.createResolver());
+		renderer.renderSection(out, "File System");
+		printFunctionUsages(out, renderer, FileSystemFunctions.createResolver());
+		renderer.renderSection(out, "File I/O");
+		printFunctionUsages(out, renderer, FileIOFunctions.createResolver());
+		renderer.renderSection(out, "Zip Files / GZIP Streams");
+		printFunctionUsages(out, renderer, ZipFunctions.createResolver());
+		renderer.renderSection(out, "Stream I/O");
+		printFunctionUsages(out, renderer, StreamingIOFunctions.createResolver());
+		renderer.renderSection(out, "Data I/O");
+		printFunctionUsages(out, renderer, DataIOFunctions.createResolver());
+		renderer.renderSection(out, "Digest");
+		printFunctionUsages(out, renderer, DigestFunctions.createResolver());
 	}
 	
 	public static void main(String[] args) throws Exception
