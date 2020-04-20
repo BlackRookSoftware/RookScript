@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.4.5
+----------------
+
+- `Fixed` Markdown output for function docs was missing handling null Usage.
+
+
 Changed in 1.4.4
 ----------------
 

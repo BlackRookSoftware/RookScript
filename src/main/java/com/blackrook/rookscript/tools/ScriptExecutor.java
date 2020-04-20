@@ -154,6 +154,13 @@ public final class ScriptExecutor
 			@Override
 			protected void renderUsage(PrintStream out, String functionName, Usage usage)
 			{
+				if (usage == null)
+				{
+					out.append("## ").append(functionName).append("(...)").println();
+					out.println();
+					return;
+				}
+				
 				out.append("## ").append(functionName).append('(');
 				List<ParameterUsage> pul = usage.getParameterInstructions();
 				for (int i = 0; i < pul.size(); i++)
