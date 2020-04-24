@@ -3,9 +3,10 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
-Changed in 1.4.5
+Changed in [NOW]
 ----------------
 
+- `Added` SROPEN() and SWOPEN().
 - `Fixed` Markdown output for function docs was missing handling null Usage.
 
 

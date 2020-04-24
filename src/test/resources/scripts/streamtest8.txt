@@ -1,0 +1,12 @@
+entry main()
+{
+	sw = swopen()
+		->cswriteln("Hello stream!")
+		->cswriteln("More things!");
+	s = tostring(sw);
+	print(s);
+	
+	each(line : sropen(s)->csiterate())
+		println(line);
+	
+}

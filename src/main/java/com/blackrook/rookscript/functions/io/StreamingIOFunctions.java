@@ -38,6 +38,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
@@ -789,7 +791,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				)
 				.returns(
 					type(Type.NULL, "If [outstream] is null."),
-					type(Type.OBJECTREF, "Reader", "The Reader to use for reading characters from."),
+					type(Type.OBJECTREF, "Writer", "The Writer to use for writing characters to."),
 					type(Type.ERROR, "BadParameter", "If [outstream] is not a data output stream object type."),
 					type(Type.ERROR, "BadEncoding", "If [encoding] is not a valid charset name.")
 				)
@@ -841,6 +843,67 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 			{
 				temp.setNull();
 			}
+		}
+	},
+	
+	/** @since [NOW] */
+	SROPEN(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Creates a \"character stream\" reader around a string (not registered as an open resource)."
+				)
+				.parameter("string", 
+					type(Type.STRING, "The string to read from (value is converted to a string).")
+				)
+				.returns(
+					type(Type.OBJECTREF, "Reader", "The Reader to use for reading characters from.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set((Reader)(new StringReader(temp.asString())));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	/** @since [NOW] */
+	SWOPEN(0)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Creates a \"character stream\" writer for writing into a string (not registered as an open resource). " +
+					"The string can then be fetched by calling TOSTRING() on this Writer."
+				)
+				.returns(
+					type(Type.OBJECTREF, "Writer", "The Writer to use for writing characters to.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			returnValue.set((Writer)(new StringWriter(256)));
+			return true;
 		}
 	},
 	
