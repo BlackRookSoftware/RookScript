@@ -478,6 +478,53 @@ public enum StringFunctions implements ScriptFunctionType
 		}
 	},
 	
+	/** @since [NOW] */
+	STRREPLACEALL(3)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Replaces all occurrances of a string in a string with another string."
+				)
+				.parameter("string", 
+					type(Type.STRING, "The string to perform replacement on (converted to string if not a string).")
+				)
+				.parameter("target", 
+					type(Type.STRING, "The target substring to replace (converted to string if not a string).")
+				)
+				.parameter("replacement", 
+					type(Type.STRING, "The replacement string (converted to string if not a string).")
+				)
+				.returns(
+					type(Type.STRING, "The resultant string, after replacement.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String replacement = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String target = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				returnValue.set(str.replace(target, replacement));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	;
 	
 	private final int parameterCount;
