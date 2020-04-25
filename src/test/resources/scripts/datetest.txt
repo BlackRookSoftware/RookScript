@@ -2,6 +2,6 @@
 
 entry main()
 {
-	println("The current time is: " + dateformat("yyyy-MM-dd hh:mm:ss.SSS a Z", date()));
-	println("The Epoch is: " + dateformat("yyyy-MM-dd hh:mm:ss.SSS a Z", 0));
+	println("The current time is: " + dateformat(date(), "yyyy-MM-dd hh:mm:ss.SSS a Z"));
+	println("The Epoch is: " + dateformat(0, "yyyy-MM-dd hh:mm:ss.SSS a Z"));
 }

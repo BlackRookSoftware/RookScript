@@ -7,7 +7,9 @@ Changed in [NOW]
 ----------------
 
 - `Added` SROPEN() and SWOPEN().
+- `Added` Missing Date function doc output in ScriptExecutor.
 - `Fixed` Markdown output for function docs was missing handling null Usage.
+- `Changed` Swapped parameters in DATEFORMAT().
 
 
 Changed in 1.4.4

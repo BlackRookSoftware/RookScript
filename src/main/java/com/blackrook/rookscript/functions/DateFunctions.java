@@ -60,12 +60,11 @@ public enum DateFunctions implements ScriptFunctionType
 				.instructions(
 					"Formats a date using milliseconds since Epoch."
 				)
+				.parameter("timemillis",
+					type(Type.INTEGER, "Milliseconds since Epoch.")
+				)
 				.parameter("formatstring",
 					type(Type.STRING, "A SimpleDateFormat formatting string.")
-				)
-				.parameter("timemillis",
-					type(Type.NULL, "Use date()."),
-					type(Type.INTEGER, "Milliseconds since Epoch.")
 				)
 				.returns(
 					type(Type.STRING, "The formatted time string."),
@@ -81,9 +80,9 @@ public enum DateFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				long time = temp.isNull() ? System.currentTimeMillis() : temp.asLong();
-				scriptInstance.popStackValue(temp);
 				String formatString = temp.asString();
+				scriptInstance.popStackValue(temp);
+				long time = temp.asLong();
 				
 				SimpleDateFormat sdf;
 				try {

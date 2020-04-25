@@ -549,6 +549,8 @@ public final class ScriptExecutor
 		printFunctionUsages(out, renderer, MathFunctions.createResolver());
 		renderer.renderSection(out, "RegEx");
 		printFunctionUsages(out, renderer, RegexFunctions.createResolver());
+		renderer.renderSection(out, "Date / Time");
+		printFunctionUsages(out, renderer, DateFunctions.createResolver());
 		renderer.renderSection(out, "File System");
 		printFunctionUsages(out, renderer, FileSystemFunctions.createResolver());
 		renderer.renderSection(out, "File I/O");
