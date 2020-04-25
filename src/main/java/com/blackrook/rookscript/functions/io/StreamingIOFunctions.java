@@ -846,7 +846,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		}
 	},
 	
-	/** @since [NOW] */
+	/** @since 1.5.0 */
 	SROPEN(1)
 	{
 		@Override
@@ -882,7 +882,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		}
 	},
 	
-	/** @since [NOW] */
+	/** @since 1.5.0 */
 	SWOPEN(0)
 	{
 		@Override

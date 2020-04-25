@@ -3,7 +3,7 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
-Changed in [NOW]
+Changed in 1.5.0
 ----------------
 
 - `Added` SROPEN() and SWOPEN().

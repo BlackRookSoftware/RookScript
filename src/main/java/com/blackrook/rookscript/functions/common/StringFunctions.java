@@ -478,7 +478,7 @@ public enum StringFunctions implements ScriptFunctionType
 		}
 	},
 	
-	/** @since [NOW] */
+	/** @since 1.5.0 */
 	STRREPLACEALL(3)
 	{
 		@Override
