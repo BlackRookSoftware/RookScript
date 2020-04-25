@@ -500,13 +500,13 @@ public class ScriptParser extends Lexer.Parser
 	// Gets a named label for output.
 	private String getFunctionLabel(String name)
 	{
-		return Script.LABEL_FUNCTION_PREFIX+name;
+		return Script.LABEL_FUNCTION_PREFIX + name.toLowerCase();
 	}
 
 	// Gets a named label for output.
 	private String getScriptLabel(String name)
 	{
-		return Script.LABEL_ENTRY_PREFIX+name;
+		return Script.LABEL_ENTRY_PREFIX + name.toLowerCase();
 	}
 
 	// Parse a bunch of entries.
