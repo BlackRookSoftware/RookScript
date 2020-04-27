@@ -1483,10 +1483,6 @@ public class ScriptParser extends Lexer.Parser
 				// partial application operator
 				else if (matchType(ScriptKernel.TYPE_RIGHTARROW))
 				{
-					// treat with low precedence.
-					if (!expressionReduceAll(currentScript, operatorStack, expressionValueCounter))
-						return false;
-
 					if (!parsePartialChain(currentScript, checkEndLabel))
 						return false;
 					
