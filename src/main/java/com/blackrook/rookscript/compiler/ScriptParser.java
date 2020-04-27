@@ -1472,20 +1472,24 @@ public class ScriptParser extends Lexer.Parser
 					operatorStack.push(nextOperator);
 					lastWasValue = false;
 				}
-				// partial application operator
-				else if (matchType(ScriptKernel.TYPE_RIGHTARROW))
-				{
-					if (!parsePartialChain(currentScript, checkEndLabel))
-						return false;
-					
-					lastWasValue = true;
-				}
 				// array resolution or map deref?
 				else if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 				{
 					if (!parseListMapDerefChain(currentScript, checkEndLabel))
 						return false;
 
+					lastWasValue = true;
+				}
+				// partial application operator
+				else if (matchType(ScriptKernel.TYPE_RIGHTARROW))
+				{
+					// treat with low precedence.
+					if (!expressionReduceAll(currentScript, operatorStack, expressionValueCounter))
+						return false;
+
+					if (!parsePartialChain(currentScript, checkEndLabel))
+						return false;
+					
 					lastWasValue = true;
 				}
 				// logical and: short circuit

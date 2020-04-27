@@ -1,0 +1,20 @@
+
+check entry main()
+{
+	println(5->jsonstr());
+	println(5.6->jsonstr());
+	println(Infinity->jsonstr());
+	println(NaN->jsonstr());
+	println(-8215->jsonstr());
+	println("asdfasdfs a sdf Ģ asd"->jsonstr());
+	println([1,2,3,4,5]->jsonstr());
+	println(bufnew(32)->bufputUint(12341234)->jsonstr());
+	println([]->jsonstr());
+	println({}->jsonstr());
+	println({x: "asdfasdf", y:[67,89,12,"asdfasdf",6.9]}->jsonstr());
+	println({x: "asdfasdf", y:[67,89,12,"asdfasdf",6.9]}->jsonstr()->readjson());
+	
+	b = {x: "asdfasdf", y:[67,89,12,"asdfasdf",6.9]}->jsonstr()->readjson();
+	file("barf.json")->writejson(b);
+	filedelete(file("barf.json"))->println();
+}

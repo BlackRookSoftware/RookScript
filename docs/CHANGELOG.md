@@ -3,6 +3,18 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in [NOW]
+----------------
+
+- `Added` JSON parsing/writing functions.
+
+
+Changed in 1.5.1
+----------------
+
+- `Fixed` Doubling-up of function/entry labels in script if the name had mixed case.
+
+
 Changed in 1.5.1
 ----------------
 

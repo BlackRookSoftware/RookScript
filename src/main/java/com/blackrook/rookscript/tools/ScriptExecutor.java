@@ -43,6 +43,7 @@ import com.blackrook.rookscript.functions.DateFunctions;
 import com.blackrook.rookscript.functions.DigestFunctions;
 import com.blackrook.rookscript.functions.FileSystemFunctions;
 import com.blackrook.rookscript.functions.IOFunctions;
+import com.blackrook.rookscript.functions.JSONFunctions;
 import com.blackrook.rookscript.functions.PrintFunctions;
 
 /**
@@ -277,6 +278,7 @@ public final class ScriptExecutor
 				.andFunctionResolver(RegexFunctions.createResolver())
 				.andFunctionResolver(ZipFunctions.createResolver())
 				.andFunctionResolver(DigestFunctions.createResolver())
+				.andFunctionResolver(JSONFunctions.createResolver())
 			.withScriptStack(activationDepth, stackDepth)
 			.withRunawayLimit(runawayLimit)
 			.createInstance();
@@ -563,6 +565,8 @@ public final class ScriptExecutor
 		printFunctionUsages(out, renderer, DataIOFunctions.createResolver());
 		renderer.renderSection(out, "Digest");
 		printFunctionUsages(out, renderer, DigestFunctions.createResolver());
+		renderer.renderSection(out, "JSON");
+		printFunctionUsages(out, renderer, JSONFunctions.createResolver());
 	}
 	
 	public static void main(String[] args) throws Exception
