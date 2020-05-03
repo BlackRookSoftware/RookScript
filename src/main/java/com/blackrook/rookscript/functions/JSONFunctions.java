@@ -40,7 +40,7 @@ import java.nio.charset.Charset;
 /**
  * Script common functions for converting JSON to Maps (and vice-versa).
  * @author Matthew Tropiano
- * @since [NOW]
+ * @since 1.6.0
  */
 public enum JSONFunctions implements ScriptFunctionType
 {
