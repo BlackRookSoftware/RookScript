@@ -19,6 +19,7 @@ import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.ScriptAssembler;
 import com.blackrook.rookscript.ScriptEnvironment;
 import com.blackrook.rookscript.ScriptInstance;
+import com.blackrook.rookscript.ScriptInstanceBuilder;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.RegexFunctions;
@@ -38,11 +39,9 @@ import com.blackrook.rookscript.lang.ScriptFunctionType.Usage.ParameterUsage;
 import com.blackrook.rookscript.lang.ScriptFunctionType.Usage.TypeUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 
-import com.blackrook.rookscript.functions.CommonFunctions;
 import com.blackrook.rookscript.functions.DateFunctions;
 import com.blackrook.rookscript.functions.DigestFunctions;
 import com.blackrook.rookscript.functions.FileSystemFunctions;
-import com.blackrook.rookscript.functions.IOFunctions;
 import com.blackrook.rookscript.functions.JSONFunctions;
 import com.blackrook.rookscript.functions.PrintFunctions;
 
@@ -65,6 +64,248 @@ public final class ScriptExecutor
 	private static final String SWITCH_SEPARATOR = "--";
 	private static final String SWITCH_SEPARATORBASH = "--X";
 	
+	private static final Resolver[] RESOLVERS = 
+	{
+		new Resolver("Common", MiscFunctions.createResolver()),
+		new Resolver("Printing/Logging", PrintFunctions.createResolver()),
+		new Resolver("String", StringFunctions.createResolver()),
+		new Resolver("List / Set", ListFunctions.createResolver()),
+		new Resolver("Map", MapFunctions.createResolver()),
+		new Resolver("Buffer", BufferFunctions.createResolver()),
+		new Resolver("Error", ErrorFunctions.createResolver()),
+		new Resolver("Math", MathFunctions.createResolver()),
+		new Resolver("RegEx", RegexFunctions.createResolver()),
+		new Resolver("Date / Time", DateFunctions.createResolver()),
+		new Resolver("File System", FileSystemFunctions.createResolver()),
+		new Resolver("File I/O", FileIOFunctions.createResolver()),
+		new Resolver("Zip Files / GZIP Streams", ZipFunctions.createResolver()),
+		new Resolver("Stream I/O", StreamingIOFunctions.createResolver()),
+		new Resolver("Data I/O", DataIOFunctions.createResolver()),
+		new Resolver("Digest", DigestFunctions.createResolver()),
+		new Resolver("JSON", JSONFunctions.createResolver())
+	};
+	
+	private static class Resolver
+	{
+		private String sectionName;
+		private String namespace;
+		private ScriptFunctionResolver resolver;
+		
+		private Resolver(String sectionName, ScriptFunctionResolver resolver)
+		{
+			this.sectionName = sectionName;
+			this.namespace = null;
+			this.resolver = resolver;
+		}
+
+		private Resolver(String sectionName, String namespace, ScriptFunctionResolver resolver)
+		{
+			this.sectionName = sectionName;
+			this.namespace = namespace;
+			this.resolver = resolver;
+		}
+		
+	}
+	
+	private interface UsageRendererType
+	{
+		/**
+		 * Called on render start.
+		 */
+		void startRender();
+		
+		/**
+		 * Renders a section break.
+		 * @param title the section title.
+		 */
+		void renderSection(String title);
+
+		/**
+		 * Renders a single function usage doc.
+		 * @param namespace the function namespace.
+		 * @param functionName the function name.
+		 * @param usage the usage to render (can be null).
+		 */
+		void renderUsage(String namespace, String functionName, Usage usage);
+
+		/**
+		 * Called on render finish.
+		 */
+		void finishRender();
+		
+	}
+	
+	private static class UsageTextRenderer implements UsageRendererType
+	{
+		private static final String NEWLINE_INDENT = "\n            ";
+		
+		private PrintStream out;
+		
+		private UsageTextRenderer(PrintStream out) 
+		{
+			this.out = out;
+		}
+		
+		@Override
+		public void startRender()
+		{
+			// Do nothing
+		}
+
+		@Override
+		public void renderSection(String title) 
+		{
+			out.println("=================================================================");
+			out.println("==== " + title);
+			out.println("=================================================================");
+			out.println();
+		}
+
+		private void renderTypeUsage(TypeUsage tu)
+		{
+			out.append("        (").append(tu.getType() != null 
+					? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
+					: "ANY"
+				).append(") ").println(tu.getDescription().replace("\n", NEWLINE_INDENT));
+		}
+
+		@Override
+		public void renderUsage(String namespace, String functionName, Usage usage)
+		{
+			if (usage == null)
+			{
+				if (namespace != null)
+					out.append(namespace + "::");
+				out.append(functionName).append("(...)").println();
+				out.println();
+				return;
+			}
+			
+			if (namespace != null)
+				out.append(namespace + "::");
+			
+			out.append(functionName).append('(');
+			List<ParameterUsage> pul = usage.getParameterInstructions();
+			for (int i = 0; i < pul.size(); i++)
+			{
+				out.append(pul.get(i).getParameterName());
+				if (i < pul.size() - 1)
+					out.append(", ");
+			}
+			out.append(')').print('\n');
+			
+			out.append("    ").println(usage.getInstructions().replace("\n", NEWLINE_INDENT));
+			if (!pul.isEmpty()) for (ParameterUsage pu : pul)
+			{
+				out.append("    ").append(pu.getParameterName()).println(":");
+				for (TypeUsage tu : pu.getTypes())
+					renderTypeUsage(tu);
+			}
+			
+			out.append("    ").println("Returns:");
+			for (TypeUsage tu : usage.getReturnTypes())
+				renderTypeUsage(tu);
+			out.println();
+		}
+
+		@Override
+		public void finishRender() 
+		{
+			// Do nothing
+		}
+
+	}
+	
+	private static class UsageMarkdownRenderer implements UsageRendererType
+	{
+		final String NEWLINE_INDENT = "\n        - ";
+
+		private PrintStream out;
+		
+		private UsageMarkdownRenderer(PrintStream out)
+		{
+			this.out = out;
+		}
+		
+		@Override
+		public void startRender()
+		{
+			// Do nothing
+		}
+
+		@Override
+		public void renderSection(String title) 
+		{
+			out.append("# ").println(title);
+			out.println();
+		}
+		
+		private void renderTypeUsage(TypeUsage tu)
+		{
+			out.append("- `").append(tu.getType() != null ? tu.getType().name() : "ANY").append("` ");
+			out.append((tu.getSubType() != null ? "*" + tu.getSubType() + "*" : ""));
+			out.println();
+			out.append("    - ").println(tu.getDescription().replace("\n", NEWLINE_INDENT));
+		}
+		
+		@Override
+		public void renderUsage(String namespace, String functionName, Usage usage)
+		{
+			if (usage == null)
+			{
+				out.append("## ");
+				if (namespace != null)
+					out.append(namespace + "::");
+				out.append(functionName).append("(...)").println();
+				out.println();
+				return;
+			}
+			
+			if (namespace != null)
+				out.append(namespace + "::");
+
+			out.append("## ").append(functionName).append('(');
+			List<ParameterUsage> pul = usage.getParameterInstructions();
+			for (int i = 0; i < pul.size(); i++)
+			{
+				out.append(pul.get(i).getParameterName());
+				if (i < pul.size() - 1)
+					out.append(", ");
+			}
+			out.append(')').print('\n');
+			out.println();
+			
+			out.println(usage.getInstructions().replace("\n", NEWLINE_INDENT));
+			out.println();
+			if (!pul.isEmpty())
+			{
+				for (ParameterUsage pu : pul)
+				{
+					out.append("**").append(pu.getParameterName()).append("**").println(":");
+					out.println();
+					for (TypeUsage tu : pu.getTypes())
+						renderTypeUsage(tu);
+					out.println();
+				}
+				out.println();
+			}
+
+			out.append("**Returns**").println(":");
+			out.println();
+			for (TypeUsage tu : usage.getReturnTypes())
+				renderTypeUsage(tu);
+			out.println();
+			out.println();
+		}
+
+		@Override
+		public void finishRender() 
+		{
+			// Do nothing
+		}
+
+	}
+	
 	private enum Mode
 	{
 		HELP,
@@ -73,149 +314,7 @@ public final class ScriptExecutor
 		DISASSEMBLE,
 		EXECUTE;
 	}
-	
-	private enum UsageRenderer
-	{
-		TEXT
-		{
-			final String NEWLINE_INDENT = "\n            ";
-			
-			@Override
-			protected void renderSection(PrintStream out, String title) 
-			{
-				out.println("=================================================================");
-				out.println("==== " + title);
-				out.println("=================================================================");
-				out.println();
-			}
 
-			private void renderTypeUsage(PrintStream out, TypeUsage tu)
-			{
-				out.append("        (").append(tu.getType() != null 
-						? (tu.getType().name() + (tu.getSubType() != null ? ":" + tu.getSubType() : "")) 
-						: "ANY"
-					).append(") ").println(tu.getDescription().replace("\n", NEWLINE_INDENT));
-			}
-
-			@Override
-			protected void renderUsage(PrintStream out, String functionName, Usage usage)
-			{
-				if (usage == null)
-				{
-					out.println(functionName + "(...)");
-					out.println();
-					return;
-				}
-				
-				out.append(functionName).append('(');
-				List<ParameterUsage> pul = usage.getParameterInstructions();
-				for (int i = 0; i < pul.size(); i++)
-				{
-					out.append(pul.get(i).getParameterName());
-					if (i < pul.size() - 1)
-						out.append(", ");
-				}
-				out.append(')').print('\n');
-				
-				out.append("    ").println(usage.getInstructions().replace("\n", NEWLINE_INDENT));
-				if (!pul.isEmpty()) for (ParameterUsage pu : pul)
-				{
-					out.append("    ").append(pu.getParameterName()).println(":");
-					for (TypeUsage tu : pu.getTypes())
-						renderTypeUsage(out, tu);
-				}
-				
-				out.append("    ").println("Returns:");
-				for (TypeUsage tu : usage.getReturnTypes())
-					renderTypeUsage(out, tu);
-				out.println();
-			}
-			
-		},
-		
-		MARKDOWN
-		{
-			final String NEWLINE_INDENT = "\n        - ";
-
-			@Override
-			protected void renderSection(PrintStream out, String title) 
-			{
-				out.append("# ").println(title);
-				out.println();
-			}
-			
-			private void renderTypeUsage(PrintStream out, TypeUsage tu)
-			{
-				out.append("- `").append(tu.getType() != null ? tu.getType().name() : "ANY").append("` ");
-				out.append((tu.getSubType() != null ? "*" + tu.getSubType() + "*" : ""));
-				out.println();
-				out.append("    - ").println(tu.getDescription().replace("\n", NEWLINE_INDENT));
-			}
-			
-			@Override
-			protected void renderUsage(PrintStream out, String functionName, Usage usage)
-			{
-				if (usage == null)
-				{
-					out.append("## ").append(functionName).append("(...)").println();
-					out.println();
-					return;
-				}
-				
-				out.append("## ").append(functionName).append('(');
-				List<ParameterUsage> pul = usage.getParameterInstructions();
-				for (int i = 0; i < pul.size(); i++)
-				{
-					out.append(pul.get(i).getParameterName());
-					if (i < pul.size() - 1)
-						out.append(", ");
-				}
-				out.append(')').print('\n');
-				out.println();
-				
-				out.println(usage.getInstructions().replace("\n", NEWLINE_INDENT));
-				out.println();
-				if (!pul.isEmpty())
-				{
-					for (ParameterUsage pu : pul)
-					{
-						out.append("**").append(pu.getParameterName()).append("**").println(":");
-						out.println();
-						for (TypeUsage tu : pu.getTypes())
-							renderTypeUsage(out, tu);
-						out.println();
-					}
-					out.println();
-				}
-
-				out.append("**Returns**").println(":");
-				out.println();
-				for (TypeUsage tu : usage.getReturnTypes())
-					renderTypeUsage(out, tu);
-				out.println();
-				out.println();
-			}
-			
-		}
-		
-		;
-		
-		/**
-		 * Renders a section break.
-		 * @param out the output stream.
-		 * @param title the section title.
-		 */
-		protected abstract void renderSection(PrintStream out, String title);
-
-		/**
-		 * Renders a single function usage doc.
-		 * @param out the output stream.
-		 * @param functionName the function name.
-		 * @param usage the usage to render (can be null).
-		 */
-		protected abstract void renderUsage(PrintStream out, String functionName, Usage usage);
-	}
-	
 	private Mode mode;
 	private File scriptFile;
 	private String entryPointName;
@@ -245,13 +344,13 @@ public final class ScriptExecutor
 		
 		if (mode == Mode.FUNCTIONHELP)
 		{
-			printFunctionHelp(System.out, UsageRenderer.TEXT);
+			printFunctionHelp(new UsageTextRenderer(System.out));
 			return 0;
 		}
 		
 		if (mode == Mode.FUNCTIONHELP_MARKDOWN)
 		{
-			printFunctionHelp(System.out, UsageRenderer.MARKDOWN);
+			printFunctionHelp(new UsageMarkdownRenderer(System.out));
 			return 0;
 		}
 		
@@ -266,22 +365,25 @@ public final class ScriptExecutor
 			return 4;
 		}
 		
-		ScriptInstance instance = ScriptInstance.createBuilder()
+		ScriptInstanceBuilder builder = ScriptInstance.createBuilder()
 			.withSource(scriptFile)
 			.withEnvironment(ScriptEnvironment.createStandardEnvironment())
-			.withFunctionResolver(CommonFunctions.createResolver())
-				.andFunctionResolver(IOFunctions.createResolver())
-				.andFunctionResolver(DateFunctions.createResolver())
-				.andFunctionResolver(FileSystemFunctions.createResolver())
-				.andFunctionResolver(MathFunctions.createResolver())
-				.andFunctionResolver(PrintFunctions.createResolver())
-				.andFunctionResolver(RegexFunctions.createResolver())
-				.andFunctionResolver(ZipFunctions.createResolver())
-				.andFunctionResolver(DigestFunctions.createResolver())
-				.andFunctionResolver(JSONFunctions.createResolver())
 			.withScriptStack(activationDepth, stackDepth)
-			.withRunawayLimit(runawayLimit)
-			.createInstance();
+			.withRunawayLimit(runawayLimit);
+
+		// ============ Add Functions =============
+		
+		for (int i = 0; i < RESOLVERS.length; i++)
+		{
+			if (i == 0)
+				builder.withFunctionResolver(RESOLVERS[i].resolver);
+			else
+				builder.andFunctionResolver(RESOLVERS[i].resolver);
+		}
+		
+		// ========================================
+
+		ScriptInstance instance = builder.createInstance();
 		
 		if (mode == Mode.DISASSEMBLE)
 		{
@@ -524,49 +626,18 @@ public final class ScriptExecutor
 		out.println("                                     script.");
 	}
 
-	private static void printFunctionUsages(PrintStream out, UsageRenderer renderer, ScriptFunctionResolver resolver)
+	private static void printFunctionUsages(UsageRendererType renderer, String sectionName, String namespace, ScriptFunctionResolver resolver)
 	{
+		renderer.renderSection(sectionName);
 		for (ScriptFunctionType sft : resolver.getFunctions())
-			renderer.renderUsage(out, sft.name(), sft.getUsage());
-		out.println();
+			renderer.renderUsage(namespace, sft.name(), sft.getUsage());
+		System.out.println();
 	}
 	
-	private static void printFunctionHelp(PrintStream out, UsageRenderer renderer)
+	private static void printFunctionHelp(UsageRendererType renderer)
 	{
-		renderer.renderSection(out, "Common");
-		printFunctionUsages(out, renderer, MiscFunctions.createResolver());
-		renderer.renderSection(out, "Printing/Logging");
-		printFunctionUsages(out, renderer, PrintFunctions.createResolver());
-		renderer.renderSection(out, "String");
-		printFunctionUsages(out, renderer, StringFunctions.createResolver());
-		renderer.renderSection(out, "List / Set");
-		printFunctionUsages(out, renderer, ListFunctions.createResolver());
-		renderer.renderSection(out, "Map");
-		printFunctionUsages(out, renderer, MapFunctions.createResolver());
-		renderer.renderSection(out, "Buffer");
-		printFunctionUsages(out, renderer, BufferFunctions.createResolver());
-		renderer.renderSection(out, "Error");
-		printFunctionUsages(out, renderer, ErrorFunctions.createResolver());
-		renderer.renderSection(out, "Math");
-		printFunctionUsages(out, renderer, MathFunctions.createResolver());
-		renderer.renderSection(out, "RegEx");
-		printFunctionUsages(out, renderer, RegexFunctions.createResolver());
-		renderer.renderSection(out, "Date / Time");
-		printFunctionUsages(out, renderer, DateFunctions.createResolver());
-		renderer.renderSection(out, "File System");
-		printFunctionUsages(out, renderer, FileSystemFunctions.createResolver());
-		renderer.renderSection(out, "File I/O");
-		printFunctionUsages(out, renderer, FileIOFunctions.createResolver());
-		renderer.renderSection(out, "Zip Files / GZIP Streams");
-		printFunctionUsages(out, renderer, ZipFunctions.createResolver());
-		renderer.renderSection(out, "Stream I/O");
-		printFunctionUsages(out, renderer, StreamingIOFunctions.createResolver());
-		renderer.renderSection(out, "Data I/O");
-		printFunctionUsages(out, renderer, DataIOFunctions.createResolver());
-		renderer.renderSection(out, "Digest");
-		printFunctionUsages(out, renderer, DigestFunctions.createResolver());
-		renderer.renderSection(out, "JSON");
-		printFunctionUsages(out, renderer, JSONFunctions.createResolver());
+		for (int i = 0; i < RESOLVERS.length; i++)
+			printFunctionUsages(renderer, RESOLVERS[i].sectionName, RESOLVERS[i].namespace, RESOLVERS[i].resolver);		
 	}
 	
 	public static void main(String[] args) throws Exception
