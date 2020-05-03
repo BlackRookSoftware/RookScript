@@ -636,8 +636,10 @@ public final class ScriptExecutor
 	
 	private static void printFunctionHelp(UsageRendererType renderer)
 	{
+		renderer.startRender();
 		for (int i = 0; i < RESOLVERS.length; i++)
 			printFunctionUsages(renderer, RESOLVERS[i].sectionName, RESOLVERS[i].namespace, RESOLVERS[i].resolver);		
+		renderer.finishRender();
 	}
 	
 	public static void main(String[] args) throws Exception
