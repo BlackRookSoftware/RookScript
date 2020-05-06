@@ -13,6 +13,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -70,6 +71,30 @@ public final class Utils
 
 	private static final ThreadLocal<Object[]> BLANK_PARAM_ARRAY = ThreadLocal.withInitial(()->new Object[]{});
 
+	/**
+	 * A null input stream (never has data to read).
+	 */
+	public static final InputStream NULL_INPUT = new InputStream() 
+	{
+		@Override
+		public int read() throws IOException 
+		{
+			return -1;
+		}
+	};
+	
+	/**
+	 * A null output stream (eats all data written).
+	 */
+	public static final OutputStream NULL_OUTPUT = new OutputStream() 
+	{
+		@Override
+		public void write(int b) throws IOException
+		{
+			// Do nothing.
+		}
+	};
+	
 	static
 	{
 		String osName = System.getProperty("os.name");

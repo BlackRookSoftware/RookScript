@@ -20,6 +20,7 @@ import com.blackrook.rookscript.ScriptAssembler;
 import com.blackrook.rookscript.ScriptEnvironment;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptInstanceBuilder;
+import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.functions.MathFunctions;
 import com.blackrook.rookscript.functions.RegexFunctions;
@@ -44,6 +45,7 @@ import com.blackrook.rookscript.functions.DigestFunctions;
 import com.blackrook.rookscript.functions.FileSystemFunctions;
 import com.blackrook.rookscript.functions.JSONFunctions;
 import com.blackrook.rookscript.functions.PrintFunctions;
+import com.blackrook.rookscript.functions.SystemFunctions;
 
 /**
  * A class for executing scripts from command line.
@@ -82,7 +84,8 @@ public final class ScriptExecutor
 		new Resolver("Stream I/O", StreamingIOFunctions.createResolver()),
 		new Resolver("Data I/O", DataIOFunctions.createResolver()),
 		new Resolver("Digest", DigestFunctions.createResolver()),
-		new Resolver("JSON", JSONFunctions.createResolver())
+		new Resolver("JSON", JSONFunctions.createResolver()),
+		new Resolver("Processes", SystemFunctions.createResolver())
 	};
 	
 	private static class Resolver
@@ -426,12 +429,22 @@ public final class ScriptExecutor
 			Object[] args = new Object[argList.size()];
 			argList.toArray(args);
 			try {
-				Integer ret;
+				
+				ScriptValue retval = ScriptValue.create(null);
+
 				if (entryPoint.getParameterCount() > 0)
-					ret = instance.callAndReturnAs(Integer.class, entryPointName, new Object[]{args});
+					instance.call(entryPointName, new Object[]{args});
 				else
-					ret = instance.callAndReturnAs(Integer.class, entryPointName);
-				return ret != null ? ret : 0;
+					instance.call(entryPointName);
+
+				instance.popStackValue(retval);
+				
+				if (retval.isError())
+				{
+					System.err.println("ERROR: " + retval);
+					return 7;
+				}
+				return retval.asInt();
 			} catch (ScriptExecutionException e) {
 				System.err.println("Script ERROR: " + e.getLocalizedMessage());
 				return 6;

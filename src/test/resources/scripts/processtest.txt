@@ -1,0 +1,11 @@
+#!/usr/bin/env rookscript -i
+
+function cmd(line, work, env)
+{
+	return exec("cmd.exe", ["/c", line], env, work, STDOUT(), STDERR());
+}
+
+check entry main()
+{
+	return cmd("wtexscan --help")->processresult();
+}
