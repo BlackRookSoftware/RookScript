@@ -26,6 +26,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -36,17 +38,24 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public enum SystemFunctions implements ScriptFunctionType
 {
-	OS(0)
+	PROPERTIES(1)
 	{
 		@Override
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Returns a map of Operating System information."
+					"Returns a map of JVM properties. Best to read this once and re-query the returned map."
+				)
+				.parameter("key", 
+					type(Type.NULL, "Get all properties as a map."),
+					type(Type.STRING, "Get a single property as a string value."),
+					type(Type.LIST, "Get all provided properties as a map.")
 				)
 				.returns(
-					type(Type.MAP, "A map of values for OS values.")
+					type(Type.STRING, "The corresponding property, if [key] is a string. Can be null."),
+					type(Type.MAP, "The corresponding map of properties, if [key] is null or a list."),
+					type(Type.ERROR, "Security", "If a property cannot be queried.")
 				);
 		}
 		
@@ -56,7 +65,33 @@ public enum SystemFunctions implements ScriptFunctionType
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
-				// TODO: Finish this.
+				scriptInstance.popStackValue(temp);
+				if (temp.isNull())
+				{
+					Properties props = System.getProperties();
+					returnValue.setEmptyMap(props.size());
+					for (Map.Entry<Object, Object> entry : props.entrySet())
+						returnValue.mapSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+				}
+				else if (temp.isString())
+				{
+					returnValue.set(System.getProperty(temp.asString()));
+				}
+				else if (temp.isList())
+				{
+					returnValue.setEmptyMap(temp.length());
+					for (IteratorPair pair : temp)
+						returnValue.mapSet(pair.getValue().asString(), System.getProperty(pair.getValue().asString()));					
+				}
+				else
+				{
+					returnValue.setEmptyMap();
+				}
+				return true;
+			} 
+			catch (SecurityException e) 
+			{
+				temp.setError("Security", e.getMessage());
 				return true;
 			}
 			finally
@@ -66,37 +101,7 @@ public enum SystemFunctions implements ScriptFunctionType
 		}
 	},
 	
-	JAVA(0)
-	{
-		@Override
-		protected Usage usage()
-		{
-			return ScriptFunctionUsage.create()
-				.instructions(
-					"Returns a map of JVM information."
-				)
-				.returns(
-					type(Type.MAP, "A map of values for Java properties.")
-				);
-		}
-		
-		@Override
-		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
-		{
-			ScriptValue temp = CACHEVALUE1.get();
-			try
-			{
-				// TODO: Finish this.
-				return true;
-			}
-			finally
-			{
-				temp.isNull();
-			}
-		}
-	},
-	
-	ENV(1)
+	ENVVARS(1)
 	{
 		@Override
 		protected Usage usage()
@@ -123,7 +128,33 @@ public enum SystemFunctions implements ScriptFunctionType
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
-				// TODO: Finish this.
+				scriptInstance.popStackValue(temp);
+				if (temp.isNull())
+				{
+					Map<String, String> env = System.getenv();
+					returnValue.setEmptyMap(env.size());
+					for (Map.Entry<String, String> entry : env.entrySet())
+						returnValue.mapSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+				}
+				else if (temp.isString())
+				{
+					returnValue.set(System.getenv(temp.asString()));
+				}
+				else if (temp.isList())
+				{
+					returnValue.setEmptyMap(temp.length());
+					for (IteratorPair pair : temp)
+						returnValue.mapSet(pair.getValue().asString(), System.getenv(pair.getValue().asString()));					
+				}
+				else
+				{
+					returnValue.setEmptyMap();
+				}
+				return true;
+			} 
+			catch (SecurityException e) 
+			{
+				temp.setError("Security", e.getMessage());
 				return true;
 			}
 			finally
@@ -373,7 +404,7 @@ public enum SystemFunctions implements ScriptFunctionType
 					"Waits for a process to complete and returns its result."
 				)
 				.parameter("command", 
-					type(Type.OBJECTREF, "File", "The file to read process input from (assumes native encoding).")
+					type(Type.OBJECTREF, "ProcessInstance", "The process instance.")
 				)
 				.parameter("waitmillis", 
 					type(Type.NULL, "Wait indefinitely."),

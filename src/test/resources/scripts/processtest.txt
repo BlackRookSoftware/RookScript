@@ -7,5 +7,11 @@ function cmd(line, work, env)
 
 check entry main()
 {
-	return cmd("wtexscan --help")->processresult();
+	println(envvars());
+	println(envvars("TMP"));
+	println(envvars(["JAVA_HOME", "JRE_PATH"]));
+	println(properties());
+	println(properties("os.name"));
+	println(properties(["os.arch", "os.name"]));
+	return cmd("dir", ".", envvars(["path"]))->execresult();
 }

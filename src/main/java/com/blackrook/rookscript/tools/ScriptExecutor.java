@@ -85,7 +85,7 @@ public final class ScriptExecutor
 		new Resolver("Data I/O", DataIOFunctions.createResolver()),
 		new Resolver("Digest", DigestFunctions.createResolver()),
 		new Resolver("JSON", JSONFunctions.createResolver()),
-		new Resolver("Processes", SystemFunctions.createResolver())
+		new Resolver("System", SystemFunctions.createResolver())
 	};
 	
 	private static class Resolver
