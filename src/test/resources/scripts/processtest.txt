@@ -1,8 +1,16 @@
 #!/usr/bin/env rookscript -i
 
-function cmd(line, work, env)
+function path()
 {
-	return exec("cmd.exe", ["/c", line], env, work, STDOUT(), STDERR());
+	return envvars("path")->regexspl
+}
+
+function cmd(line, env, work, out)
+{
+	out = out ?? stdout();
+	work = work ?? ".";
+	env = env ?? envvars(["path"]);
+	return exec("cmd.exe", ["/c", line], env, work, out, out);
 }
 
 check entry main()
@@ -10,8 +18,15 @@ check entry main()
 	println(envvars());
 	println(envvars("TMP"));
 	println(envvars(["JAVA_HOME", "JRE_PATH"]));
+	println("");
 	println(properties());
 	println(properties("os.name"));
 	println(properties(["os.arch", "os.name"]));
-	return cmd("dir", ".", envvars(["path"]))->execresult();
+	println("");
+	
+	buf = bufnew(2048);
+	result = cmd("dir", null, null, bosopen(buf))->execresult();
+	println(buf->bufgetpos());
+	println(result);
+	return result;
 }

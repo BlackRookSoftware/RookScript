@@ -328,6 +328,66 @@ public enum StringFunctions implements ScriptFunctionType
 		}
 	},
 		
+	/** @since 1.7.0 */
+	STRSPLIT(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Splits a string into many substrings using a delimiting string of characters."
+				)
+				.parameter("string", 
+					type(Type.STRING, "The string to split (converted to string if not a string).")
+				)
+				.parameter("splitstring", 
+					type(Type.STRING, "The target substring for delimiting splits (converted to string if not a string).")
+				)
+				.returns(
+					type(Type.LIST, "[STRING, ...]", "The resultant list of strings.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String substr = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				
+				returnValue.setEmptyList();
+				int slen = substr.length();
+				
+				// Blank substring = undefined amount of splits!
+				if (slen == 0)
+					return true;
+
+				int s = 0;
+
+				int i;
+				while ((i = str.indexOf(substr, s)) >= 0)
+				{
+					returnValue.listAdd(str.substring(s, i));
+					s = i + slen;
+				}
+
+				// last substring
+				returnValue.listAdd(str.substring(s));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	STRJOIN(2)
 	{
 		@Override

@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Script common functions for system level stuff, like process creation, control, and environment stuff.
  * @author Matthew Tropiano
- * @since [NOW]
+ * @since 1.7.0
  */
 public enum SystemFunctions implements ScriptFunctionType
 {
@@ -373,7 +373,9 @@ public enum SystemFunctions implements ScriptFunctionType
 				}
 
 				try {
-					returnValue.set(new ProcessInstance(argv, env, workingDir, out, closeOut, err, closeErr, in));
+					ProcessInstance instance = new ProcessInstance(argv, env, workingDir, out, closeOut, err, closeErr, in);
+					scriptInstance.registerCloseable(instance);
+					returnValue.set(instance);
 					return true;
 				} catch (SecurityException e) {
 					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
@@ -408,7 +410,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				)
 				.parameter("waitmillis", 
 					type(Type.NULL, "Wait indefinitely."),
-					type(Type.INTEGER, "The amount of time to wait for a result, in milliseconds.")
+					type(Type.INTEGER, "The amount of time to wait for a result, in milliseconds. If 0 or less, wait forever.")
 				)
 				.returns(
 					type(Type.INTEGER, "The process return result."),
@@ -425,7 +427,7 @@ public enum SystemFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				long wait = temp.isNull() ? -1 : temp.asLong();
+				long wait = temp.isNull() ? 0L : temp.asLong();
 				scriptInstance.popStackValue(temp);
 				if (!temp.isObjectRef(ProcessInstance.class))
 				{
