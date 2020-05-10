@@ -2,7 +2,7 @@
 
 function path()
 {
-	return envvars("path")->regexspl
+	return envvars("path")->strsplit(properties("path.separator"));
 }
 
 function cmd(line, env, work, out)
@@ -23,6 +23,8 @@ check entry main()
 	println(properties("os.name"));
 	println(properties(["os.arch", "os.name"]));
 	println("");
+	
+	each (v : path()) println(v);
 	
 	buf = bufnew(2048);
 	result = cmd("dir", null, null, bosopen(buf))->execresult();
