@@ -1466,7 +1466,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			case FLOAT:
 				return !isNaN() && Double.longBitsToDouble(rawbits) != 0.0; 
 			case STRING:
-				return ((String)ref).length() == 0;
+				return ((String)ref).length() != 0;
 			case OBJECTREF:
 			case LIST:
 			case MAP:

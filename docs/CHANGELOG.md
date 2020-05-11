@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.7.2
+----------------
+
+- `Fixed` Strings of length > 0 should have been `true`, if converted to boolean.
+
+
 Changed in 1.7.1
 ----------------
 
