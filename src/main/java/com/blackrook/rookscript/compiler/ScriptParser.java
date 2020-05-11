@@ -1270,6 +1270,7 @@ public class ScriptParser extends Lexer.Parser
 		return true;
 	}
 
+	// FIXME: EACH breakout is BAD! FIX THIS!
 	// <EACH> "(" <IdentifierAssignment> <IdentifierAssignment'> ":" <Expression> ")" <StatementBody>
 	private boolean parseEachClause(Script currentScript, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
