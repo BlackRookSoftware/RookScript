@@ -8,6 +8,7 @@ Changed in 1.7.0
 
 - `Added` System functions.
 - `Added` Added STRSPLIT().
+- `Changed` Some function documentation.
 
 
 Changed in 1.6.0

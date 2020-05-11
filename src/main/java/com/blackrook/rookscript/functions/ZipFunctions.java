@@ -362,7 +362,9 @@ public enum ZipFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens a data input stream for reading from a GZIP stream (and registers this resource as an open resource)."
+					"Wraps a data input stream for reading a GZIP stream (and registers this resource as " + 
+					"an open resource, but only if the underlying stream is registered - it is deregistered before " + 
+					"registering this one)."
 				)
 				.parameter("instream", 
 					type(Type.OBJECTREF, "InputStream", "A valid open input stream.")
@@ -430,13 +432,15 @@ public enum ZipFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens a data output stream for writing to a GZIP stream (and registers this resource as an open resource)."
+					"Wraps a data output stream for writing a GZIP stream (and registers this resource as " + 
+					"an open resource, but only if the underlying stream is registered - it is deregistered before " + 
+					"registering this one)."
 				)
-				.parameter("instream", 
+				.parameter("outstream", 
 					type(Type.OBJECTREF, "OutputStream", "A valid open output stream.")
 				)
 				.returns(
-					type(Type.OBJECTREF, "DataOutput", "An open data output stream to read from."),
+					type(Type.OBJECTREF, "DataOutputStream", "An open data output stream to write to."),
 					type(Type.ERROR, "BadParameter", "If an open output stream was not provided."),
 					type(Type.ERROR, "IOError", "If a write error occurs, or the provided stream is not open.")
 				)

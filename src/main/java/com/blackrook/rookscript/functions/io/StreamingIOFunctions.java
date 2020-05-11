@@ -51,6 +51,7 @@ import java.nio.charset.UnsupportedCharsetException;
  */
 public enum StreamingIOFunctions implements ScriptFunctionType
 {
+	/** @since 1.7.0, accepts InputStreams. */
 	SKIP(2)
 	{
 		@Override
@@ -62,7 +63,8 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					"current cursor position. The file's cursor will be advanced."
 				)
 				.parameter("input", 
-					type(Type.OBJECTREF, "DataInput", "A readable data input.")
+					type(Type.OBJECTREF, "DataInput", "A readable data input."),
+					type(Type.OBJECTREF, "InputStream", "An input stream.")
 				)
 				.parameter("length",
 					type(Type.NULL, "Use 0."),
@@ -85,36 +87,59 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				int length = temp.asInt();
 				scriptInstance.popStackValue(temp);
-				if (!temp.isObjectRef(DataInput.class))
-				{
-					returnValue.setError("BadParameter", "First parameter is not a readable data input");
-					return true;
-				}
-				
-				DataInput in = temp.asObjectType(DataInput.class);
 
 				long totalSkipped = 0;
-				try {
-					// some inputstreams are buffered - skip() will only skip up to the buffer's length if data is buffered.
-					// this ensures the maximum possible/desired, and breaks out when it truly cannot skip any more.
-					long buf = 0;
-					long lastlength = length;
-					while (length > 0)
-					{
-						buf = in.skipBytes(length);
-						length -= buf;
-						totalSkipped += buf;
-						if (lastlength == length)
-							break;
-						lastlength = length;
+				if (temp.isObjectRef(DataInput.class))
+				{
+					DataInput in = temp.asObjectType(DataInput.class);
+					try {
+						// some inputstreams are buffered - skip() will only skip up to the buffer's length if data is buffered.
+						// this ensures the maximum possible/desired, and breaks out when it truly cannot skip any more.
+						long buf = 0;
+						long lastlength = length;
+						while (length > 0)
+						{
+							buf = in.skipBytes(length);
+							length -= buf;
+							totalSkipped += buf;
+							if (lastlength == length)
+								break;
+							lastlength = length;
+						}
+						returnValue.set(totalSkipped);
+					} catch (IOException e) {
+						returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());
 					}
-				} catch (IOException e) {
-					returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());
 					return true;
 				}
-
-				returnValue.set(totalSkipped);
-				return true;
+				else if (temp.isObjectRef(InputStream.class))
+				{
+					InputStream in = temp.asObjectType(InputStream.class);
+					try {
+						// some inputstreams are buffered - skip() will only skip up to the buffer's length if data is buffered.
+						// this ensures the maximum possible/desired, and breaks out when it truly cannot skip any more.
+						long buf = 0;
+						long lastlength = length;
+						while (length > 0)
+						{
+							buf = in.skip(length);
+							length -= buf;
+							totalSkipped += buf;
+							if (lastlength == length)
+								break;
+							lastlength = length;
+						}
+						returnValue.set(totalSkipped);
+					} catch (IOException e) {
+						returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());
+					}
+					return true;
+				}
+				else
+				{
+					returnValue.setError("BadParameter", "First parameter is not a valid input.");
+					return true;
+				}
 			}
 			finally
 			{
