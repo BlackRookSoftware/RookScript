@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.7.1
+----------------
+
+- `Fixed` Function parsing bug when amount of parameters were less than the required amount.
+
+
 Changed in 1.7.0
 ----------------
 

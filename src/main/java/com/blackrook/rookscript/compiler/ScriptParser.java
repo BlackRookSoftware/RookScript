@@ -250,18 +250,20 @@ public class ScriptParser extends Lexer.Parser
 		}
 
 		// test type of call: host function first, then local script function.
-		ScriptFunctionType functionType;
-		Entry functionEntry;
-		if ((functionType = currentScript.getHostFunctionResolver().getNamespacedFunction(functionNamespace, functionName)) != null)
+		ScriptFunctionType hostFunctionEntry;
+		Entry localFunctionEntry;
+		if ((hostFunctionEntry = currentScript.getHostFunctionResolver().getNamespacedFunction(functionNamespace, functionName)) != null)
 		{
-			int paramCount = functionType.getParameterCount() - (partial ? 1 : 0);
+			int requiredParamCount = hostFunctionEntry.getParameterCount() - (partial ? 1 : 0);
 			int parsedCount;
-			if ((parsedCount = parseFunctionParameters(currentScript, checkEndLabel, paramCount)) == PARSEFUNCTIONCALL_FALSE)
+			if ((parsedCount = parseFunctionParameters(currentScript, checkEndLabel, requiredParamCount)) == PARSEFUNCTIONCALL_FALSE)
 				return false;
+			if (partial)
+				parsedCount++;
 							
 			if (!matchType(ScriptKernel.TYPE_RPAREN))
 			{
-				if (paramCount == parsedCount)
+				if (parsedCount == hostFunctionEntry.getParameterCount())
 					addErrorMessage("Expected \")\". The maximum amount of parameters on this host function call was reached.");
 				else
 					addErrorMessage("Expected \")\" after a host function call's parameters.");
@@ -269,7 +271,7 @@ public class ScriptParser extends Lexer.Parser
 			}
 			
 			// fill last arguments left with null.
-			while (paramCount - (parsedCount++) > 0)
+			while ((parsedCount++) < hostFunctionEntry.getParameterCount())
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 			
 			if (functionNamespace != null)
@@ -282,18 +284,18 @@ public class ScriptParser extends Lexer.Parser
 			
 			return true;
 		}
-		else if (functionNamespace == null && (functionEntry = currentScript.getFunctionEntry(functionName)) != null)
+		else if (functionNamespace == null && (localFunctionEntry = currentScript.getFunctionEntry(functionName)) != null)
 		{
-			int paramCount = functionEntry.getParameterCount() - (partial ? 1 : 0);
+			int requiredParamCount = localFunctionEntry.getParameterCount() - (partial ? 1 : 0);
 			int parsedCount;
-			if ((parsedCount = parseFunctionParameters(currentScript, checkEndLabel, paramCount)) == PARSEFUNCTIONCALL_FALSE)
+			if ((parsedCount = parseFunctionParameters(currentScript, checkEndLabel, requiredParamCount)) == PARSEFUNCTIONCALL_FALSE)
 				return false;
 			if (partial)
 				parsedCount++;
 							
 			if (!matchType(ScriptKernel.TYPE_RPAREN))
 			{
-				if (paramCount == parsedCount)
+				if (parsedCount == localFunctionEntry.getParameterCount())
 					addErrorMessage("Expected \")\". The maximum amount of parameters on this function call was reached.");
 				else
 					addErrorMessage("Expected \")\" after a function call's parameters.");
@@ -301,7 +303,7 @@ public class ScriptParser extends Lexer.Parser
 			}
 			
 			// fill last arguments left with null.
-			while (paramCount - (parsedCount++) > 0)
+			while ((parsedCount++) < localFunctionEntry.getParameterCount())
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 			
 			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL, getFunctionLabel(functionName)));
@@ -1947,19 +1949,19 @@ public class ScriptParser extends Lexer.Parser
 	// Parses a function call.
 	// 		( .... , .... )
 	// Returns amount of arguments parsed.
-	private int parseFunctionParameters(Script currentScript, String checkEndLabel, int paramCount)
+	private int parseFunctionParameters(Script currentScript, String checkEndLabel, int requiredParamCount)
 	{
 		int parsed = 0;
 		if (currentType(ScriptKernel.TYPE_RPAREN))
 			return parsed;
-		while (paramCount-- > 0)
+		while (requiredParamCount-- > 0)
 		{
 			if (!parseExpression(currentScript, checkEndLabel))
 				return PARSEFUNCTIONCALL_FALSE;
 			
 			parsed++;
 			
-			if (paramCount > 0)
+			if (requiredParamCount > 0)
 			{
 				if (!matchType(ScriptKernel.TYPE_COMMA))
 					return parsed; 
