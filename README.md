@@ -101,6 +101,11 @@ which is set to a list of the script arguments.
 Call it with the `--help` switch to output help.
 
 
+### Known Issues
+
+* Breaking out of an `each` loop prematurely leaves junk on the stack - this must be fixed! 
+
+
 ### Javadocs
 
 Online Javadocs can be found at: [https://blackrooksoftware.github.io/RookScript/javadoc/](https://blackrooksoftware.github.io/RookScript/javadoc/)
