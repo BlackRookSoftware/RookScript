@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.7.3
+----------------
+
+- `Fixed` `each` loops had left stack garbage, and affected other iterators if it was exited before the iterator was finished.
+
+
 Changed in 1.7.2
 ----------------
 

@@ -31,4 +31,12 @@ entry main()
 		println(x);
 	each (k,v : 3)
 		println(k + " -> " + v);
+	each (v : [1,2,3,4,5,6])
+	{
+		if (v == 3)
+			break;
+		println(v);
+	}
+	each (k,v : ["abc","def","ghi","jkl","mno"])
+		println(k + " -> " + v);
 }

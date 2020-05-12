@@ -774,26 +774,30 @@ public enum ScriptCommandType
 	},
 	
 	/**
-	 * Pops a variable and pushes an iterator for it onto the stack.
+	 * Pops a variable, creates an iterator for it, and sets a variable for it.
 	 * Pops one value.
-	 * Pushes one value onto stack.
-	 * No operands.
+	 * Sets a variable.
+	 * Operand is variable name.
 	 */
-	PUSH_ITERATOR
+	SET_ITERATOR_VARIABLE
 	{
 		@Override
 		public boolean execute(ScriptInstance scriptInstance, Object operand1, Object operand2)
 		{
 			ScriptValue temp = CACHEVALUE1.get();
+			ScriptValue temp2 = CACHEVALUE2.get();
 			try
 			{
+				String name = String.valueOf(operand1);
 				scriptInstance.popStackValue(temp);
-				scriptInstance.pushStackValue(temp.iterator());
+				temp2.set(temp.iterator());
+				scriptInstance.setValue(name, temp2);
 				return true;
 			}
 			finally
 			{
 				temp.setNull();
+				temp2.setNull();
 			}
 		}
 	},

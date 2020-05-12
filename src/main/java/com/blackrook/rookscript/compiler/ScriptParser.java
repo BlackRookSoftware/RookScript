@@ -92,6 +92,8 @@ public class ScriptParser extends Lexer.Parser
 	public static final String LABEL_SCRIPTLET_START = "_scriptlet_start_";
 	/** Label prefix. */
 	public static final String LABEL_SCRIPTLET_END = "_scriptlet_end_";
+	/** Iterator variable prefix (must be named in a way that is impossible to access). */
+	public static final String LABEL_ITERATOR_VAR = "_iterator - var_";
 
 	/** Return false. */
 	public static final int PARSEFUNCTIONCALL_FALSE = -1;
@@ -1271,6 +1273,9 @@ public class ScriptParser extends Lexer.Parser
 	}
 
 	// FIXME: EACH breakout is BAD! FIX THIS!
+	// ISSUE: The iterator is left on the stack and assumed to be there - maybe generate an impossible-to-access 
+	// variable name and stow the iterator in variable scope, restoring it when the next set of variables need to be set on next iterate?
+	
 	// <EACH> "(" <IdentifierAssignment> <IdentifierAssignment'> ":" <Expression> ")" <StatementBody>
 	private boolean parseEachClause(Script currentScript, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
@@ -1293,6 +1298,8 @@ public class ScriptParser extends Lexer.Parser
 		String bodyLabel = currentScript.getNextGeneratedLabel(LABEL_EACH_BODY); 
 		String endLabel = currentScript.getNextGeneratedLabel(LABEL_EACH_END); 
 
+		String iteratorVariable = currentScript.getNextGeneratedLabel(LABEL_ITERATOR_VAR); 
+
 		// start
 		mark(currentScript, startLabel);
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, initLabel));
@@ -1314,9 +1321,11 @@ public class ScriptParser extends Lexer.Parser
 				return false;
 		}
 
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP)); // iterator would be on stack here, remove it
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, bodyLabel));
 
 		mark(currentScript, stepLabel);
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_VARIABLE, iteratorVariable));
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.ITERATE, endLabel, keyval));
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, nextLabel));
 		
@@ -1337,7 +1346,7 @@ public class ScriptParser extends Lexer.Parser
 			return false;
 		}
 
-		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_ITERATOR));
+		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.SET_ITERATOR_VARIABLE, iteratorVariable));
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, stepLabel));
 
 		mark(currentScript, bodyLabel);
