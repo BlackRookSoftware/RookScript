@@ -51,7 +51,9 @@ public enum JSONFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Converts JSON data to a script value. The provided stream is read until a full JSON value is parsed."
+					"Converts JSON data to a script value. The provided stream is read until a full JSON value is parsed. " +
+					"NOTE: While RookScript structures are compatible with the JSON spec, RookScript map key names are NOT case-sensitive, " +
+					"and may result in members of the same name being overwritten."
 				)
 				.parameter("jsoninput",
 					type(Type.STRING, "The JSON string to convert."),
@@ -135,7 +137,7 @@ public enum JSONFunctions implements ScriptFunctionType
 			return ScriptFunctionUsage.create()
 				.instructions(
 					"Converts a script value to JSON and writes it to a provided output. Objects will be " +
-					"reflection-exported as maps, and buffers as arrays of unsigned byte values."
+					"reflection-exported as JS objects, and buffers as arrays of unsigned byte values."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "File", "The file to write the JSON to (encoding is UTF-8, file is overwritten, and then closed)."),

@@ -175,8 +175,10 @@ public class ObjectVariableResolver<T> implements ScriptVariableResolver
 	@Override
 	public boolean isReadOnly(String name)
 	{
-		fieldMap.containsKey(name);
-		return false;
+		GetterSetter gs;
+		if ((gs = fieldMap.get(name)) == null)
+			return true;
+		return gs.field == null && gs.setter == null;
 	}
 
 	@Override

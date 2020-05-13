@@ -457,7 +457,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Sets the current cursor position for a buffer."
+					"Sets the current byte order for a buffer."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")
@@ -640,7 +640,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Fills a buffer with a single value. Does not advance any cursor positions."
+					"Fills a buffer with a single value."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The destination buffer to use.")
@@ -830,7 +830,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Sets a short value in a buffer (16-bit, signed). BufferType byte order affects how the bytes are written."
+					"Sets a short value in a buffer (16-bit, signed). The buffer's current byte order affects how the bytes are written."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")
@@ -893,7 +893,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets a short in a buffer (16-bit, signed). BufferType byte order affects how the bytes are read."
+					"Gets a short in a buffer (16-bit, signed). The buffer's current byte order affects how the bytes are read."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")
@@ -950,7 +950,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Sets a short value in a buffer (16-bit, unsigned). BufferType byte order affects how the bytes are written."
+					"Sets a short value in a buffer (16-bit, unsigned). The buffer's current byte order affects how the bytes are written."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")
@@ -1013,7 +1013,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets a short in a buffer (16-bit, unsigned). BufferType byte order affects how the bytes are read."
+					"Gets a short in a buffer (16-bit, unsigned). The buffer's current byte order affects how the bytes are read."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")
@@ -1070,7 +1070,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Sets an integer value in a buffer (32-bit, signed). BufferType byte order affects how the bytes are written."
+					"Sets an integer value in a buffer (32-bit, signed). The buffer's current byte order affects how the bytes are written."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")
@@ -1133,7 +1133,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets an integer in a buffer (32-bit, signed). BufferType byte order affects how the bytes are read."
+					"Gets an integer in a buffer (32-bit, signed). The buffer's current byte order affects how the bytes are read."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")
@@ -1190,7 +1190,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Sets an integer value in a buffer (32-bit, unsigned). BufferType byte order affects how the bytes are written."
+					"Sets an integer value in a buffer (32-bit, unsigned). The buffer's current byte order affects how the bytes are written."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")
@@ -1253,7 +1253,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets an integer in a buffer (32-bit, unsigned). BufferType byte order affects how the bytes are read."
+					"Gets an integer in a buffer (32-bit, unsigned). The buffer's current byte order affects how the bytes are read."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")
@@ -1310,7 +1310,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Sets a floating-point value in a buffer (32-bit). BufferType byte order affects how the bytes are written. " +
+					"Sets a floating-point value in a buffer (32-bit). The buffer's current byte order affects how the bytes are written. " +
 					"NOTE: Floating-point values are stored in memory as double-precision - some precision may be lost on write!"
 				)
 				.parameter("buffer", 
@@ -1374,7 +1374,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets a float in a buffer (32-bit). BufferType byte order affects how the bytes are read." +
+					"Gets a float in a buffer (32-bit). The buffer's current byte order affects how the bytes are read." +
 					"NOTE: Floating-point values are stored in memory as double-precision - some data may be extrapolated on read!"
 				)
 				.parameter("buffer", 
@@ -1432,7 +1432,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Sets a long integer value in a buffer (64-bit, signed). BufferType byte order affects how the bytes are written."
+					"Sets a long integer value in a buffer (64-bit, signed). The buffer's current byte order affects how the bytes are written."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")
@@ -1495,7 +1495,7 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets a long integer in a buffer (64-bit, signed). BufferType byte order affects how the bytes are read."
+					"Gets a long integer in a buffer (64-bit, signed). The buffer's current byte order affects how the bytes are read."
 				)
 				.parameter("buffer", 
 					type(Type.BUFFER, "The buffer to use.")

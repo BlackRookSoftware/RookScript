@@ -173,7 +173,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				.instructions(
 					"Spawns a process instance. A set of daemon threads are created that assist the streams on the process. " +
 					"The process, if created successfully, is registered as an open resource, and is closeable like any other resource. " +
-					"The script may end before the process does, so you may want to wait for its end via PROCESSRESULT()."
+					"The script may end before the process does, so you may want to wait for its end via EXECRESULT()."
 				)
 				.parameter("command", 
 					type(Type.STRING, "Process name or path to execute.")

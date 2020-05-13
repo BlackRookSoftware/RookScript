@@ -1109,7 +1109,6 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "Writer", "A valid open Writer.")
 				)
 				.parameter("str", 
-					type(Type.NULL, "Writes nothing."),
 					type(Type.STRING, "The string of characters to write (if not a string, it is converted to one).")
 				)
 				.returns(
@@ -1127,7 +1126,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				String value = temp.isNull() ? null : temp.asString();
+				String value = temp.asString();
 				scriptInstance.popStackValue(temp);
 				if (!temp.isObjectRef(Writer.class))
 				{
@@ -1169,7 +1168,6 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "Writer", "A valid open Writer.")
 				)
 				.parameter("str", 
-					type(Type.NULL, "Writes only a newline."),
 					type(Type.STRING, "The string of characters to write (if not a string, it is converted to one).")
 				)
 				.returns(
@@ -1187,7 +1185,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				String value = temp.isNull() ? null : temp.asString();
+				String value = temp.asString();
 				scriptInstance.popStackValue(temp);
 				if (!temp.isObjectRef(Writer.class))
 				{
@@ -1197,8 +1195,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 
 				Writer writer = temp.asObjectType(Writer.class);
 				try {
-					if (value != null)
-						writer.write(value);
+					writer.write(value);
 					writer.write('\n');
 				} catch (IOException e) {
 					returnValue.setError("IOError", e.getMessage(), e.getLocalizedMessage());

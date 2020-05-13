@@ -829,7 +829,7 @@ public enum FileSystemFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "File", "The directory or directories to create.")
 				)
 				.returns(
-					type(Type.BOOLEAN, "True if and only if ALL of the directories did not exist and were created, false if not."),
+					type(Type.BOOLEAN, "True if and only if one or more directories did not exist before and were then created, and false if not."),
 					type(Type.ERROR, "Security", "If the OS is preventing the creation.")
 				)
 			;
@@ -866,7 +866,7 @@ public enum FileSystemFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Attempts to create a directory using an abstract pathname and all of " +
+					"Attempts to create a directory using an abstract pathname and all of the " +
 					"directories in between, if they also don't exist, OR verify that the directory path that was specified already exists. " +
 					"NOTE: A failure due to path creation may still involve some directories being created!"
 				)

@@ -394,7 +394,7 @@ public enum ListFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets the index of the first occurrence of a value in a list. " +
+					"Gets the index of the last occurrence of a value in a list. " +
 					"Finds list/map-typed items by reference and objects by equals()."
 				)
 				.parameter("list", 
@@ -613,7 +613,8 @@ public enum ListFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Removes a value from a list, expected to be set up like a set (sorted, discrete)."
+					"Removes a value from a list, expected to be set up like a set (sorted, discrete). " +
+					"This is more performant than a list - search is binary search."
 				)
 				.parameter("list", 
 					type(Type.LIST, "The set (list).")

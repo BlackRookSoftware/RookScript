@@ -3,6 +3,14 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.7.4
+----------------
+
+- `Fixed` ObjectVariableResolver.isReadOnly() never returned a proper value.
+- `Fixed` Some erroneous documentation.
+- `Changed` CSWRITE / CSWRITELN now writes "null" if input is null.
+
+
 Changed in 1.7.3
 ----------------
 

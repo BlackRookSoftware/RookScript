@@ -83,7 +83,7 @@ public enum MapFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Returns a value that corresponds to a key in the map, or a default value if not found. " +
+					"Returns a value that corresponds to a key in the map, or null if not found. " +
 					"Keys are resolved case-insensitively."
 				)
 				.parameter("map", 

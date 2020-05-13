@@ -105,7 +105,7 @@ public enum DigestFunctions implements ScriptFunctionType
 				)
 				.parameter("length",
 					type(Type.NULL, "Use full length."),
-					type(Type.INTEGER, "The buffer to read from (starting from the buffer's cursor).")
+					type(Type.INTEGER, "The amount of bytes to read, maximum.")
 				)
 				.returns(
 					type(Type.OBJECTREF, "MessageDigest", "digest."),
@@ -126,7 +126,7 @@ public enum DigestFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				Integer length = temp.isNull() ? null : temp.asInt();
+				Long length = temp.isNull() ? null : temp.asLong();
 				scriptInstance.popStackValue(temp);
 				scriptInstance.popStackValue(msg);
 
@@ -164,13 +164,13 @@ public enum DigestFunctions implements ScriptFunctionType
 				}
 
 				if (length == null)
-					length = Integer.MAX_VALUE;
+					length = Long.MAX_VALUE;
 				
 				try {
 					int b;
 					while (length > 0)
 					{
-						if ((b = in.read(bytes, 0, Math.min(length, bytes.length))) <= 0)
+						if ((b = in.read(bytes, 0, Math.min((length > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)length.intValue()), bytes.length))) <= 0)
 							break;
 						digest.update(bytes, 0, b);
 						length -= b;
