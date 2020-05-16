@@ -17,7 +17,7 @@ public interface ScriptHostFunctionResolver
 {
 	/**
 	 * A host function resolver with no functions or namespaces.
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	static final ScriptHostFunctionResolver EMPTY = new ScriptHostFunctionResolver()
 	{

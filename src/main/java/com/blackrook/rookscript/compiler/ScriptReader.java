@@ -163,7 +163,7 @@ public final class ScriptReader
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if file is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver) throws IOException
 	{
@@ -180,7 +180,7 @@ public final class ScriptReader
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if text is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer) throws IOException
 	{
@@ -198,7 +198,7 @@ public final class ScriptReader
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if text is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
@@ -263,7 +263,7 @@ public final class ScriptReader
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if file is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String streamName, String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver) throws IOException
 	{
@@ -281,7 +281,7 @@ public final class ScriptReader
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if text is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String streamName, String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer) throws IOException
 	{
@@ -300,7 +300,7 @@ public final class ScriptReader
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws NullPointerException if text is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String streamName, String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
@@ -370,7 +370,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if file is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(File file, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver) throws IOException
 	{
@@ -388,7 +388,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if file is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(File file, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer) throws IOException
 	{
@@ -407,7 +407,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if file is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(File file, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
@@ -479,7 +479,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if in is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver) throws IOException
 	{
@@ -498,7 +498,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if in is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer) throws IOException
 	{
@@ -518,7 +518,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if in is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
@@ -587,7 +587,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if f is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver) throws IOException
 	{
@@ -606,7 +606,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if reader is null or a resolver is null. 
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer) throws IOException
 	{
@@ -626,7 +626,7 @@ public final class ScriptReader
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
 	 * @throws NullPointerException if reader is null or a resolver is null.
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{

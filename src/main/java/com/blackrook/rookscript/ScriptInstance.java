@@ -21,7 +21,7 @@ import com.blackrook.rookscript.struct.Utils;
 /**
  * A single script instance.
  * @author Matthew Tropiano
- * @since [NOW], Script Scope attachment is done on the script, not the instance.
+ * @since 1.8.0, Script Scope attachment is done on the script, not the instance.
  */
 public class ScriptInstance
 {

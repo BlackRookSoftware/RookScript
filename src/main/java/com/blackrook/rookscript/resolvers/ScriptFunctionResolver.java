@@ -17,7 +17,7 @@ public interface ScriptFunctionResolver
 {
 	/**
 	 * A function resolver with no functions.
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	static final ScriptFunctionResolver EMPTY = new ScriptFunctionResolver()
 	{

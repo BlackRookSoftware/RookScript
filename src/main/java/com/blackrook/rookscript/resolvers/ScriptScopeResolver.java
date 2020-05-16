@@ -16,7 +16,7 @@ public interface ScriptScopeResolver
 {
 	/**
 	 * A scope resolver with no scopes.
-	 * @since [NOW]
+	 * @since 1.8.0
 	 */
 	static final ScriptScopeResolver EMPTY = new ScriptScopeResolver()
 	{
