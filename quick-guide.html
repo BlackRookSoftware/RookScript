@@ -82,9 +82,6 @@ false
 0.0
 NaN
 ""      // empty string
-[]      // empty list
-{}      // empty map
-// Plus empty Buffers
 </code></pre>
 <p>Everything else is considered <code>true</code>.</p>
 <h3><a id="user-content-variables" class="anchor" aria-hidden="true" href="#variables"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Variables</h3>
@@ -300,7 +297,7 @@ for (; x &lt; 10;)
 }
 </code></pre>
 <h4><a id="user-content-the-each-loop" class="anchor" aria-hidden="true" href="#the-each-loop"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>The "Each" Loop</h4>
-<p>"Each" loops iterate linearly through a values that are collections of values. All value types can be iterated through (with varying usefulness).</p>
+<p>"Each" loops iterate linearly through values that are collections of values. All value types can be iterated through (with varying usefulness).</p>
 <pre><code>numbers = [1, 2, 3, 4, 5];
 // will print each number in "numbers" on its own line.
 each (x : numbers)
@@ -333,7 +330,7 @@ each (x : a)
 }
 </code></pre>
 <p>A key-value iteration on a single value will return <code>null</code> as the key, and the value as the value.</p>
-<p>Iterators are also smart enough to iterate through Java-native collections that are not RookScript values - any OBJECTREF type that implements Map or Iterable will work!</p>
+<p>Iterators are also smart enough to iterate through Java-native collections that are not RookScript values - any OBJECTREF type that implements Map or Iterable will work (which includes Collections)!</p>
 <h3><a id="user-content-entry-points" class="anchor" aria-hidden="true" href="#entry-points"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Entry Points</h3>
 <p>All starting points in a script's execution are called <em>entry points</em> and are declared as such:</p>
 <pre><code>entry start()
@@ -510,7 +507,7 @@ io::file()  // "io" is a namespace for a function, "file"
     }
     close(fis);
     close(fos);
-    if (iserror(err))
+    if (err != null)
         println("ERROR: " + err);
     else
         println("Copied file successfully.");
