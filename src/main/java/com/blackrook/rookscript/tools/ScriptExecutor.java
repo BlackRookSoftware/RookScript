@@ -45,6 +45,7 @@ import com.blackrook.rookscript.functions.DigestFunctions;
 import com.blackrook.rookscript.functions.FileSystemFunctions;
 import com.blackrook.rookscript.functions.JSONFunctions;
 import com.blackrook.rookscript.functions.PrintFunctions;
+import com.blackrook.rookscript.functions.ReflectionFunctions;
 import com.blackrook.rookscript.functions.SystemFunctions;
 
 /**
@@ -85,7 +86,8 @@ public final class ScriptExecutor
 		new Resolver("Data I/O", DataIOFunctions.createResolver()),
 		new Resolver("Digest", DigestFunctions.createResolver()),
 		new Resolver("JSON", JSONFunctions.createResolver()),
-		new Resolver("System", SystemFunctions.createResolver())
+		new Resolver("System", SystemFunctions.createResolver()),
+		new Resolver("Reflection", "RS", ReflectionFunctions.createResolver())
 	};
 	
 	private static class Resolver
@@ -379,9 +381,19 @@ public final class ScriptExecutor
 		for (int i = 0; i < RESOLVERS.length; i++)
 		{
 			if (i == 0)
-				builder.withFunctionResolver(RESOLVERS[i].resolver);
-			else
-				builder.andFunctionResolver(RESOLVERS[i].resolver);
+			{
+				if (RESOLVERS[i].namespace != null)
+					builder.withFunctionResolver(RESOLVERS[i].namespace, RESOLVERS[i].resolver);
+				else
+					builder.withFunctionResolver(RESOLVERS[i].resolver);
+			}
+			else 
+			{
+				if (RESOLVERS[i].namespace != null)
+					builder.andFunctionResolver(RESOLVERS[i].namespace, RESOLVERS[i].resolver);
+				else
+					builder.andFunctionResolver(RESOLVERS[i].resolver);
+			} 
 		}
 		
 		// ========================================

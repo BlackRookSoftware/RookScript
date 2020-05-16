@@ -92,8 +92,9 @@ public class ScriptParser extends Lexer.Parser
 	public static final String LABEL_SCRIPTLET_START = "_scriptlet_start_";
 	/** Label prefix. */
 	public static final String LABEL_SCRIPTLET_END = "_scriptlet_end_";
-	/** Iterator variable prefix (must be named in a way that is impossible to access). */
-	public static final String LABEL_ITERATOR_VAR = "_iterator - var_";
+
+	/** Iterator variable prefix (must be named in a way that is impossible to access from a parsed script). */
+	public static final String ITERATOR_VAR_PREFIX = ":iter:";
 
 	/** Return false. */
 	public static final int PARSEFUNCTIONCALL_FALSE = -1;
@@ -1298,7 +1299,7 @@ public class ScriptParser extends Lexer.Parser
 		String bodyLabel = currentScript.getNextGeneratedLabel(LABEL_EACH_BODY); 
 		String endLabel = currentScript.getNextGeneratedLabel(LABEL_EACH_END); 
 
-		String iteratorVariable = currentScript.getNextGeneratedLabel(LABEL_ITERATOR_VAR); 
+		String iteratorVariable = currentScript.getNextGeneratedLabel(ITERATOR_VAR_PREFIX); 
 
 		// start
 		mark(currentScript, startLabel);
@@ -1321,6 +1322,12 @@ public class ScriptParser extends Lexer.Parser
 				return false;
 		}
 
+		if (!matchType(ScriptKernel.TYPE_COLON))
+		{
+			addErrorMessage("Expected \":\" after the variables in \"each\".");
+			return false;
+		}
+
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP)); // iterator would be on stack here, remove it
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, bodyLabel));
 
@@ -1329,12 +1336,6 @@ public class ScriptParser extends Lexer.Parser
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.ITERATE, endLabel, keyval));
 		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.JUMP, nextLabel));
 		
-		if (!matchType(ScriptKernel.TYPE_COLON))
-		{
-			addErrorMessage("Expected \":\" after the variables in \"each\".");
-			return false;
-		}
-
 		mark(currentScript, initLabel);
 		
 		if (!parseExpression(currentScript, checkEndLabel))

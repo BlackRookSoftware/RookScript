@@ -1,0 +1,19 @@
+#!/usr/bin/env rookscript -i
+
+function stuff(a,b,c)
+{
+	return a + b + c;
+}
+
+
+entry main()
+{
+	println(rs::functioninfo("stuff"));
+	println(rs::functioninfo("exec"));
+	println(rs::functioninfo("functioninfo", "rs"));
+	println(rs::functioninfo("functioninfo"));
+	println(rs::entryinfo("main"));
+
+	println(rs::invoke("stuff", null, [1,2,3]));
+	
+}
