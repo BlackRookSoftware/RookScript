@@ -8,7 +8,7 @@ entry main()
 	println(script::x);
 	
 	script::x = [1,2,3,4];
-	println(script::x[0]);
+	println(script::x[2]);
 	
 	script::x = {x: 1, y: 2};
 	println(script::x.x);

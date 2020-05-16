@@ -3,6 +3,13 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in [NOW]
+----------------
+
+- `Fixed / Changed` Scope handling was not fleshed out and also a little buggy.
+- `Changed` Documentation for clarifying "truthiness" in the quick guide that wasn't... uh... true.
+
+
 Changed in 1.7.4
 ----------------
 

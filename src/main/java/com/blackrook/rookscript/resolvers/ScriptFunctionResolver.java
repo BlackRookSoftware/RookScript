@@ -15,6 +15,33 @@ import com.blackrook.rookscript.lang.ScriptFunctionType;
  */
 public interface ScriptFunctionResolver
 {
+	/**
+	 * A function resolver with no functions.
+	 * @since [NOW]
+	 */
+	static final ScriptFunctionResolver EMPTY = new ScriptFunctionResolver()
+	{
+		private ScriptFunctionType[] NO_FUNCTIONS = new ScriptFunctionType[0];
+		
+		@Override
+		public boolean containsFunction(String name)
+		{
+			return false;
+		}
+
+		@Override
+		public ScriptFunctionType getFunction(String name) 
+		{
+			return null;
+		}
+
+		@Override
+		public ScriptFunctionType[] getFunctions() 
+		{
+			return NO_FUNCTIONS;
+		}
+	};
+	
 
 	/**
 	 * Attempts to find if this resolver has a function by its calling name.

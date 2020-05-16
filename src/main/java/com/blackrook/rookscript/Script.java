@@ -11,9 +11,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.blackrook.rookscript.lang.ScriptCommand;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 import com.blackrook.rookscript.struct.CountMap;
 import com.blackrook.rookscript.struct.HashDequeMap;
 
@@ -30,6 +32,8 @@ public class Script
 
 	/** Script host function resolver. */
 	private ScriptHostFunctionResolver hostFunctionResolver;
+	/** Script host function resolver. */
+	private ScriptScopeResolver scopeResolver;
 	/** List of script commands. */
 	private List<ScriptCommand> commands;
 
@@ -52,7 +56,8 @@ public class Script
 	 */
 	public Script()
 	{
-		this.hostFunctionResolver = null;
+		this.hostFunctionResolver = ScriptHostFunctionResolver.EMPTY;
+		this.scopeResolver = ScriptScopeResolver.EMPTY;
 		this.commands = new ArrayList<>(256);
 		this.functionLabelMap = new HashMap<>();
 		this.scriptLabelMap = new HashMap<>();
@@ -64,10 +69,23 @@ public class Script
 	/**
 	 * Sets this script's host function resolver.  
 	 * @param hostFunctionResolver the function resolver.
+	 * @throws NullPointerException if hostFunctionResolver is null.
 	 */
 	public void setHostFunctionResolver(ScriptHostFunctionResolver hostFunctionResolver)
 	{
+		Objects.requireNonNull(hostFunctionResolver);
 		this.hostFunctionResolver = hostFunctionResolver;
+	}
+	
+	/**
+	 * Sets this script's scope resolver.
+	 * @param scopeResolver the scope resolver.
+	 * @throws NullPointerException if scopeResolver is null.
+	 */
+	public void setScopeResolver(ScriptScopeResolver scopeResolver) 
+	{
+		Objects.requireNonNull(scopeResolver);
+		this.scopeResolver = scopeResolver;
 	}
 	
 	/**
@@ -171,6 +189,15 @@ public class Script
 	public ScriptHostFunctionResolver getHostFunctionResolver()
 	{
 		return hostFunctionResolver;
+	}
+
+	/**
+	 * Returns this script's scope resolver.
+	 * @return the scope resolver.
+	 */
+	public ScriptScopeResolver getScopeResolver()
+	{
+		return scopeResolver;
 	}
 
 	/**

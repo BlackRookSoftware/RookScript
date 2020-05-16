@@ -13,7 +13,6 @@ import com.blackrook.rookscript.ScriptIteratorType.IteratorPair;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
-import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 
 /**
@@ -477,19 +476,18 @@ public enum ScriptCommandType
 			{
 				ScriptVariableResolver scope;
 				if ((scope = scriptInstance.getScopeResolver().getScope(scopeName)) == null)
-				{
-					scriptInstance.pushStackValue(null);
-					return true;
-				}
+					throw new ScriptExecutionException("scope \""+scopeName+"\" could not be resolved");
 
 				if (!scope.getValue(variableName, sv))
 				{
 					scriptInstance.pushStackValue(null);
 					return true;
 				}
-				
-				scriptInstance.pushStackValue(sv);
-				return true;
+				else
+				{
+					scriptInstance.pushStackValue(sv);
+					return true;
+				}
 			}
 			finally
 			{
@@ -879,19 +877,9 @@ public enum ScriptCommandType
 			{
 				scriptInstance.popStackValue(value);
 
-				ScriptScopeResolver resolver = scriptInstance.getScopeResolver();
-				if (resolver == null)
-				{
-					scriptInstance.pushStackValue(null);
-					return true;
-				}
-
 				ScriptVariableResolver scope;
-				if ((scope = resolver.getScope(scopeName)) == null)
-				{
-					scriptInstance.pushStackValue(null);
-					return true;
-				}
+				if ((scope = scriptInstance.getScopeResolver().getScope(scopeName)) == null)
+					throw new ScriptExecutionException("scope \""+scopeName+"\" could not be resolved");
 
 				if (!scope.isReadOnly(variableName))
 					scope.setValue(variableName, value);

@@ -947,6 +947,13 @@ public class ScriptParser extends Lexer.Parser
 			// if deref list or map...
 			if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 			{
+				// Verify scope.
+				if (currentScript.getScopeResolver().getScope(identifierName) == null)
+				{
+					addErrorMessage("\"" + identifierName + "\" is not the name of a valid scope.");
+					return false;
+				}
+				
 				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, identifierName, scopeVar));
 
 				Boolean lastWasList;
@@ -979,6 +986,13 @@ public class ScriptParser extends Lexer.Parser
 			// else just push scope var
 			else
 			{
+				// Verify scope.
+				if (currentScript.getScopeResolver().getScope(identifierName) == null)
+				{
+					addErrorMessage("\"" + identifierName + "\" is not the name of a valid scope.");
+					return false;
+				}
+
 				int assignmentType = currentToken().getType();
 				if (!isAssignmentOperator(assignmentType))
 				{
@@ -1272,10 +1286,6 @@ public class ScriptParser extends Lexer.Parser
 		return true;
 	}
 
-	// FIXME: EACH breakout is BAD! FIX THIS!
-	// ISSUE: The iterator is left on the stack and assumed to be there - maybe generate an impossible-to-access 
-	// variable name and stow the iterator in variable scope, restoring it when the next set of variables need to be set on next iterate?
-	
 	// <EACH> "(" <IdentifierAssignment> <IdentifierAssignment'> ":" <Expression> ")" <StatementBody>
 	private boolean parseEachClause(Script currentScript, String checkEndLabel, int currentCheckDepth, int fullCheckDepth)
 	{
@@ -1732,6 +1742,13 @@ public class ScriptParser extends Lexer.Parser
 						// if deref list or map...
 						if (currentType(ScriptKernel.TYPE_LBRACK, ScriptKernel.TYPE_PERIOD))
 						{
+							// Verify scope.
+							if (currentScript.getScopeResolver().getScope(lexeme) == null)
+							{
+								addErrorMessage("\"" + lexeme + "\" is not the name of a valid scope.");
+								return false;
+							}
+
 							currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, lexeme, var));
 							if (!parseListMapDerefChain(currentScript, checkEndLabel))
 								return false;
@@ -1748,6 +1765,18 @@ public class ScriptParser extends Lexer.Parser
 								if (!parsePartialChain(currentScript, checkEndLabel))
 									return false;
 							}
+						}
+						// just single scope var
+						else
+						{
+							// Verify scope.
+							if (currentScript.getScopeResolver().getScope(lexeme) == null)
+							{
+								addErrorMessage("\"" + lexeme + "\" is not the name of a valid scope.");
+								return false;
+							}
+
+							currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_SCOPE_VARIABLE, lexeme, var));
 						}
 					}
 					// must be local variable?

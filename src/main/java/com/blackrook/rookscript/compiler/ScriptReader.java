@@ -19,6 +19,7 @@ import com.blackrook.rookscript.Script;
 import com.blackrook.rookscript.ScriptAssembler;
 import com.blackrook.rookscript.exception.ScriptParseException;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 import com.blackrook.rookscript.struct.Utils;
 
 /**
@@ -111,146 +112,308 @@ public final class ScriptReader
 	/**
 	 * Reads a script from a String of text.
 	 * @param text the String to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param functionResolver the host function resolver to use.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
-	 * @throws NullPointerException if file is null. 
+	 * @throws NullPointerException if file is null or a resolver is null. 
 	 */
-	public static Script read(String text, ScriptHostFunctionResolver resolver) throws IOException
+	public static Script read(String text, ScriptHostFunctionResolver functionResolver) throws IOException
 	{
-		return read(STREAMNAME_TEXT, new StringReader(text), resolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
+		return read(STREAMNAME_TEXT, new StringReader(text), functionResolver, ScriptScopeResolver.EMPTY, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
 	}
 
 	/**
 	 * Reads a script from a String of text.
 	 * @param text the String to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param functionResolver the host function resolver to use.
 	 * @param includer the includer to use to resolve "included" paths.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
-	 * @throws NullPointerException if text is null. 
+	 * @throws NullPointerException if text is null or a resolver is null. 
 	 */
-	public static Script read(String text, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
+	public static Script read(String text, ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer) throws IOException
 	{
-		return read(STREAMNAME_TEXT, new StringReader(text), resolver, includer, DEFAULT_OPTIONS);
+		return read(STREAMNAME_TEXT, new StringReader(text), functionResolver, ScriptScopeResolver.EMPTY, includer, DEFAULT_OPTIONS);
 	}
 
 	/**
 	 * Reads a script from a String of text.
 	 * @param text the String to read from.
-	 * @param resolver the host function resolver to use.
-	 * @param includer the includer to use to resolve "included" paths.
-	 * @param options the reader options to use.
-	 * @return A new Script that contains all the read object hierarchy.
-	 * @throws ScriptParseException if one or more parse errors happen.
-	 * @throws IOException if the stream can't be read.
-	 * @throws NullPointerException if text is null. 
-	 */
-	public static Script read(String text, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
-	{
-		return read(STREAMNAME_TEXT, new StringReader(text), resolver, includer, options);
-	}
-
-	/**
-	 * Reads a script from a String of text.
-	 * @param streamName a name to assign to the stream.
-	 * @param text the String to read from.
-	 * @param resolver the host function resolver to use.
-	 * @return A new Script that contains all the read object hierarchy.
-	 * @throws ScriptParseException if one or more parse errors happen.
-	 * @throws IOException if the stream can't be read.
-	 * @throws NullPointerException if file is null. 
-	 */
-	public static Script read(String streamName, String text, ScriptHostFunctionResolver resolver) throws IOException
-	{
-		return read(streamName, new StringReader(text), resolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
-	}
-
-	/**
-	 * Reads a script from a String of text.
-	 * @param streamName a name to assign to the stream.
-	 * @param text the String to read from.
-	 * @param resolver the host function resolver to use.
-	 * @param includer the includer to use to resolve "included" paths.
-	 * @return A new Script that contains all the read object hierarchy.
-	 * @throws ScriptParseException if one or more parse errors happen.
-	 * @throws IOException if the stream can't be read.
-	 * @throws NullPointerException if text is null. 
-	 */
-	public static Script read(String streamName, String text, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
-	{
-		return read(streamName, new StringReader(text), resolver, includer, DEFAULT_OPTIONS);
-	}
-
-	/**
-	 * Reads a script from a String of text.
-	 * @param streamName a name to assign to the stream.
-	 * @param text the String to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param functionResolver the host function resolver to use.
 	 * @param includer the includer to use to resolve "included" paths.
 	 * @param options the reader options to use.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
-	 * @throws NullPointerException if text is null. 
+	 * @throws NullPointerException if text is null or a resolver is null. 
 	 */
-	public static Script read(String streamName, String text, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	public static Script read(String text, ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
-		return read(streamName, new StringReader(text), resolver, includer, options);
+		return read(STREAMNAME_TEXT, new StringReader(text), functionResolver, ScriptScopeResolver.EMPTY, includer, options);
+	}
+
+	/**
+	 * Reads a script from a String of text.
+	 * @param text the String to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws NullPointerException if file is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver) throws IOException
+	{
+		return read(STREAMNAME_TEXT, new StringReader(text), functionResolver, scopeResolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a String of text.
+	 * @param text the String to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws NullPointerException if text is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer) throws IOException
+	{
+		return read(STREAMNAME_TEXT, new StringReader(text), functionResolver, scopeResolver, includer, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a String of text.
+	 * @param text the String to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @param options the reader options to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws NullPointerException if text is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	{
+		return read(STREAMNAME_TEXT, new StringReader(text), functionResolver, scopeResolver, includer, options);
+	}
+
+	/**
+	 * Reads a script from a String of text.
+	 * @param streamName a name to assign to the stream.
+	 * @param text the String to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws NullPointerException if file is null or a resolver is null. 
+	 */
+	public static Script read(String streamName, String text, ScriptHostFunctionResolver functionResolver) throws IOException
+	{
+		return read(streamName, new StringReader(text), functionResolver, ScriptScopeResolver.EMPTY, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a String of text.
+	 * @param streamName a name to assign to the stream.
+	 * @param text the String to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws NullPointerException if text is null or a resolver is null. 
+	 */
+	public static Script read(String streamName, String text, ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer) throws IOException
+	{
+		return read(streamName, new StringReader(text), functionResolver, ScriptScopeResolver.EMPTY, includer, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a String of text.
+	 * @param streamName a name to assign to the stream.
+	 * @param text the String to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @param options the reader options to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws NullPointerException if text is null or a resolver is null. 
+	 */
+	public static Script read(String streamName, String text, ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	{
+		return read(streamName, new StringReader(text), functionResolver, ScriptScopeResolver.EMPTY, includer, options);
+	}
+
+	/**
+	 * Reads a script from a String of text.
+	 * @param streamName a name to assign to the stream.
+	 * @param text the String to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws NullPointerException if file is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(String streamName, String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver) throws IOException
+	{
+		return read(streamName, new StringReader(text), functionResolver, scopeResolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a String of text.
+	 * @param streamName a name to assign to the stream.
+	 * @param text the String to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws NullPointerException if text is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(String streamName, String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer) throws IOException
+	{
+		return read(streamName, new StringReader(text), functionResolver, scopeResolver, includer, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a String of text.
+	 * @param streamName a name to assign to the stream.
+	 * @param text the String to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @param options the reader options to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws NullPointerException if text is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(String streamName, String text, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	{
+		return read(streamName, new StringReader(text), functionResolver, scopeResolver, includer, options);
 	}
 
 	/**
 	 * Reads a script from a starting text file.
 	 * @param file the file to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param functionResolver the host function resolver to use.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
-	 * @throws NullPointerException if file is null. 
+	 * @throws NullPointerException if file is null or a resolver is null. 
 	 */
-	public static Script read(File file, ScriptHostFunctionResolver resolver) throws IOException
+	public static Script read(File file, ScriptHostFunctionResolver functionResolver) throws IOException
 	{
-		return read(file, resolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
+		return read(file, functionResolver, ScriptScopeResolver.EMPTY, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
 	}
 
 	/**
 	 * Reads a script from a starting text file.
 	 * @param file	the file to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param functionResolver the host function resolver to use.
 	 * @param includer the includer to use to resolve "included" paths.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
-	 * @throws NullPointerException if file is null. 
+	 * @throws NullPointerException if file is null or a resolver is null. 
 	 */
-	public static Script read(File file, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
+	public static Script read(File file, ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer) throws IOException
 	{
-		return read(file, resolver, includer, DEFAULT_OPTIONS);
+		return read(file, functionResolver, ScriptScopeResolver.EMPTY, includer, DEFAULT_OPTIONS);
 	}
 
 	/**
 	 * Reads a script from a starting text file.
 	 * @param file	the file to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param functionResolver the host function resolver to use.
 	 * @param includer the includer to use to resolve "included" paths.
 	 * @param options the reader options to use.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
-	 * @throws NullPointerException if file is null. 
+	 * @throws NullPointerException if file is null or a resolver is null. 
 	 */
-	public static Script read(File file, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	public static Script read(File file, ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
 		FileInputStream fis = new FileInputStream(file);
 		try {
-			return read(file.getPath(), fis, resolver, includer, options);
+			return read(file.getPath(), fis, functionResolver, ScriptScopeResolver.EMPTY, includer, options);
 		} finally {
 			Utils.close(fis);
+		}
+	}
+
+	/**
+	 * Reads a script from a starting text file.
+	 * @param file the file to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws SecurityException if a read error happens due to OS permissioning.
+	 * @throws NullPointerException if file is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(File file, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver) throws IOException
+	{
+		return read(file, functionResolver, scopeResolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a starting text file.
+	 * @param file	the file to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws SecurityException if a read error happens due to OS permissioning.
+	 * @throws NullPointerException if file is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(File file, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer) throws IOException
+	{
+		return read(file, functionResolver, scopeResolver, includer, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a starting text file.
+	 * @param file	the file to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @param options the reader options to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws SecurityException if a read error happens due to OS permissioning.
+	 * @throws NullPointerException if file is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(File file, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	{
+		try (FileInputStream fis = new FileInputStream(file)) 
+		{
+			return read(file.getPath(), fis, functionResolver, scopeResolver, includer, options);
 		}
 	}
 
@@ -258,103 +421,218 @@ public final class ScriptReader
 	 * Reads a script.
 	 * @param streamName the name of the stream.
 	 * @param in the stream to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param functionResolver the host function resolver to use.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
-	 * @throws NullPointerException if in is null. 
+	 * @throws NullPointerException if in is null or a resolver is null. 
 	 */
-	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver resolver) throws IOException
+	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver functionResolver) throws IOException
 	{
-		return read(streamName, new InputStreamReader(in), resolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
+		return read(streamName, new InputStreamReader(in), functionResolver, ScriptScopeResolver.EMPTY, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
 	}
 
 	/**
 	 * Reads a script.
 	 * @param streamName the name of the stream.
 	 * @param in the stream to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param functionResolver the host function resolver to use.
 	 * @param includer the includer to use to resolve "included" paths.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
-	 * @throws NullPointerException if in is null. 
+	 * @throws NullPointerException if in is null or a resolver is null. 
 	 */
-	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
+	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer) throws IOException
 	{
-		return read(streamName, new InputStreamReader(in), resolver, includer, DEFAULT_OPTIONS);
+		return read(streamName, new InputStreamReader(in), functionResolver, ScriptScopeResolver.EMPTY, includer, DEFAULT_OPTIONS);
 	}
 
 	/**
 	 * Reads a script.
 	 * @param streamName the name of the stream.
 	 * @param in the stream to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param functionResolver the host function resolver to use.
 	 * @param includer the includer to use to resolve "included" paths.
 	 * @param options the reader options to use.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
-	 * @throws NullPointerException if in is null. 
+	 * @throws NullPointerException if in is null or a resolver is null. 
 	 */
-	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
-		return read(streamName, new InputStreamReader(in), resolver, includer, options);
+		return read(streamName, new InputStreamReader(in), functionResolver, ScriptScopeResolver.EMPTY, includer, options);
 	}
 
 	/**
-	 * Reads a script from a reader stream.
+	 * Reads a script.
 	 * @param streamName the name of the stream.
-	 * @param reader the reader to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param in the stream to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
-	 * @throws NullPointerException if f is null. 
+	 * @throws NullPointerException if in is null or a resolver is null. 
+	 * @since [NOW]
 	 */
-	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver resolver) throws IOException
+	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver) throws IOException
 	{
-		return read(streamName, reader, resolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
+		return read(streamName, new InputStreamReader(in), functionResolver, scopeResolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
 	}
 
 	/**
-	 * Reads a script from a reader stream.
+	 * Reads a script.
 	 * @param streamName the name of the stream.
-	 * @param reader the reader to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param in the stream to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
 	 * @param includer the includer to use to resolve "included" paths.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
-	 * @throws NullPointerException if reader is null. 
+	 * @throws NullPointerException if in is null or a resolver is null. 
+	 * @since [NOW]
 	 */
-	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer) throws IOException
+	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer) throws IOException
 	{
-		return read(streamName, reader, resolver, includer, DEFAULT_OPTIONS);
+		return read(streamName, new InputStreamReader(in), functionResolver, scopeResolver, includer, DEFAULT_OPTIONS);
 	}
 
 	/**
-	 * Reads a script from a reader stream.
+	 * Reads a script.
 	 * @param streamName the name of the stream.
-	 * @param reader the reader to read from.
-	 * @param resolver the host function resolver to use.
+	 * @param in the stream to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
 	 * @param includer the includer to use to resolve "included" paths.
 	 * @param options the reader options to use.
 	 * @return A new Script that contains all the read object hierarchy.
 	 * @throws ScriptParseException if one or more parse errors happen.
 	 * @throws IOException if the stream can't be read.
 	 * @throws SecurityException if a read error happens due to OS permissioning.
-	 * @throws NullPointerException if reader is null. 
+	 * @throws NullPointerException if in is null or a resolver is null. 
+	 * @since [NOW]
 	 */
-	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver resolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	public static Script read(String streamName, InputStream in, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	{
+		return read(streamName, new InputStreamReader(in), functionResolver, scopeResolver, includer, options);
+	}
+
+	/**
+	 * Reads a script from a reader stream.
+	 * @param streamName the name of the stream.
+	 * @param reader the reader to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws SecurityException if a read error happens due to OS permissioning.
+	 * @throws NullPointerException if f is null or a resolver is null. 
+	 */
+	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver functionResolver) throws IOException
+	{
+		return read(streamName, reader, functionResolver, ScriptScopeResolver.EMPTY, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a reader stream.
+	 * @param streamName the name of the stream.
+	 * @param reader the reader to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws SecurityException if a read error happens due to OS permissioning.
+	 * @throws NullPointerException if reader is null or a resolver is null. 
+	 */
+	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer) throws IOException
+	{
+		return read(streamName, reader, functionResolver, ScriptScopeResolver.EMPTY, includer, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a reader stream.
+	 * @param streamName the name of the stream.
+	 * @param reader the reader to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @param options the reader options to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws SecurityException if a read error happens due to OS permissioning.
+	 * @throws NullPointerException if reader is null or a resolver is null. 
+	 */
+	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
+	{
+		return read(streamName, reader, functionResolver, ScriptScopeResolver.EMPTY, includer, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a reader stream.
+	 * @param streamName the name of the stream.
+	 * @param reader the reader to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws SecurityException if a read error happens due to OS permissioning.
+	 * @throws NullPointerException if f is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver) throws IOException
+	{
+		return read(streamName, reader, functionResolver, scopeResolver, DEFAULT_INCLUDER, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a reader stream.
+	 * @param streamName the name of the stream.
+	 * @param reader the reader to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws SecurityException if a read error happens due to OS permissioning.
+	 * @throws NullPointerException if reader is null or a resolver is null. 
+	 * @since [NOW]
+	 */
+	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer) throws IOException
+	{
+		return read(streamName, reader, functionResolver, scopeResolver, includer, DEFAULT_OPTIONS);
+	}
+
+	/**
+	 * Reads a script from a reader stream.
+	 * @param streamName the name of the stream.
+	 * @param reader the reader to read from.
+	 * @param functionResolver the host function resolver to use.
+	 * @param scopeResolver the scope resolver to use.
+	 * @param includer the includer to use to resolve "included" paths.
+	 * @param options the reader options to use.
+	 * @return A new Script that contains all the read object hierarchy.
+	 * @throws ScriptParseException if one or more parse errors happen.
+	 * @throws IOException if the stream can't be read.
+	 * @throws SecurityException if a read error happens due to OS permissioning.
+	 * @throws NullPointerException if reader is null or a resolver is null.
+	 * @since [NOW]
+	 */
+	public static Script read(String streamName, Reader reader, ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException
 	{
 		Script script = new Script();
-		script.setHostFunctionResolver(resolver);
+		script.setHostFunctionResolver(functionResolver);
+		script.setScopeResolver(scopeResolver);
 		(new ScriptParser(new ScriptLexer(KERNEL_INSTANCE, streamName, reader, includer, options))).readScript(script);
 		return ScriptAssembler.optimize(script);
 	}

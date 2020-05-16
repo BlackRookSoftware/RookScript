@@ -10,8 +10,6 @@ package com.blackrook.rookscript;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
-
 /**
  * Factory class for assembling script instances.
  * This factory pools {@link ScriptInstanceStack}s, since creating and destroying them could be costly on the GC.
@@ -29,8 +27,6 @@ public class ScriptInstanceFactory
 	private int activationDepth;
 	/** New instance Stack depth. */
 	private int stackDepth;
-	/** Scope resolver to use with each instance. */
-	private ScriptScopeResolver scopeResolver;
 	/** Wait handler to use with each instance. */
 	private ScriptWaitHandler waitHandler;
 	/** The script environment to use for each instance. */
@@ -50,7 +46,7 @@ public class ScriptInstanceFactory
 	 */
 	public ScriptInstanceFactory(Script script, ScriptEnvironment environment)
 	{
-		this(script, DEFAULT_ACTIVATION_DEPTH, DEFAULT_STACK_DEPTH, ScriptInstance.NO_SCOPES, null, environment, DEFAULT_RUNAWAY_LIMIT);
+		this(script, DEFAULT_ACTIVATION_DEPTH, DEFAULT_STACK_DEPTH, null, environment, DEFAULT_RUNAWAY_LIMIT);
 	}
 
 	/**
@@ -62,7 +58,7 @@ public class ScriptInstanceFactory
 	 */
 	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptEnvironment environment)
 	{
-		this(script, activationDepth, stackDepth, ScriptInstance.NO_SCOPES, null, environment, DEFAULT_RUNAWAY_LIMIT);
+		this(script, activationDepth, stackDepth, null, environment, DEFAULT_RUNAWAY_LIMIT);
 	}
 	
 	/**
@@ -70,26 +66,12 @@ public class ScriptInstanceFactory
 	 * @param script the script to use for each instance.
 	 * @param activationDepth the activation stack depth for new instances.
 	 * @param stackDepth the value stack depth for new instances.
-	 * @param scopeResolver the scope resolver to use for each instance.
-	 * @param environment the script environment to use for each instance.
-	 */
-	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptEnvironment environment)
-	{
-		this(script, activationDepth, stackDepth, scopeResolver, null, environment, DEFAULT_RUNAWAY_LIMIT);
-	}
-	
-	/**
-	 * Creates a new instance factory.
-	 * @param script the script to use for each instance.
-	 * @param activationDepth the activation stack depth for new instances.
-	 * @param stackDepth the value stack depth for new instances.
-	 * @param scopeResolver the scope resolver to use for each instance.
 	 * @param environment the script environment to use for each instance.
 	 * @param runawayLimit the amount of commands to run before the endless loop protection triggers.
 	 */
-	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptEnvironment environment, int runawayLimit)
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptEnvironment environment, int runawayLimit)
 	{
-		this(script, activationDepth, stackDepth, scopeResolver, null, environment, runawayLimit);
+		this(script, activationDepth, stackDepth, null, environment, runawayLimit);
 	}
 	
 	/**
@@ -97,13 +79,12 @@ public class ScriptInstanceFactory
 	 * @param script the script to use for each instance.
 	 * @param activationDepth the activation stack depth for new instances.
 	 * @param stackDepth the value stack depth for new instances.
-	 * @param scopeResolver the scope resolver to use for each instance.
 	 * @param waitHandler the wait handler to use for each instance.
 	 * @param environment the script environment to use for each instance.
 	 */
-	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, ScriptEnvironment environment)
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptWaitHandler waitHandler, ScriptEnvironment environment)
 	{
-		this(script, activationDepth, stackDepth, scopeResolver, waitHandler, environment, DEFAULT_RUNAWAY_LIMIT);
+		this(script, activationDepth, stackDepth, waitHandler, environment, DEFAULT_RUNAWAY_LIMIT);
 	}
 	
 	/**
@@ -111,17 +92,15 @@ public class ScriptInstanceFactory
 	 * @param script the script to use for each instance.
 	 * @param activationDepth the activation stack depth for new instances.
 	 * @param stackDepth the value stack depth for new instances.
-	 * @param scopeResolver the scope resolver to use for each instance.
 	 * @param waitHandler the wait handler to use for each instance.
 	 * @param environment the script environment to use for each instance.
 	 * @param runawayLimit the amount of commands to run before the endless loop protection triggers.
 	 */
-	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, ScriptEnvironment environment, int runawayLimit)
+	public ScriptInstanceFactory(Script script, int activationDepth, int stackDepth, ScriptWaitHandler waitHandler, ScriptEnvironment environment, int runawayLimit)
 	{
 		this.script = script;
 		this.activationDepth = activationDepth;
 		this.stackDepth = stackDepth;
-		this.scopeResolver = scopeResolver;
 		this.waitHandler = waitHandler;
 		this.environment = environment;
 		this.runawayLimit = runawayLimit;
@@ -150,7 +129,7 @@ public class ScriptInstanceFactory
 	 */
 	public ScriptInstance create()
 	{
-		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, environment, runawayLimit);
+		return new ScriptInstance(script, acquireStack(), waitHandler, environment, runawayLimit);
 	}
 	
 	/**
@@ -160,7 +139,7 @@ public class ScriptInstanceFactory
 	 */
 	public ScriptInstance create(ScriptEnvironment environment)
 	{
-		return new ScriptInstance(script, acquireStack(), scopeResolver, waitHandler, environment, runawayLimit);
+		return new ScriptInstance(script, acquireStack(), waitHandler, environment, runawayLimit);
 	}
 	
 	/**

@@ -16,12 +16,12 @@ import com.blackrook.rookscript.exception.ScriptStackException;
 import com.blackrook.rookscript.lang.ScriptCommand;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
-import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 import com.blackrook.rookscript.struct.Utils;
 
 /**
  * A single script instance.
  * @author Matthew Tropiano
+ * @since [NOW], Script Scope attachment is done on the script, not the instance.
  */
 public class ScriptInstance
 {
@@ -48,24 +48,6 @@ public class ScriptInstance
 		ENDED;
 	}
 	
-	/**
-	 * A scope resolver with no scopes.
-	 */
-	public static final ScriptScopeResolver NO_SCOPES = new ScriptScopeResolver()
-	{
-		@Override
-		public ScriptVariableResolver getScope(String name)
-		{
-			return null;
-		}
-		
-		@Override
-		public boolean containsScope(String name)
-		{
-			return false;
-		}
-	};
-	
 	// ======================================================================
 	// Environment
 	// ======================================================================
@@ -74,8 +56,6 @@ public class ScriptInstance
 	private Script script;
 	/** Script environment. */
 	private ScriptEnvironment environment;
-	/** Scope mapping. */
-	private ScriptScopeResolver scopeResolver;
 	/** Script instance stack. */
 	private ScriptInstanceStack scriptInstanceStack;
 	/** The script's wait handler. */
@@ -113,45 +93,31 @@ public class ScriptInstance
 	 */
 	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptEnvironment environment)
 	{
-		this(script, scriptInstanceStack, NO_SCOPES, null, environment, DEFAULT_RUNAWAY_LIMIT);
-	}
-	
-	/**
-	 * Creates a new script instance, no wait handler, default runaway limit.
-	 * @param script the script that holds the code.
-	 * @param scriptInstanceStack the instance stack. 
-	 * @param scopeResolver the scope resolver for this script.
-	 * @param environment the script environment to use.
-	 */
-	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptEnvironment environment)
-	{
-		this(script, scriptInstanceStack, scopeResolver, null, environment, DEFAULT_RUNAWAY_LIMIT);
+		this(script, scriptInstanceStack, null, environment, DEFAULT_RUNAWAY_LIMIT);
 	}
 	
 	/**
 	 * Creates a new script instance, no wait handler.
 	 * @param script the script that holds the code.
 	 * @param scriptInstanceStack the instance stack. 
-	 * @param scopeResolver the scope resolver for this script.
 	 * @param environment the script environment to use.
 	 * @param runawayLimit the runaway script command limit. 0 or less is no limit.
 	 */
-	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptEnvironment environment, int runawayLimit)
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptEnvironment environment, int runawayLimit)
 	{
-		this(script, scriptInstanceStack, scopeResolver, null, environment, runawayLimit);
+		this(script, scriptInstanceStack, null, environment, runawayLimit);
 	}
 	
 	/**
 	 * Creates a new script instance.
 	 * @param script the script that holds the code.
 	 * @param scriptInstanceStack the instance stack. 
-	 * @param scopeResolver the scope resolver for this script.
 	 * @param waitHandler the handler for handling a script in a waiting state (can be null).
 	 * @param environment the script environment to use.
 	 * @param runawayLimit the runaway script command limit. 0 or less is no limit.
 	 * @throws IllegalArgumentException if script or scriptInstanceStack
 	 */
-	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptScopeResolver scopeResolver, ScriptWaitHandler waitHandler, ScriptEnvironment environment, int runawayLimit)
+	public ScriptInstance(Script script, ScriptInstanceStack scriptInstanceStack, ScriptWaitHandler waitHandler, ScriptEnvironment environment, int runawayLimit)
 	{
 		if (script == null)
 			throw new IllegalArgumentException("script is null");
@@ -161,7 +127,6 @@ public class ScriptInstance
 		this.script = script;
 		this.environment = environment;
 		this.scriptInstanceStack = scriptInstanceStack;
-		this.scopeResolver = scopeResolver;
 		this.waitHandler = waitHandler;
 		this.commandRunawayLimit = runawayLimit;
 
@@ -228,15 +193,6 @@ public class ScriptInstance
 	}
 
 	/**
-	 * Returns this script's scope resolver.
-	 * @return the scope resolver.
-	 */
-	public ScriptScopeResolver getScopeResolver()
-	{
-		return scopeResolver;
-	}
-	
-	/**
 	 * Returns this script's host function resolver.
 	 * @return the function resolver.
 	 */
@@ -245,6 +201,15 @@ public class ScriptInstance
 		return script.getHostFunctionResolver();
 	}
 	
+	/**
+	 * Returns this script's scope resolver.
+	 * @return the scope resolver.
+	 */
+	public ScriptScopeResolver getScopeResolver()
+	{
+		return script.getScopeResolver();
+	}
+
 	/**
 	 * Gets the instance stack on this instance.
 	 * @return the instance stack.

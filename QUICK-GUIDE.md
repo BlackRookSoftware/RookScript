@@ -119,9 +119,6 @@ false
 0.0
 NaN
 ""      // empty string
-[]      // empty list
-{}      // empty map
-// Plus empty Buffers
 ```
 
 Everything else is considered `true`.
@@ -427,7 +424,7 @@ for (; x < 10;)
 
 #### The "Each" Loop
 
-"Each" loops iterate linearly through a values that are collections of values. All value types can be iterated through (with varying usefulness).
+"Each" loops iterate linearly through values that are collections of values. All value types can be iterated through (with varying usefulness).
 
 ```
 numbers = [1, 2, 3, 4, 5];
@@ -473,7 +470,7 @@ each (x : a)
 
 A key-value iteration on a single value will return `null` as the key, and the value as the value.
 
-Iterators are also smart enough to iterate through Java-native collections that are not RookScript values - any OBJECTREF type that implements Map or Iterable will work!
+Iterators are also smart enough to iterate through Java-native collections that are not RookScript values - any OBJECTREF type that implements Map or Iterable will work (which includes Collections)!
 
 
 ### Entry Points
@@ -709,7 +706,7 @@ entry main()
     }
     close(fis);
     close(fos);
-    if (iserror(err))
+    if (err != null)
         println("ERROR: " + err);
     else
         println("Copied file successfully.");

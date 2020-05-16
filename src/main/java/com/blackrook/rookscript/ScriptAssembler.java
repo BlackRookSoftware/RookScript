@@ -220,6 +220,7 @@ public final class ScriptAssembler
 		outCommands.toArray(optimizedCommands);
 		optimizedScript.setCommands(optimizedCommands);
 		optimizedScript.setHostFunctionResolver(script.getHostFunctionResolver());
+		optimizedScript.setScopeResolver(script.getScopeResolver());
 		if (script.getLabelGeneratorCounter() != null) for (Map.Entry<String, Integer> count : script.getLabelGeneratorCounter().entrySet())
 			optimizedScript.setNextGeneratedLabelNumber(count.getKey(), count.getValue());
 		return optimizedScript;

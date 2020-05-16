@@ -23,6 +23,7 @@ import com.blackrook.rookscript.compiler.ScriptReaderOptions;
 import com.blackrook.rookscript.exception.ScriptExecutionException;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
+import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.CompoundHostFunctionResolver;
 import com.blackrook.rookscript.resolvers.scope.DefaultScopeResolver;
@@ -36,7 +37,7 @@ public final class ScriptInstanceBuilder
 	@FunctionalInterface
 	private interface ScriptProvider
 	{
-		Script getScript(ScriptHostFunctionResolver functionResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException;
+		Script getScript(ScriptHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver, ScriptReaderIncluder includer, ScriptReaderOptions options) throws IOException;
 	}
 
 	@FunctionalInterface
@@ -89,8 +90,8 @@ public final class ScriptInstanceBuilder
 	 */
 	public ScriptInstanceBuilder withSource(final String sourceData)
 	{
-		scriptProvider = (functionResolver, includer, options)->{
-			return ScriptReader.read(sourceData, functionResolver, includer, options);
+		scriptProvider = (functionResolver, scopeResolver, includer, options)->{
+			return ScriptReader.read(sourceData, functionResolver, scopeResolver, includer, options);
 		};
 		return this;
 	}
@@ -104,8 +105,8 @@ public final class ScriptInstanceBuilder
 	 */
 	public ScriptInstanceBuilder withSource(final String sourcePath, final String sourceData)
 	{
-		scriptProvider = (functionResolver, includer, options)->{
-			return ScriptReader.read(sourcePath, sourceData, functionResolver, includer, options);
+		scriptProvider = (functionResolver, scopeResolver, includer, options)->{
+			return ScriptReader.read(sourcePath, sourceData, functionResolver, scopeResolver, includer, options);
 		};
 		return this;
 	}
@@ -118,8 +119,8 @@ public final class ScriptInstanceBuilder
 	 */
 	public ScriptInstanceBuilder withSource(final File sourceFile)
 	{
-		scriptProvider = (functionResolver, includer, options)->{
-			return ScriptReader.read(sourceFile, functionResolver, includer, options);
+		scriptProvider = (functionResolver, scopeResolver, includer, options)->{
+			return ScriptReader.read(sourceFile, functionResolver, scopeResolver, includer, options);
 		};
 		return this;
 	}
@@ -133,8 +134,8 @@ public final class ScriptInstanceBuilder
 	 */
 	public ScriptInstanceBuilder withSource(final String streamPath, final InputStream sourceStream)
 	{
-		scriptProvider = (functionResolver, includer, options)->{
-			return ScriptReader.read(streamPath, sourceStream, functionResolver, includer, options);
+		scriptProvider = (functionResolver, scopeResolver, includer, options)->{
+			return ScriptReader.read(streamPath, sourceStream, functionResolver, scopeResolver, includer, options);
 		};
 		return this;
 	}
@@ -148,8 +149,8 @@ public final class ScriptInstanceBuilder
 	 */
 	public ScriptInstanceBuilder withSource(final String streamPath, final Reader sourceReader)
 	{
-		scriptProvider = (functionResolver, includer, options)->{
-			return ScriptReader.read(streamPath, sourceReader, functionResolver, includer, options);
+		scriptProvider = (functionResolver, scopeResolver, includer, options)->{
+			return ScriptReader.read(streamPath, sourceReader, functionResolver, scopeResolver, includer, options);
 		};
 		return this;
 	}
@@ -184,7 +185,7 @@ public final class ScriptInstanceBuilder
 	 */
 	public ScriptInstanceBuilder withScript(final Script script)
 	{
-		this.scriptProvider = (functionResolver, includer, options)->{
+		this.scriptProvider = (functionResolver, scopeResolver, includer, options)->{
 			return script;
 		};
 		return this;
@@ -356,12 +357,13 @@ public final class ScriptInstanceBuilder
 		return resolver;
 	}
 
-	private Script buildScript(CompoundHostFunctionResolver resolver)
+	private Script buildScript(CompoundHostFunctionResolver functionResolver, ScriptScopeResolver scopeResolver)
 	{
 		Script script;
 		try {
 			script = scriptProvider.getScript(
-				resolver,
+				functionResolver,
+				scopeResolver,
 				readerIncluder != null ? readerIncluder : ScriptReader.DEFAULT_INCLUDER, 
 				readerOptions != null ? readerOptions : ScriptReader.DEFAULT_OPTIONS
 			);
@@ -382,10 +384,10 @@ public final class ScriptInstanceBuilder
 	{
 		buildCheckProviders();
 		CompoundHostFunctionResolver resolver = buildHostFuctionResolver();
-		Script script = buildScript(resolver);
+		Script script = buildScript(resolver, scopeResolver);
 
 		ScriptInstanceStack stack = stackProvider.getStack();
-		return new ScriptInstance(script, stack, scopeResolver, waitHandler, environment != null ? environment : ScriptEnvironment.create(), runawayLimit);
+		return new ScriptInstance(script, stack, waitHandler, environment != null ? environment : ScriptEnvironment.create(), runawayLimit);
 	}
 
 	/**
@@ -399,10 +401,10 @@ public final class ScriptInstanceBuilder
 	{
 		buildCheckProviders();
 		CompoundHostFunctionResolver resolver = buildHostFuctionResolver();
-		Script script = buildScript(resolver);
+		Script script = buildScript(resolver, scopeResolver);
 
 		ScriptInstanceStack stack = stackProvider.getStack();
-		return new ScriptInstanceFactory(script, stack.getActivationStackDepth(), stack.getValueStackDepth(), scopeResolver, waitHandler, environment != null ? environment : ScriptEnvironment.create(), runawayLimit);
+		return new ScriptInstanceFactory(script, stack.getActivationStackDepth(), stack.getValueStackDepth(), waitHandler, environment != null ? environment : ScriptEnvironment.create(), runawayLimit);
 	}
 	
 	/**

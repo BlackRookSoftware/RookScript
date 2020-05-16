@@ -15,7 +15,25 @@ import com.blackrook.rookscript.lang.ScriptFunctionType;
  */
 public interface ScriptHostFunctionResolver
 {
+	/**
+	 * A host function resolver with no functions or namespaces.
+	 * @since [NOW]
+	 */
+	static final ScriptHostFunctionResolver EMPTY = new ScriptHostFunctionResolver()
+	{
+		@Override
+		public boolean containsNamespacedFunction(String namespace, String name) 
+		{
+			return false;
+		}
 
+		@Override
+		public ScriptFunctionType getNamespacedFunction(String namespace, String name) 
+		{
+			return null;
+		}
+	};
+	
 	/**
 	 * Attempts to find if this resolver has a function by its calling name and namespace.
 	 * <p>A <code>null</code> namespace is valid, since it is a host call without declaring a namespace.

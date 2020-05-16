@@ -15,8 +15,26 @@ package com.blackrook.rookscript.resolvers;
 public interface ScriptScopeResolver
 {
 	/**
+	 * A scope resolver with no scopes.
+	 * @since [NOW]
+	 */
+	static final ScriptScopeResolver EMPTY = new ScriptScopeResolver()
+	{
+		@Override
+		public ScriptVariableResolver getScope(String name)
+		{
+			return null;
+		}
+		
+		@Override
+		public boolean containsScope(String name)
+		{
+			return false;
+		}
+	};
+	
+	/**
 	 * Gets the corresponding scope for a scope name.
-	 * Changing the returned value, if any, changes the value in-place.
 	 * @param name the scope name.
 	 * @return the corresponding scope, or <code>null</code> if no corresponding scope.
 	 */
