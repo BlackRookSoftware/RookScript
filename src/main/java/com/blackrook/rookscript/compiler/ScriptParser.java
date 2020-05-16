@@ -93,7 +93,7 @@ public class ScriptParser extends Lexer.Parser
 	/** Label prefix. */
 	public static final String LABEL_SCRIPTLET_END = "_scriptlet_end_";
 	/** Iterator variable prefix (must be named in a way that is impossible to access). */
-	public static final String LABEL_ITERATOR_VAR = "_iterator - var_";
+	public static final String LABEL_ITERATOR_VAR = ":iter:";
 
 	/** Return false. */
 	public static final int PARSEFUNCTIONCALL_FALSE = -1;
