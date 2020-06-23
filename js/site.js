@@ -1,7 +1,3 @@
-var RELEASE_SECTION = $Q1('#releases');
-var RELEASE_VERSION = $Q1('#release-version');
-var RELEASE_LINKS = $Q1('.site-release-links');
-
 $Q1('body').onload = function()
 {
 	$Q1('#link-github').setAttribute('href', 'https://github.com/'+REPO_OWNER+'/'+REPO_NAME);
@@ -22,9 +18,12 @@ function github_api_start(response)
 
 function display_release(response)
 {
-	let release = response.data[0];
-	let version = release.name;
+	display_release_data(response.data[0], $Q1('#releases'), $Q1('#release-version'), $Q1('.site-release-links'));
+}
 
+function display_release_data(release, release_section_element, release_version_element, release_links_element)
+{
+	let version = release.name;
 	let SORTASSET = function(asset)
 	{
 		let filename = asset.name;
@@ -84,11 +83,11 @@ function display_release(response)
 			"class": 'w3-button w3-red w3-round-large w3-margin',
 			"style": 'width:275px'
 		});
-		link.innerHTML = linkhtml
+		link.innerHTML = linkhtml;
 
-		RELEASE_LINKS.appendChild($Element('div', {"class":'w3-col m6 l4 w3-center'}, [link]));
+		release_links_element.appendChild($Element('div', {"class":'w3-col m6 l4 w3-center'}, [link]));
 	});
 
-	RELEASE_VERSION.innerHTML = version;
-	$ClassRemove(RELEASE_SECTION, 'site-start-hidden');
+	release_version_element.innerHTML = version;
+	$ClassRemove(release_section_element, 'site-start-hidden');
 }
