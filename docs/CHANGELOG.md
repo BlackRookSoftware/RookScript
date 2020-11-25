@@ -3,6 +3,13 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.8.1
+----------------
+
+- `Fixed` Potential NPE via `#include` directive in preprocessor.
+- `Fixed` Classpath resolution in preprocessor.
+
+
 Changed in 1.8.0
 ----------------
 
