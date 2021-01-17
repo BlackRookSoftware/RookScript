@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.9.1
+----------------
+
+- `Changed` Added additional directory scanning parameters to FILELIST.
+
+
 Changed in 1.9.0
 ----------------
 

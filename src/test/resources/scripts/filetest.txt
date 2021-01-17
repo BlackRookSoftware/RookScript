@@ -22,6 +22,9 @@ entry main()
 	each (s : fileparent(p)->filelist())
 		println(s);
 		
+	each (s : "src/main/java/com/blackrook/rookscript/resolvers"->filelist(false, `.*package-info\.java`))
+		println(s);
+
 	println(createdir("testjunk"));
 	println(createdir("testjunk/stuff"));
 	println(filedelete("testjunk/stuff"));

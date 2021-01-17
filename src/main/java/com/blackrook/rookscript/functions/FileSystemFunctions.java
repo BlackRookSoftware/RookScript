@@ -14,12 +14,16 @@ import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;
 import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
+import com.blackrook.rookscript.struct.PatternUtils;
 import com.blackrook.rookscript.struct.Utils;
 
 import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Script common functions for files.
@@ -609,24 +613,33 @@ public enum FileSystemFunctions implements ScriptFunctionType
 		}
 	},
 
-	FILELIST(1)
+	FILELIST(3)
 	{
 		@Override
 		protected Usage usage()
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Returns all files in a directory (and optionally, whose name fits a RegEx pattern)."
+					"Returns all files in a directory (and optionally, whose name fits a RegEx pattern). " +
+					"If recursive traversal is used, no directories will be added to the resultant list, just the files."
 				)
 				.parameter("path", 
 					type(Type.STRING, "A file path to inspect."),
 					type(Type.OBJECTREF, "File", "A file path to inspect.")
 				)
+				.parameter("recursive",
+					type(Type.BOOLEAN, "If true, scan recursively.")
+				)
+				.parameter("regex",
+					type(Type.NULL, "Include everything."),
+					type(Type.STRING, "The pattern to match each file against.")
+				)
 				.returns(
 					type(Type.NULL, "If not a directory or [path] is null."),
 					type(Type.LIST, "[STRING, ...]", "A list of file paths in the directory (if parameter was string)."),
 					type(Type.LIST, "[OBJECTREF:File, ...]", "A list of file paths in the directory (if parameter was file)."),
-					type(Type.ERROR, "Security", "If the OS is preventing the search.")
+					type(Type.ERROR, "Security", "If the OS is preventing the search."),
+					type(Type.ERROR, "BadPattern", "If the input RegEx pattern is malformed.")
 				)
 			;
 		}
@@ -637,7 +650,25 @@ public enum FileSystemFunctions implements ScriptFunctionType
 			ScriptValue temp = CACHEVALUE1.get();
 			try
 			{
+				scriptInstance.popStackValue(temp);
+				String regex = temp.isNull() ? null : temp.asString();
+				scriptInstance.popStackValue(temp);
+				boolean recursive = temp.asBoolean();
 				File file = popFile(scriptInstance, temp);
+				boolean wasString = temp.isString();
+				
+				FileFilter filter = ((f) -> true);
+				if (regex != null)
+				{
+					try {
+						final Pattern p = PatternUtils.get(regex);
+						filter = ((f) -> p.matcher(f.getPath()).matches());
+					} catch (PatternSyntaxException e) {
+						returnValue.setError("BadPattern", e.getMessage(), e.getLocalizedMessage());
+						return true;
+					}
+				}
+				
 				try {
 					if (file == null || !file.isDirectory())
 					{
@@ -645,19 +676,8 @@ public enum FileSystemFunctions implements ScriptFunctionType
 					}
 					else
 					{
-						boolean wasString = temp.isString();
-						File[] files = file.listFiles();
-						returnValue.setEmptyList(files.length);
-						if (wasString)
-						{
-							for (int i = 0; i < files.length; i++)
-								returnValue.listAdd(files[i].getPath());
-						}
-						else
-						{
-							for (int i = 0; i < files.length; i++)
-								returnValue.listAdd(files[i]);
-						}						
+						returnValue.setEmptyList(128);
+						fillFiles(file, wasString, recursive, returnValue, filter);
 					}
 				} catch (SecurityException e) {
 					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
@@ -960,6 +980,26 @@ public enum FileSystemFunctions implements ScriptFunctionType
 			return temp.asObjectType(File.class);
 		else
 			return new File(temp.asString());
+	}
+	
+	private static void fillFiles(File directory, boolean stringPaths, boolean recursive, ScriptValue list, FileFilter filter)
+	{
+		File[] files = directory.listFiles();
+		for (int i = 0; i < files.length; i++)
+		{
+			File f = files[i];
+			if (recursive && f.isDirectory())
+			{
+				fillFiles(f, stringPaths, recursive, list, filter);
+			}
+			else if (filter.accept(f))
+			{
+				if (stringPaths)
+					list.listAdd(f.getPath());
+				else
+					list.listAdd(f);
+			}
+		}
 	}
 	
 	// Threadlocal "stack" values.
