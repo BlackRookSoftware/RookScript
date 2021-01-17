@@ -29,11 +29,15 @@
 		com.blackrook.rookscript.compiler,
 		com.blackrook.rookscript.exception,
 		com.blackrook.rookscript.functions,
+		com.blackrook.rookscript.functions.common,
+		com.blackrook.rookscript.functions.io,
+		com.blackrook.rookscript.lang,
 		com.blackrook.rookscript.resolvers,
-		com.blackrook.rookscript.resolvers.function,
+		com.blackrook.rookscript.resolvers.hostfunction,
 		com.blackrook.rookscript.resolvers.scope,
 		com.blackrook.rookscript.resolvers.variable,
-		com.blackrook.rookscript.util
+		com.blackrook.rookscript.struct,
+		com.blackrook.rookscript.tools
 		"
 	/>
 	
