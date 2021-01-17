@@ -306,6 +306,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				{
 					try {
 						out = new FileOutputStream(stdout.asObjectType(File.class));
+						closeOut = true;
 					} catch (FileNotFoundException e) {
 						returnValue.setError("BadFile", "Fifth parameter, the output stream, could not be opened.");
 						return true;
@@ -332,6 +333,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				{
 					try {
 						err = new FileOutputStream(stderr.asObjectType(File.class));
+						closeErr = true;
 					} catch (FileNotFoundException e) {
 						returnValue.setError("BadFile", "Sixth parameter, the error stream, could not be opened.");
 						return true;

@@ -11,9 +11,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * A factory that produces type profiles for POJOs and data objects.
+ * NOTE: The main change from the original Profile Factory from Base is that this does
+ * case-insensitive resolution of fields and methods.
  * @author Matthew Tropiano
  */
 public class TypeProfileFactory
@@ -233,36 +237,36 @@ public class TypeProfileFactory
 	public static class Profile<T>
 	{
 		/** Map of Public fields by name. */
-		private HashMap<String, FieldInfo> publicFieldsByName;
+		private Map<String, FieldInfo> publicFieldsByName;
 		/** Map of getters by name. */
-		private HashMap<String, MethodInfo> getterMethodsByName;
+		private Map<String, MethodInfo> getterMethodsByName;
 		/** Map of setters by name. */
-		private HashMap<String, MethodInfo> setterMethodsByName;
+		private Map<String, MethodInfo> setterMethodsByName;
 
 		/** Map of Public fields by alias. */
-		private HashMap<String, FieldInfo> publicFieldsByAlias;
+		private Map<String, FieldInfo> publicFieldsByAlias;
 		/** Map of getters by alias. */
-		private HashMap<String, MethodInfo> getterMethodsByAlias;
+		private Map<String, MethodInfo> getterMethodsByAlias;
 		/** Map of setters by alias. */
-		private HashMap<String, MethodInfo> setterMethodsByAlias;
+		private Map<String, MethodInfo> setterMethodsByAlias;
 
 		/** Map of methods by alias. */
-		private HashMap<String, MethodInfo> methodsByAlias;
+		private Map<String, MethodInfo> methodsByAlias;
 		/** Map of methods by name. */
-		private HashMap<String, MethodInfo> methodsByName;
+		private Map<String, MethodInfo> methodsByName;
 
 		
 		// Creates a profile from a class. 
 		private Profile(Class<? extends T> inputClass, MemberPolicy policy)
 		{
-			publicFieldsByName = new HashMap<String, FieldInfo>(4);
-			getterMethodsByName = new HashMap<String, MethodInfo>(4);
-			setterMethodsByName = new HashMap<String, MethodInfo>(4);
-			publicFieldsByAlias = new HashMap<String, FieldInfo>(4);
-			getterMethodsByAlias = new HashMap<String, MethodInfo>(4);
-			setterMethodsByAlias = new HashMap<String, MethodInfo>(4);
-			methodsByAlias = new HashMap<String, MethodInfo>(4);
-			methodsByName = new HashMap<String, MethodInfo>(4);
+			publicFieldsByName = new TreeMap<String, FieldInfo>(String.CASE_INSENSITIVE_ORDER);
+			getterMethodsByName = new TreeMap<String, MethodInfo>(String.CASE_INSENSITIVE_ORDER);
+			setterMethodsByName = new TreeMap<String, MethodInfo>(String.CASE_INSENSITIVE_ORDER);
+			publicFieldsByAlias = new TreeMap<String, FieldInfo>(String.CASE_INSENSITIVE_ORDER);
+			getterMethodsByAlias = new TreeMap<String, MethodInfo>(String.CASE_INSENSITIVE_ORDER);
+			setterMethodsByAlias = new TreeMap<String, MethodInfo>(String.CASE_INSENSITIVE_ORDER);
+			methodsByAlias = new TreeMap<String, MethodInfo>(String.CASE_INSENSITIVE_ORDER);
+			methodsByName = new TreeMap<String, MethodInfo>(String.CASE_INSENSITIVE_ORDER);
 
 			for (Field f : inputClass.getFields())
 			{
@@ -324,7 +328,7 @@ public class TypeProfileFactory
 		 * Maps "field name" to {@link FieldInfo} object.
 		 * @return the map of field name to field.  
 		 */
-		public HashMap<String, FieldInfo> getPublicFieldsByName()
+		public Map<String, FieldInfo> getPublicFieldsByName()
 		{
 			return publicFieldsByName;
 		}
@@ -334,7 +338,7 @@ public class TypeProfileFactory
 		 * Maps "field name" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself.
 		 * @return the map of getter name to method.  
 		 */
-		public HashMap<String, MethodInfo> getGetterMethodsByName()
+		public Map<String, MethodInfo> getGetterMethodsByName()
 		{
 			return getterMethodsByName;
 		}
@@ -344,7 +348,7 @@ public class TypeProfileFactory
 		 * Maps "field name" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself. 
 		 * @return the map of setter name to method.  
 		 */
-		public HashMap<String, MethodInfo> getSetterMethodsByName()
+		public Map<String, MethodInfo> getSetterMethodsByName()
 		{
 			return setterMethodsByName;
 		}
@@ -354,7 +358,7 @@ public class TypeProfileFactory
 		 * Maps "method name" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself. 
 		 * @return the map of name to method.  
 		 */
-		public HashMap<String, MethodInfo> getMethodsByName()
+		public Map<String, MethodInfo> getMethodsByName()
 		{
 			return methodsByName;
 		}
@@ -364,7 +368,7 @@ public class TypeProfileFactory
 		 * Maps "field alias" to {@link FieldInfo} object.
 		 * @return the map of field alias to field.  
 		 */
-		public HashMap<String, FieldInfo> getPublicFieldsByAlias()
+		public Map<String, FieldInfo> getPublicFieldsByAlias()
 		{
 			return publicFieldsByAlias;
 		}
@@ -374,7 +378,7 @@ public class TypeProfileFactory
 		 * Maps "field alias" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself.
 		 * @return the map of getter alias to method.  
 		 */
-		public HashMap<String, MethodInfo> getGetterMethodsByAlias()
+		public Map<String, MethodInfo> getGetterMethodsByAlias()
 		{
 			return getterMethodsByAlias;
 		}
@@ -384,7 +388,7 @@ public class TypeProfileFactory
 		 * Maps "field alias" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself. 
 		 * @return the map of setter alias to method.  
 		 */
-		public HashMap<String, MethodInfo> getSetterMethodsByAlias()
+		public Map<String, MethodInfo> getSetterMethodsByAlias()
 		{
 			return setterMethodsByAlias;
 		}
@@ -394,7 +398,7 @@ public class TypeProfileFactory
 		 * Maps "method alias" to {@link MethodInfo} object, which contains the {@link Class} type and the {@link Method} itself. 
 		 * @return the map of alias to method.
 		 */
-		public HashMap<String, MethodInfo> getMethodsByAlias()
+		public Map<String, MethodInfo> getMethodsByAlias()
 		{
 			return methodsByAlias;
 		}

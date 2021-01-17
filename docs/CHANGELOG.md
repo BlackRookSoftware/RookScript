@@ -3,6 +3,13 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.9.0
+----------------
+
+- `Fixed` ScriptValue.mapApply(...) didn't apply map fields properly.
+- `Changed` Reflection on Objects in RookScript looks up fields/methods case-insensitively.
+
+
 Changed in 1.8.1
 ----------------
 

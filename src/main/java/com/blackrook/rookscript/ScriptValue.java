@@ -1209,6 +1209,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * @param <T> the object type.
 	 * @param object the source object.
 	 * @return true if this is a map and application was successful.
+	 * @throws ClassCastException if any incoming type cannot be converted.
 	 */
 	public <T> boolean mapApply(T object)
 	{
@@ -1221,7 +1222,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		
 		for (IteratorPair entry : map)
 		{
-			String name = String.valueOf(entry.getKey()).toLowerCase();
+			String name = entry.getKey().asString();
 			ScriptValue value = entry.getValue();
 
 			FieldInfo fi;
