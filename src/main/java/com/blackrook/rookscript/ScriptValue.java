@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -500,7 +501,8 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			{
 				int len = Array.getLength(value);
 				setEmptyList(len);
-				listExtract((Object[])value);
+				for (int i = 0; i < len; i++)
+					listAdd(Array.get(value, i));
 			}
 			else
 			{
@@ -923,6 +925,65 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			return listGetIndexOf(value) >= 0;
 	}
 
+	/**
+	 * Applies this list to an array.
+	 * @param <T> the array type.
+	 * @param target the target array.
+	 * @return true if this is a list and it has been applied, false if not.
+	 * @since [NOW]
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> boolean listApply(T target)
+	{
+		if (!isList())
+			return false;
+
+		ListType list = (ListType)ref;
+		Class<T> targetType = (Class<T>)target.getClass().getComponentType();
+		
+		int i = 0;
+		for (IteratorPair entry : list)
+		{
+			ScriptValue value = entry.getValue();
+			Array.set(target, i++, value.createForType(targetType));
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Applies this list to another list by setting 
+	 * the contents on a (expected new, empty) target list.
+	 * Best of used on a list of contiguous elements.
+	 * @param <T> the array type.
+	 * @param targetType the underlying generic target type.
+	 * @param target the target array.
+	 * @return true if this is a list and it has been applied, false if not.
+	 * @since [NOW]
+	 * @see List#set(int, Object)
+	 * @see List#add(Object)
+	 */
+	public <T> boolean listApply(Class<T> targetType, List<T> target)
+	{
+		if (!isList())
+			return false;
+
+		ListType list = (ListType)ref;
+		
+		int i = 0;
+		for (IteratorPair entry : list)
+		{
+			ScriptValue value = entry.getValue();
+			if (i < target.size())
+				target.set(i, value.createForType(targetType));
+			else
+				target.add(value.createForType(targetType));
+			i++;
+		}
+		
+		return true;
+	}
+	
 	/**
 	 * Sorts the contents of this list.
 	 * Does nothing if this is not a list.
@@ -1820,6 +1881,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * @return a suitable object of type <code>targetType</code>, or null . 
 	 * @throws ClassCastException if the incoming type cannot be converted.
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> T createForType(Class<T> targetType)
 	{
 		switch(getType())
@@ -1835,8 +1897,23 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			case STRING:
 				return Utils.createForType(asString(), targetType);
 			case LIST:
-				return Utils.createForType(asObjectType(ListType.class), targetType);
+			{
+				T out;
+				if (targetType.isArray())
+				{
+					Class<?> componentType = targetType.getComponentType();
+					Object obj = Array.newInstance(componentType, length());
+					listApply(targetType.cast(obj));
+					out = (T)obj;
+				}
+				else
+				{
+					throw new ClassCastException("Attempt to apply list to non-array, non-List type: " + targetType + " from " + getType());
+				}
+				return out;
+			}
 			case MAP:
+			{
 				T out;
 				try {
 					out = Utils.create(targetType);
@@ -1845,6 +1922,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 				}
 				mapApply(out);
 				return out;
+			}
 			default:
 			case ERROR:
 			case OBJECTREF:
