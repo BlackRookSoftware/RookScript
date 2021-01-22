@@ -8,6 +8,7 @@ Changed in [NOW]
 
 - `Added` ScriptValue.listApply() functions. 
 - `Changed` Better reflection with creation from lists and application to lists/arrays.
+- `Changed` Some documentation for clarity.
 
 
 Changed in 1.9.1

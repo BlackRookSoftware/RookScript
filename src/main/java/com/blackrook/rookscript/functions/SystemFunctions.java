@@ -53,7 +53,8 @@ public enum SystemFunctions implements ScriptFunctionType
 					type(Type.LIST, "Get all provided properties as a map.")
 				)
 				.returns(
-					type(Type.STRING, "The corresponding property, if [key] is a string. Can be null."),
+					type(Type.NULL, "If no corresponding property, if [key] is a string."),
+					type(Type.STRING, "The corresponding property, if [key] is a string."),
 					type(Type.MAP, "The corresponding map of properties, if [key] is null or a list."),
 					type(Type.ERROR, "Security", "If a property cannot be queried.")
 				);
