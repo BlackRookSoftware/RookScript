@@ -930,7 +930,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * @param <T> the array type.
 	 * @param target the target array.
 	 * @return true if this is a list and it has been applied, false if not.
-	 * @since [NOW]
+	 * @since 1.10.0
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> boolean listApply(T target)
@@ -959,7 +959,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	 * @param targetType the underlying generic target type.
 	 * @param target the target array.
 	 * @return true if this is a list and it has been applied, false if not.
-	 * @since [NOW]
+	 * @since 1.10.0
 	 * @see List#set(int, Object)
 	 * @see List#add(Object)
 	 */

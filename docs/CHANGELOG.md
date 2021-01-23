@@ -3,9 +3,10 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
-Changed in [NOW]
+Changed in 1.10.0
 -----------------
 
+- `Fixed` Preprocessor handling of backslashes.
 - `Added` ScriptValue.listApply() functions. 
 - `Changed` Better reflection with creation from lists and application to lists/arrays.
 - `Changed` Some documentation for clarity.
