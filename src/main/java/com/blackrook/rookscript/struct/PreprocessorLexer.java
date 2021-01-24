@@ -407,13 +407,10 @@ public class PreprocessorLexer extends Lexer
 						sb.append('\n');
 						state = STATE_READ;
 					}
-					else if (Character.isWhitespace(c))
-					{
-						// eat character.
-					}
 					else
 					{
 						sb.append('\\');
+						sb.append(c);
 						state = STATE_READ;
 					}
 				}
