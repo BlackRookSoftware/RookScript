@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.10.1
+-----------------
+
+- `Fixed` COLOR() returned the wrong value.
+
+
 Changed in 1.10.0
 -----------------
 

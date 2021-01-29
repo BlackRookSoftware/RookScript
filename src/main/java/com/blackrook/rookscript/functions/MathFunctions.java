@@ -963,7 +963,11 @@ public enum MathFunctions implements ScriptFunctionType
 				byte green = temp.asByte();
 				scriptInstance.popStackValue(temp);
 				byte red = temp.asByte();
-				long argb = alpha << 24 | red << 16 | green << 8 | blue;
+				long argb = 
+					  (alpha & 0x0ff) << 24 
+					| (red & 0x0ff) << 16 
+					| (green & 0x0ff) << 8 
+					| (blue & 0x0ff);
 				returnValue.set(argb);
 				return true;
 			}
@@ -1016,7 +1020,7 @@ public enum MathFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				double red = temp.asByte();
 				long argb = 
-					((int)(alpha * 255.0) & 0x0ff) << 24 
+					  ((int)(alpha * 255.0) & 0x0ff) << 24 
 					| ((int)(red * 255.0) & 0x0ff) << 16 
 					| ((int)(green * 255.0) & 0x0ff) << 8 
 					| ((int)(blue * 255.0) & 0x0ff);
