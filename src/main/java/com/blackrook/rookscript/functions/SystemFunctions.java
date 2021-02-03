@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -229,29 +230,24 @@ public enum SystemFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(stderr);
 				scriptInstance.popStackValue(stdout);
 				scriptInstance.popStackValue(work);
+				scriptInstance.popStackValue(temp);
 				
 				String[] argv;
-				String[] env;
 				File workingDir;
 				OutputStream out;
-				boolean closeOut = false;
 				OutputStream err;
-				boolean closeErr = false;
 				InputStream in;
+				Map<String, String> env = new HashMap<>(temp.length());
 				
 				// Runtime
-
-				scriptInstance.popStackValue(temp);
 				if (temp.isMap())
 				{
-					int i = 0;
-					env = new String[temp.length()];
 					for (IteratorPair pair : temp)
-						env[i++] = pair.getKey().asString() + "=" + pair.getValue().asString();
-				}
-				else
-				{
-					env = NO_STRINGS;
+					{
+						String key = pair.getKey().asString();
+						String value = pair.getValue().isNull() ? null : pair.getValue().asString();
+						env.put(key, value);
+					}
 				}
 
 				scriptInstance.popStackValue(temp);
@@ -307,7 +303,6 @@ public enum SystemFunctions implements ScriptFunctionType
 				{
 					try {
 						out = new FileOutputStream(stdout.asObjectType(File.class));
-						closeOut = true;
 					} catch (FileNotFoundException e) {
 						returnValue.setError("BadFile", "Fifth parameter, the output stream, could not be opened.");
 						return true;
@@ -334,7 +329,6 @@ public enum SystemFunctions implements ScriptFunctionType
 				{
 					try {
 						err = new FileOutputStream(stderr.asObjectType(File.class));
-						closeErr = true;
 					} catch (FileNotFoundException e) {
 						returnValue.setError("BadFile", "Sixth parameter, the error stream, could not be opened.");
 						return true;
@@ -376,7 +370,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				}
 
 				try {
-					ProcessInstance instance = new ProcessInstance(argv, env, workingDir, out, closeOut, err, closeErr, in);
+					ProcessInstance instance = new ProcessInstance(argv, env, workingDir, out, err, in);
 					scriptInstance.registerCloseable(instance);
 					returnValue.set(instance);
 					return true;
@@ -501,69 +495,18 @@ public enum SystemFunctions implements ScriptFunctionType
 		private static final AtomicLong PROCESSTHREAD_ID = new AtomicLong(0L);
 		
 		private final Process process;
-		private final InputStream inPipe;
-		private Thread stdOutThread;
-		private Thread stdErrThread;
-		private Thread stdInThread;
 		
-		private ProcessInstance(String[] argv, String[] env, File workingDir, final OutputStream out, final boolean closeOut, final OutputStream err, final boolean closeErr, final InputStream in) throws IOException
+		private ProcessInstance(String[] argv, Map<String, String> env, File workingDir, final OutputStream out, final OutputStream err, final InputStream in) throws IOException
 		{
 			long id = PROCESSTHREAD_ID.getAndIncrement();
-			process = Runtime.getRuntime().exec(argv, env, workingDir);
-			inPipe = in;
-			
-			(stdOutThread = new ProcessStreamThread(id, "Out", ()->{
-				try {
-					int buf;
-					byte[] buffer = new byte[4096];
-					InputStream stdOut = process.getInputStream();
-					while ((buf = stdOut.read(buffer)) > 0)
-					{
-						out.write(buffer, 0, buf);
-						out.flush();
-					}
-				} catch (IOException e) {
-					// Eat exception.
-				} finally {
-					if (closeOut)
-						Utils.close(out);
-				}
-			})).start();
-			
-			(stdErrThread = new ProcessStreamThread(id, "Err", ()->{
-				try {
-					int buf;
-					byte[] buffer = new byte[4096];
-					InputStream stdErr = process.getErrorStream();
-					while ((buf = stdErr.read(buffer)) > 0)
-					{
-						err.write(buffer, 0, buf);
-						err.flush();
-					}
-				} catch (IOException e) {
-					// Eat exception.
-				} finally {
-					if (closeErr)
-						Utils.close(err);
-				} 
-			})).start();
-			
-			(stdInThread = new ProcessStreamThread(id, "In", ()->{
-				try (OutputStream stdIn = process.getOutputStream()) 
-				{
-					int buf;
-					byte[] buffer = new byte[4096];
-					while ((buf = inPipe.read(buffer)) > 0)
-					{
-						stdIn.write(buffer, 0, buf);
-						stdIn.flush();
-					}
-				} catch (IOException e) {
-					// Eat exception.
-				} finally {
-					Utils.close(inPipe);
-				}
-			})).start();
+			ProcessBuilder builder = new ProcessBuilder(argv);
+			Map<String, String> envVarMap = builder.environment();
+			for (Map.Entry<String, String> entry : env.entrySet())
+				envVarMap.put(entry.getKey(), entry.getValue());
+			process = builder.start();
+			(new PipeInToOutThread(id, "stdout", process.getInputStream(), out)).start();
+			(new PipeInToOutThread(id, "stderr", process.getErrorStream(), err)).start();
+			(new PipeInToOutThread(id, "stdin", in, process.getOutputStream())).start();
 		}
 		
 		/**
@@ -573,9 +516,7 @@ public enum SystemFunctions implements ScriptFunctionType
 		public int get()
 		{
 			try {
-				int out = process.waitFor();
-				cleanup();
-				return out;
+				return process.waitFor();
 			} catch (InterruptedException e) {
 				return 0;
 			}
@@ -589,10 +530,7 @@ public enum SystemFunctions implements ScriptFunctionType
 		public boolean waitTime(long millis)
 		{
 			try {
-				boolean out = process.waitFor(millis, TimeUnit.MILLISECONDS);
-				if (out)
-					cleanup();
-				return out;
+				return process.waitFor(millis, TimeUnit.MILLISECONDS);
 			} catch (InterruptedException e) {
 				return false;
 			}
@@ -602,31 +540,40 @@ public enum SystemFunctions implements ScriptFunctionType
 		public void close() throws Exception 
 		{
 			process.destroy();
-			cleanup();
-		}
-		
-		private void cleanup() throws InterruptedException
-		{
-			Utils.close(inPipe);
-			Utils.close(process.getOutputStream());
-			stdInThread.join();
-			stdOutThread.join();
-			stdErrThread.join();
 		}
 	}
 	
-	private static class ProcessStreamThread extends Thread
+	// Piping thread from in to out.
+	private static class PipeInToOutThread extends Thread
 	{
-		private ProcessStreamThread(long processId, String suffix, Runnable runnable)
+		private InputStream srcIn;
+		private OutputStream destOut;
+		
+		private PipeInToOutThread(long processId, String suffix, InputStream in, OutputStream out)
 		{
-			super(runnable);
 			setDaemon(false);
 			setName("RookScriptProcess-" + processId + "-" + suffix);
+			this.srcIn = in;
+			this.destOut = out;
+		}
+		
+		@Override
+		public void run() 
+		{
+			int buf = 0;
+			byte[] BUFFER = new byte[8192];
+			try {
+				while ((buf = srcIn.read(BUFFER)) > 0)
+					destOut.write(BUFFER, 0, buf);
+			} catch (IOException e) {
+				// Eat exception.
+			} finally {
+				Utils.close(srcIn);
+				Utils.close(destOut);
+			}
 		}
 	}
 
-	private static final String[] NO_STRINGS = new String[0];
-	
 	// Threadlocal "stack" values.
 	private static final ThreadLocal<ScriptValue> CACHEVALUE1 = ThreadLocal.withInitial(()->ScriptValue.create(null));
 	private static final ThreadLocal<ScriptValue> CACHEVALUE2 = ThreadLocal.withInitial(()->ScriptValue.create(null));

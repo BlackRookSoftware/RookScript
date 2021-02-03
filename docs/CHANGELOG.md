@@ -7,6 +7,7 @@ Changed in 1.10.1
 -----------------
 
 - `Fixed` COLOR() returned the wrong value.
+- `Fixed` EXEC() was handled suboptimally.
 
 
 Changed in 1.10.0
