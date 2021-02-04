@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.10.2
+-----------------
+
+- `Fixed` EXEC() uses the working directory correctly.
+
+
 Changed in 1.10.1
 -----------------
 

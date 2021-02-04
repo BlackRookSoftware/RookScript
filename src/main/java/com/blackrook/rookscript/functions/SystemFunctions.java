@@ -503,6 +503,7 @@ public enum SystemFunctions implements ScriptFunctionType
 			Map<String, String> envVarMap = builder.environment();
 			for (Map.Entry<String, String> entry : env.entrySet())
 				envVarMap.put(entry.getKey(), entry.getValue());
+			builder.directory(workingDir);
 			process = builder.start();
 			(new PipeInToOutThread(id, "stdout", process.getInputStream(), out)).start();
 			(new PipeInToOutThread(id, "stderr", process.getErrorStream(), err)).start();
