@@ -1,20 +1,22 @@
-$Q1('body').onload = function()
+function github_api_start(data)
 {
-	$Q1('#link-github').setAttribute('href', 'https://github.com/'+REPO_OWNER+'/'+REPO_NAME);
-	$Q1('#link-github-release').setAttribute('href', 'https://github.com/'+REPO_OWNER+'/'+REPO_NAME+'/releases');
-	$INC("https://api.github.com/?callback=github_api_start");
-	$IncludeHTML();
-};
-
-// ================================================================================
-
-function github_api_start(response)
-{
-	let repourl = response.data.repository_url
+	let repourl = data.repository_url
 		.replace('{owner}', REPO_OWNER)
 		.replace('{repo}', REPO_NAME);
 	$INC(repourl + "/releases?callback=display_release");
 }
+
+// ================================================================================
+
+$Q1('body').onload = function()
+{
+	$Q1('#link-github').setAttribute('href', 'https://github.com/'+REPO_OWNER+'/'+REPO_NAME);
+	$Q1('#link-github-release').setAttribute('href', 'https://github.com/'+REPO_OWNER+'/'+REPO_NAME+'/releases');
+	$INCCALL("https://api.github.com/", github_api_start);
+	$IncludeHTML();
+};
+
+// ================================================================================
 
 function display_release(response)
 {
