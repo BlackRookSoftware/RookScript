@@ -47,7 +47,7 @@
 		<link rel="StyleSheet" type="text/css" href="css/site.css" />
 		<script type="text/javascript">
 			var REPO_OWNER = 'BlackRookSoftware';
-			var REPO_NAME = 'Rookscript';
+			var REPO_NAME = ['Rookscript'];
 		</script>
 	</head>
 	<body>
@@ -63,20 +63,23 @@
 		</div>
 		<div class="w3-row">
 			<div class="w3-col l12 w3-center">
-				<a id="link-github-release" href="#">Releases</a> | <a href="javadoc/index.html">Javadocs</a> | <a id="link-github" href="#">Github</a>
+				<a id="link-github-release-core" href="#">Releases</a> | <a href="javadoc/Core/index.html">Javadocs</a> | <a id="link-github-core" href="#">Github</a>
 			</div>
 		</div>
 		<div class="w3-row"><div class="w3-col l12 w3-center">&nbsp;</div></div>
-		<div id="releases" class="w3-container site-start-hidden">
+
+		<!-- RookScript (Core) -->
+		<div id="releases-core" class="w3-container site-start-hidden">
 			<div class="w3-row">
 				<div class="w3-col l12 w3-center">
-					<h2>Latest Release: <span id="release-version"></span></h2>
+					<h2>Latest Release: <span id="release-version-core"></span></h2>
 				</div>
 			</div>
-			<div class="w3-row site-release-links">
+			<div id="site-release-links-core" class="w3-row site-release-links">
 				<!-- Filled Later -->
 			</div>
 		</div>
+
 		<div id="changelog" class="w3-container">
 			<div class="w3-row">
 				<div class="w3-col l12 w3-center">
