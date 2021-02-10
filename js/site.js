@@ -21,7 +21,7 @@ $Q1('body').onload = function()
 
 function display_release_core(response)
 {
-	display_release_data(response.data[0], $Q1('#releases-core'), $Q1('#release-version-core'), $Q1('.site-release-links-core'));
+	display_release_data(response.data[0], $Q1('#releases-core'), $Q1('#release-version-core'), $Q1('#site-release-links-core'));
 }
 
 function display_release_data(release, release_section_element, release_version_element, release_links_element)
