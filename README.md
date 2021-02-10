@@ -103,7 +103,7 @@ Call it with the `--help` switch to output help.
 
 ### Javadocs
 
-Online Javadocs can be found at: [https://blackrooksoftware.github.io/RookScript/javadoc/](https://blackrooksoftware.github.io/RookScript/javadoc/)
+Online Javadocs can be found at: [https://blackrooksoftware.github.io/RookScript/javadoc/Core](https://blackrooksoftware.github.io/RookScript/javadoc/Core)
 
 
 ### Other
