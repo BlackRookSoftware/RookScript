@@ -3,7 +3,7 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
-Changed in [NOW]
+Changed in 1.11.0
 -----------------
 
 - `Added` Exposed/added some script parsing methods in ScriptParser.

@@ -52,7 +52,7 @@ public class ScriptParseException extends RuntimeException
 
 	/**
 	 * @return the list of error messages used to construct this exception.
-	 * @since [NOW]
+	 * @since 1.11.0
 	 */
 	public ErrorMessage[] getErrorMessages()
 	{

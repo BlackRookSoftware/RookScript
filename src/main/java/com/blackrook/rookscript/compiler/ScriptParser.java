@@ -127,7 +127,7 @@ public class ScriptParser extends Lexer.Parser
 	
 	/**
 	 * @return the list of error messages emitted by this parser.
-	 * @since [NOW], this is exposed to implementors.
+	 * @since 1.11.0, this is exposed to implementors.
 	 */
 	public ErrorMessage[] getErrors()
 	{
@@ -145,7 +145,7 @@ public class ScriptParser extends Lexer.Parser
 	 *     throw new ScriptParseException(errors);
 	 * </pre>
 	 * @param script the script to start adding compiled code to.
-	 * @since [NOW], this calls {@link #parseScript(Script)}
+	 * @since 1.11.0, this calls {@link #parseScript(Script)}
 	 * @throws ScriptParseException if any errors were logged.
 	 */
 	public void readScript(Script script)
@@ -166,7 +166,7 @@ public class ScriptParser extends Lexer.Parser
 	 * and they should be fetched from {@link #getErrorMessages()} for display or logging.
 	 * @param script the script to emit commands and entries to.
 	 * @return true if no errors were encountered, or false if a parse error occurred and parsing was halted.
-	 * @since [NOW]
+	 * @since 1.11.0
 	 */
 	public boolean parseScript(Script script)
 	{
@@ -195,7 +195,7 @@ public class ScriptParser extends Lexer.Parser
 	 * </pre>
 	 * @param script the script to emit commands into.
 	 * @return the index of the scriptlet starting point if no errors were encountered, or null if a parse error occurred and parsing was halted.
-	 * @since [NOW], this has been made public.
+	 * @since 1.11.0, this has been made public.
 	 */
 	public Integer parseScriptlet(Script script)
 	{
@@ -279,7 +279,7 @@ public class ScriptParser extends Lexer.Parser
 	 * @param script the script to add the function to and emit commands into.
 	 * @param checkMode if true, the function is parsed as though "check" was prepended to the function entry.
 	 * @return true if no errors were encountered, or false if a parse error occurred and parsing was halted.
-	 * @since [NOW], this has been made public.
+	 * @since 1.11.0, this has been made public.
 	 */
 	public boolean parseFunctionEntry(Script script, boolean checkMode)
 	{
@@ -369,7 +369,7 @@ public class ScriptParser extends Lexer.Parser
 	 * @param script the script to add the entry point to and emit commands into.
 	 * @param checkMode if true, the entry point is parsed as though "check" was prepended to the entry.
 	 * @return true if no errors were encountered, or false if a parse error occurred and parsing was halted.
-	 * @since [NOW], this has been made public.
+	 * @since 1.11.0, this has been made public.
 	 */
 	public boolean parseEntryPoint(Script script, boolean checkMode)
 	{
@@ -451,7 +451,7 @@ public class ScriptParser extends Lexer.Parser
 	/**
 	 * Adds an error message (along with current token info) to the error message list.
 	 * @param message the error message.
-	 * @since [NOW], this is exposed as a protected method.
+	 * @since 1.11.0, this is exposed as a protected method.
 	 */
 	protected void addErrorMessage(String message)
 	{
