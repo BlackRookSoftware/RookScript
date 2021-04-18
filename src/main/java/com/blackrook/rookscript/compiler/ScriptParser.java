@@ -174,7 +174,7 @@ public class ScriptParser extends Lexer.Parser
 		boolean noError = true;
 		
 		try {
-			while (currentToken() != null && (noError = parseEntryList(script))) ;
+			while (currentToken() != null && (noError = parseEntryList(script))) { }
 		} catch (ScriptParseException e) {
 			addErrorMessage(e.getMessage());
 			noError = false;
@@ -194,10 +194,10 @@ public class ScriptParser extends Lexer.Parser
 	 * 		"{" [StatementList] "}"
 	 * </pre>
 	 * @param script the script to emit commands into.
-	 * @return true if no errors were encountered, or false if a parse error occurred and parsing was halted.
+	 * @return the index of the scriptlet starting point if no errors were encountered, or null if a parse error occurred and parsing was halted.
 	 * @since [NOW], this has been made public.
 	 */
-	public boolean parseScriptlet(Script script)
+	public Integer parseScriptlet(Script script)
 	{
 		// start statement list?
 		if (matchType(ScriptKernel.TYPE_LBRACE))
@@ -205,20 +205,20 @@ public class ScriptParser extends Lexer.Parser
 			String startLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_START);
 			String endLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_END);
 			
-			mark(script, startLabel);
+			int index = mark(script, startLabel);
 			
 			if (!parseStatementList(script, null, null, null, 0, 0))
-				return false;
+				return null;
 			
 			mark(script, endLabel);
 	
 			if (!matchType(ScriptKernel.TYPE_RBRACE))
 			{
 				addErrorMessage("Expected \"}\" to close scriptlet body.");
-				return false;
+				return null;
 			}
 		
-			return true;
+			return index;
 		}
 		else if (currentType(ScriptKernel.TYPE_IDENTIFIER))
 		{
@@ -235,7 +235,7 @@ public class ScriptParser extends Lexer.Parser
 				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
 				{
 					addErrorMessage("Expected identifier after \"::\".");
-					return false;
+					return null;
 				}
 				
 				namespace = functionName;
@@ -246,24 +246,24 @@ public class ScriptParser extends Lexer.Parser
 			if (!currentType(ScriptKernel.TYPE_LPAREN))
 			{
 				addErrorMessage("Expected \"(\" or \"::\" after a function name.");
-				return false;
+				return null;
 			}
 	
-			mark(script, startLabel);
+			int index = mark(script, startLabel);
 
 			if (!parseFunctionCall(script, null, namespace, functionName, false))
-				return false;
+				return null;
 			
 			script.addCommand(ScriptCommand.create(ScriptCommandType.POP));
 
 			mark(script, endLabel);
 			
-			return true;
+			return index;
 		}
 		else
 		{
 			addErrorMessage("Expected \"{\" to start scriptlet body or function name.");
-			return false;
+			return null;
 		}
 	}
 

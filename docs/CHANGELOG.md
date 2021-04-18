@@ -9,6 +9,7 @@ Changed in [NOW]
 - `Added` Exposed/added some script parsing methods in ScriptParser.
 - `Changed` Underlying error type in ScriptParser.
 - `Changed` Constructors for ScriptParseException and multiple errors.
+- `Changed` Return type for ScriptParser.parseScriptlet(Script).
 
 
 Changed in 1.10.2
