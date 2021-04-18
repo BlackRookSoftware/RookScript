@@ -141,7 +141,7 @@ public class ScriptParser extends Lexer.Parser
 	 * nextToken();
 	 * parseScript(script);
 	 * ErrorMessage[] errors = getErrorMessages();
-	 * if (errors.length > 0)
+	 * if (errors.length &gt; 0)
 	 *     throw new ScriptParseException(errors);
 	 * </pre>
 	 * @param script the script to start adding compiled code to.
