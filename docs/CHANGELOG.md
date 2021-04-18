@@ -3,6 +3,14 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in [NOW]
+-----------------
+
+- `Added` Exposed/added some script parsing methods in ScriptParser.
+- `Changed` Underlying error type in ScriptParser.
+- `Changed` Constructors for ScriptParseException and multiple errors.
+
+
 Changed in 1.10.2
 -----------------
 

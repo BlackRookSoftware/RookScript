@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2020 Black Rook Software
+ * Copyright (c) 2017-2021 Black Rook Software
  * This program and the accompanying materials are made available under the 
  * terms of the GNU Lesser Public License v2.1 which accompanies this 
  * distribution, and is available at 
@@ -101,7 +101,8 @@ public class ScriptParser extends Lexer.Parser
 	private static final char[] HEXALPHABET = "0123456789abcdef".toCharArray();
 	
 	/** List of errors. */
-	private LinkedList<String> errors;
+	private LinkedList<ErrorMessage> errors;
+	
 	/**
 	 * Creates a new script parser.
 	 * @param lexer the lexer to fetch tokens from.
@@ -111,28 +112,64 @@ public class ScriptParser extends Lexer.Parser
 		super(lexer);
 		this.errors = new LinkedList<>();
 	}
-	
-	private void addErrorMessage(String message)
+
+	/**
+	 * @return the list of error messages emitted by this parser.
+	 */
+	public String[] getErrorMessages()
 	{
-		errors.add(getTokenInfoLine(message));
-	}
-	
-	private String[] getErrorMessages()
-	{
+		int i = 0;
 		String[] out = new String[errors.size()];
-		errors.toArray(out);
+		for (ErrorMessage e : errors)
+			out[i++] = e.toString();
 		return out;
 	}
 	
 	/**
+	 * @return the list of error messages emitted by this parser.
+	 * @since [NOW], this is exposed to implementors.
+	 */
+	public ErrorMessage[] getErrors()
+	{
+		return errors.toArray(new ErrorMessage[errors.size()]);
+	}
+	
+	/**
 	 * Starts parsing a script.
+	 * <p> This is equivalent to:
+	 * <pre>
+	 * nextToken();
+	 * parseScript(script);
+	 * ErrorMessage[] errors = getErrorMessages();
+	 * if (errors.length > 0)
+	 *     throw new ScriptParseException(errors);
+	 * </pre>
 	 * @param script the script to start adding compiled code to.
+	 * @since [NOW], this calls {@link #parseScript(Script)}
+	 * @throws ScriptParseException if any errors were logged.
 	 */
 	public void readScript(Script script)
 	{
 		// prime first token.
 		nextToken();
 		
+		parseScript(script);
+		ErrorMessage[] errors = getErrors();
+		if (errors.length > 0)
+			throw new ScriptParseException(errors);
+	}
+	
+	/**
+	 * Parses a script from the current token until the 
+	 * end of the token stream is reached or an error is encountered or an exception is thrown.
+	 * <p> If this function returns false, then one or more errors may have been encountered, 
+	 * and they should be fetched from {@link #getErrorMessages()} for display or logging.
+	 * @param script the script to emit commands and entries to.
+	 * @return true if no errors were encountered, or false if a parse error occurred and parsing was halted.
+	 * @since [NOW]
+	 */
+	public boolean parseScript(Script script)
+	{
 		// keep parsing entries.
 		boolean noError = true;
 		
@@ -143,28 +180,108 @@ public class ScriptParser extends Lexer.Parser
 			noError = false;
 		}
 		
-		if (!noError) // awkward, I know.
-		{
-			String[] errors = getErrorMessages();
-			if (errors.length > 0)
-			{
-				StringBuilder sb = new StringBuilder();
-				for (int i = 0; i < errors.length; i++)
-				{
-					sb.append(errors[i]);
-					if (i < errors.length-1)
-						sb.append('\n');
-				}
-				throw new ScriptParseException(sb.toString());
-			}
-		}
+		return noError;
 	}
 	
-	/* 
-	 	<FunctionEntry> := 
-	 		<IDENTIFIER> "(" <FunctionArgumentList> ")" "{" <StatementList> "}"
+	/**
+	 * Parses a scriptlet into an existing script.
+	 * A scriptlet is either a single function call statement (scoped or not), or a set of statements between curly braces.
+	 * Scriptlets are demarcated in the output script with labels.
+	 * <p> Use caution when parsing scriptlets - tokens are parsed and emitted as-is as though they were part of a full script!
+	 * <pre>
+	 * [Scriptlet] :=
+	 * 		[IDENTIFIER] [FunctionCall] 
+	 * 		"{" [StatementList] "}"
+	 * </pre>
+	 * @param script the script to emit commands into.
+	 * @return true if no errors were encountered, or false if a parse error occurred and parsing was halted.
+	 * @since [NOW], this has been made public.
 	 */
-	protected boolean parseFunctionEntry(Script currentScript, boolean checkMode)
+	public boolean parseScriptlet(Script script)
+	{
+		// start statement list?
+		if (matchType(ScriptKernel.TYPE_LBRACE))
+		{
+			String startLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_START);
+			String endLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_END);
+			
+			mark(script, startLabel);
+			
+			if (!parseStatementList(script, null, null, null, 0, 0))
+				return false;
+			
+			mark(script, endLabel);
+	
+			if (!matchType(ScriptKernel.TYPE_RBRACE))
+			{
+				addErrorMessage("Expected \"}\" to close scriptlet body.");
+				return false;
+			}
+		
+			return true;
+		}
+		else if (currentType(ScriptKernel.TYPE_IDENTIFIER))
+		{
+			String startLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_START);
+			String endLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_END);
+
+			String namespace = null;
+			String functionName = currentToken().getLexeme();
+			nextToken();
+			
+			// maybe a namespaced function
+			if (matchType(ScriptKernel.TYPE_DOUBLECOLON))
+			{
+				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+				{
+					addErrorMessage("Expected identifier after \"::\".");
+					return false;
+				}
+				
+				namespace = functionName;
+				functionName = currentToken().getLexeme();
+				nextToken();
+			}
+	
+			if (!currentType(ScriptKernel.TYPE_LPAREN))
+			{
+				addErrorMessage("Expected \"(\" or \"::\" after a function name.");
+				return false;
+			}
+	
+			mark(script, startLabel);
+
+			if (!parseFunctionCall(script, null, namespace, functionName, false))
+				return false;
+			
+			script.addCommand(ScriptCommand.create(ScriptCommandType.POP));
+
+			mark(script, endLabel);
+			
+			return true;
+		}
+		else
+		{
+			addErrorMessage("Expected \"{\" to start scriptlet body or function name.");
+			return false;
+		}
+	}
+
+	/**
+	 * Parses a single function entry (as though the token "function" was already parsed).
+	 * The function entry is added to the script, and the label and the rest of the function are emitted into the script.
+	 * <p> Use caution when parsing functions - tokens are parsed and emitted as-is as though they were part of a full script!
+	 * <pre>
+	 * [FunctionEntry] := 
+	 *     [IDENTIFIER] "(" [FunctionArgumentList] ")" "{" [StatementList] "}"
+	 * </pre>
+	 * <p> If this method returns false, a parse error occurred and you must check for any emitted errors via {@link #getErrorMessages()}. 
+	 * @param script the script to add the function to and emit commands into.
+	 * @param checkMode if true, the function is parsed as though "check" was prepended to the function entry.
+	 * @return true if no errors were encountered, or false if a parse error occurred and parsing was halted.
+	 * @since [NOW], this has been made public.
+	 */
+	public boolean parseFunctionEntry(Script script, boolean checkMode)
 	{
 		if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
 		{
@@ -175,14 +292,14 @@ public class ScriptParser extends Lexer.Parser
 		String name = currentToken().getLexeme();
 		nextToken();
 		
-		if (currentScript.getFunctionEntry(name) != null)
+		if (script.getFunctionEntry(name) != null)
 		{
 			addErrorMessage("The function entry \"" + name + "\" was already defined.");
 			return false;
 		}
 		
-		int index = currentScript.getCommandCount();
-		mark(currentScript, getFunctionLabel(name));
+		int index = script.getCommandCount();
+		mark(script, getFunctionLabel(name));
 		
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
@@ -212,10 +329,10 @@ public class ScriptParser extends Lexer.Parser
 			paramAmount = paramNameStack.size();
 			
 			while (!paramNameStack.isEmpty())
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_VARIABLE, paramNameStack.pollFirst()));
+				script.addCommand(ScriptCommand.create(ScriptCommandType.POP_VARIABLE, paramNameStack.pollFirst()));
 		}
 		
-		currentScript.createFunctionEntry(name, paramAmount, index);
+		script.createFunctionEntry(name, paramAmount, index);
 		
 		if (!matchType(ScriptKernel.TYPE_RPAREN))
 		{
@@ -225,108 +342,131 @@ public class ScriptParser extends Lexer.Parser
 	
 		if (checkMode)
 		{
-			if (!parseCheckBody(currentScript, null, null, 0, 0))
+			if (!parseCheckBody(script, null, null, 0, 0))
 				return false;
 		}
 		else
 		{
-			if (!parseStatementBody(currentScript, null, null, null, 0, 0))
+			if (!parseStatementBody(script, null, null, null, 0, 0))
 				return false;
 			
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
+			script.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 		}
 		
-		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
+		script.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
 		return true;
 	}
 
-	/*
-	 *  <Function> := "(" <Expression> ... ")"
+	/**
+	 * Parses a single entry point (as though the token "entry" was already parsed).
+	 * The entry point is added to the script, and the label and the rest of the entry are emitted into the script.
+	 * <p> Use caution when parsing entry points - tokens are parsed and emitted as-is as though they were part of a full script!
+	 * <pre>
+	 * [ScriptEntry] := 
+	 *     [ScriptName] "(" [ScriptEntryArgumentList] ")" "{" [StatementList] "}"
+	 * </pre>
+	 * <p> If this method returns false, a parse error occurred and you must check for any emitted errors via {@link #getErrorMessages()}. 
+	 * @param script the script to add the entry point to and emit commands into.
+	 * @param checkMode if true, the entry point is parsed as though "check" was prepended to the entry.
+	 * @return true if no errors were encountered, or false if a parse error occurred and parsing was halted.
+	 * @since [NOW], this has been made public.
 	 */
-	protected boolean parseFunctionCall(Script currentScript, String checkEndLabel, String functionNamespace, String functionName, boolean partial)
+	public boolean parseEntryPoint(Script script, boolean checkMode)
 	{
+		if (!currentType(ScriptKernel.TYPE_IDENTIFIER, ScriptKernel.TYPE_NUMBER, ScriptKernel.TYPE_STRING))
+		{
+			addErrorMessage("Expected an identifier, string, or number for the entry point name.");
+			return false;
+		}
+	
+		String name = currentToken().getLexeme();
+		nextToken();
+		
+		String label = getScriptLabel(name);
+		if (script.getScriptEntry(name) != null)
+		{
+			addErrorMessage("The script entry \"" + name + "\" was already defined.");
+			return false;
+		}
+		
+		int index = mark(script, label);
+		
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
-			addErrorMessage("INTERNAL ERROR: Expected \"(\" - not verified first!");
+			addErrorMessage("Expected \"(\" after function name.");
 			return false;
 		}
-
-		// test type of call: host function first, then local script function.
-		ScriptFunctionType hostFunctionEntry;
-		Entry localFunctionEntry;
-		if ((hostFunctionEntry = currentScript.getHostFunctionResolver().getNamespacedFunction(functionNamespace, functionName)) != null)
-		{
-			int requiredParamCount = hostFunctionEntry.getParameterCount() - (partial ? 1 : 0);
-			int parsedCount;
-			if ((parsedCount = parseFunctionParameters(currentScript, checkEndLabel, requiredParamCount)) == PARSEFUNCTIONCALL_FALSE)
-				return false;
-			if (partial)
-				parsedCount++;
-							
-			if (!matchType(ScriptKernel.TYPE_RPAREN))
-			{
-				if (parsedCount == hostFunctionEntry.getParameterCount())
-					addErrorMessage("Expected \")\". The maximum amount of parameters on this host function call was reached.");
-				else
-					addErrorMessage("Expected \")\" after a host function call's parameters.");
-				return false;
-			}
-			
-			// fill last arguments left with null.
-			while ((parsedCount++) < hostFunctionEntry.getParameterCount())
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
-			
-			if (functionNamespace != null)
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST_NAMESPACE, functionNamespace, functionName));
-			else
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST, functionName));
-
-			if (checkEndLabel != null)
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CHECK_ERROR, checkEndLabel));
-			
-			return true;
-		}
-		else if (functionNamespace == null && (localFunctionEntry = currentScript.getFunctionEntry(functionName)) != null)
-		{
-			int requiredParamCount = localFunctionEntry.getParameterCount() - (partial ? 1 : 0);
-			int parsedCount;
-			if ((parsedCount = parseFunctionParameters(currentScript, checkEndLabel, requiredParamCount)) == PARSEFUNCTIONCALL_FALSE)
-				return false;
-			if (partial)
-				parsedCount++;
-							
-			if (!matchType(ScriptKernel.TYPE_RPAREN))
-			{
-				if (parsedCount == localFunctionEntry.getParameterCount())
-					addErrorMessage("Expected \")\". The maximum amount of parameters on this function call was reached.");
-				else
-					addErrorMessage("Expected \")\" after a function call's parameters.");
-				return false;
-			}
-			
-			// fill last arguments left with null.
-			while ((parsedCount++) < localFunctionEntry.getParameterCount())
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
-			
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL, getFunctionLabel(functionName)));
 	
-			if (checkEndLabel != null)
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CHECK_ERROR, checkEndLabel));
-
-			return true;
-		}
-
-		// not found!
-		if (functionNamespace != null)
+		int paramAmount = 0;
+		if (currentType(ScriptKernel.TYPE_IDENTIFIER))
 		{
-			addErrorMessage("\"" + functionNamespace + "::" + functionName + "\" is not the name of a valid namespaced function call.");
+			Deque<String> paramNameStack = new LinkedList<>();
+			paramNameStack.push(currentToken().getLexeme());
+			nextToken();
+			
+			while (matchType(ScriptKernel.TYPE_COMMA))
+			{
+				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
+				{
+					addErrorMessage("Expected identifier after \",\" for parameter name.");
+					return false;
+				}
+				
+				paramNameStack.push(currentToken().getLexeme());
+				nextToken();
+			}
+			
+			paramAmount = paramNameStack.size();
+			
+			while (!paramNameStack.isEmpty())
+				script.addCommand(ScriptCommand.create(ScriptCommandType.POP_VARIABLE, paramNameStack.pop()));
+			
+		}
+		
+		script.setScriptEntry(name, paramAmount, index);
+		
+		if (!matchType(ScriptKernel.TYPE_RPAREN))
+		{
+			addErrorMessage("Expected \")\".");
 			return false;
+		}
+	
+		if (checkMode)
+		{
+			if (!parseCheckBody(script, null, null, 0, 0))
+				return false;
 		}
 		else
 		{
-			addErrorMessage("\"" + functionName + "\" is not the name of a valid function call - not host or local.");
-			return false;
+			if (!parseStatementBody(script, null, null, null, 0, 0))
+				return false;
+	
+			script.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 		}
+	
+		script.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
+		return true;
+	}
+
+	/**
+	 * Adds an error message (along with current token info) to the error message list.
+	 * @param message the error message.
+	 * @since [NOW], this is exposed as a protected method.
+	 */
+	protected void addErrorMessage(String message)
+	{
+		errors.add(new ErrorMessage(currentToken(), message));
+	}
+
+	// Parse a single value to add to an object.
+	// If null, bad parse.
+	protected <T> T parseValueFor(Class<T> clazz)
+	{
+		ScriptValue value;
+		if ((value = parseValue()) == null)
+			return null;
+		else
+			return value.isNull() ? null : value.createForType(clazz);
 	}
 
 	/** 
@@ -342,103 +482,30 @@ public class ScriptParser extends Lexer.Parser
 		return out;
 	}
 
-	/**
-	 * Parses a scriptlet to the main script.
-	 * <pre>
-	 * [Scriptlet] :=
-	 * 		[IDENTIFIER] [FunctionCall] 
-	 * 		"{" [StatementList] "}"
-	 * </pre>
-	 * @param script the script.
-	 * @return true if parse is good, false if not.
-	 */
-	protected boolean parseScriptlet(Script script)
-	{
-		// start statement list?
-		if (matchType(ScriptKernel.TYPE_LBRACE))
-		{
-			String startLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_START);
-			String endLabel = script.getNextGeneratedLabel(LABEL_SCRIPTLET_END);
-			
-			mark(script, startLabel);
-			
-			if (!parseStatementList(script, null, null, null, 0, 0))
-				return false;
-			
-			mark(script, endLabel);
-
-			if (!matchType(ScriptKernel.TYPE_RBRACE))
-			{
-				addErrorMessage("Expected \"}\" to close scriptlet body.");
-				return false;
-			}
-		
-			return true;
-		}
-		else if (currentType(ScriptKernel.TYPE_IDENTIFIER))
-		{
-			String namespace = null;
-			String functionName = currentToken().getLexeme();
-			nextToken();
-			
-			// maybe a namespaced function
-			if (matchType(ScriptKernel.TYPE_DOUBLECOLON))
-			{
-				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
-				{
-					addErrorMessage("Expected identifier after \"::\".");
-					return false;
-				}
-				
-				namespace = functionName;
-				functionName = currentToken().getLexeme();
-				nextToken();
-			}
-
-			if (!currentType(ScriptKernel.TYPE_LPAREN))
-			{
-				addErrorMessage("Expected \"(\" or \"::\" after a function name.");
-				return false;
-			}
-
-			if (!parseFunctionCall(script, null, namespace, functionName, false))
-				return false;
-			
-			script.addCommand(ScriptCommand.create(ScriptCommandType.POP));
-			return true;
-		}
-		else
-		{
-			addErrorMessage("Expected \"{\" to start scriptlet body or function name.");
-			return false;
-		}
-	}
-
-	// Parse a single value to add to an object.
-	// If null, bad parse.
-	protected <T> T parseValueFor(Class<T> clazz)
+	// Creates a single script value.
+	private ScriptValue parseValue()
 	{
 		if (matchType(ScriptKernel.TYPE_NULL))
 		{
-			return null;
+			return ScriptValue.create(null);
 		}
 		else if (matchType(ScriptKernel.TYPE_TRUE))
 		{
-			return ScriptValue.create(true).createForType(clazz);
+			return ScriptValue.create(true);
 		}
 		else if (matchType(ScriptKernel.TYPE_FALSE))
 		{
-			return ScriptValue.create(false).createForType(clazz);
+			return ScriptValue.create(false);
 		}
 		else if (matchType(ScriptKernel.TYPE_DASH))
 		{
 			if (matchType(ScriptKernel.TYPE_INFINITY))
 			{
-				return ScriptValue.create(Double.NEGATIVE_INFINITY).createForType(clazz);
+				return ScriptValue.create(Double.NEGATIVE_INFINITY);
 			}
 			else if (matchType(ScriptKernel.TYPE_NAN))
 			{
-				return ScriptValue.create(Double.NaN).createForType(clazz);
+				return ScriptValue.create(Double.NaN);
 			}
 			else if (currentType(ScriptKernel.TYPE_NUMBER))
 			{
@@ -446,15 +513,15 @@ public class ScriptParser extends Lexer.Parser
 				nextToken();
 				if (lexeme.startsWith("0X") || lexeme.startsWith("0x"))
 				{
-					return ScriptValue.create(-Long.parseLong(lexeme.substring(2), 16)).createForType(clazz);
+					return ScriptValue.create(-Long.parseLong(lexeme.substring(2), 16));
 				}
 				else if (lexeme.contains("."))
 				{
-					return ScriptValue.create(-Double.parseDouble(lexeme)).createForType(clazz);
+					return ScriptValue.create(-Double.parseDouble(lexeme));
 				}
 				else
 				{
-					return ScriptValue.create(-Long.parseLong(lexeme)).createForType(clazz);
+					return ScriptValue.create(-Long.parseLong(lexeme));
 				}
 			}
 			else
@@ -465,11 +532,11 @@ public class ScriptParser extends Lexer.Parser
 		}
 		else if (matchType(ScriptKernel.TYPE_INFINITY))
 		{
-			return ScriptValue.create(Double.POSITIVE_INFINITY).createForType(clazz);
+			return ScriptValue.create(Double.POSITIVE_INFINITY);
 		}
 		else if (matchType(ScriptKernel.TYPE_NAN))
 		{
-			return ScriptValue.create(Double.NaN).createForType(clazz);
+			return ScriptValue.create(Double.NaN);
 		}
 		else if (currentType(ScriptKernel.TYPE_NUMBER))
 		{
@@ -477,26 +544,89 @@ public class ScriptParser extends Lexer.Parser
 			nextToken();
 			if (lexeme.startsWith("0X") || lexeme.startsWith("0x"))
 			{
-				return ScriptValue.create(Long.parseLong(lexeme.substring(2), 16)).createForType(clazz);
+				return ScriptValue.create(Long.parseLong(lexeme.substring(2), 16));
 			}
 			else if (lexeme.contains("."))
 			{
-				return ScriptValue.create(Double.parseDouble(lexeme)).createForType(clazz);
+				return ScriptValue.create(Double.parseDouble(lexeme));
 			}
 			else
 			{
-				return ScriptValue.create(Long.parseLong(lexeme)).createForType(clazz);
+				return ScriptValue.create(Long.parseLong(lexeme));
 			}
 		}
 		else if (currentType(ScriptKernel.TYPE_STRING))
 		{
 			String lexeme = currentToken().getLexeme();
 			nextToken();
-			return ScriptValue.create(lexeme).createForType(clazz);
+			return ScriptValue.create(lexeme);
+		}
+		else if (matchType(ScriptKernel.TYPE_LBRACK))
+		{
+			ScriptValue out = ScriptValue.createEmptyList();
+			
+			// if no elements.
+			if (matchType(ScriptKernel.TYPE_RBRACK))
+				return out;
+			
+			ScriptValue value;
+			if ((value = parseValue()) == null)
+				return null;
+			out.listAdd(value);
+			while (matchType(ScriptKernel.TYPE_COMMA))
+			{
+				if ((value = parseValue()) == null)
+					return null;
+				out.listAdd(value);
+			}
+
+			if (!matchType(ScriptKernel.TYPE_RBRACK))
+			{
+				addErrorMessage("Expression - expected a ']' to terminate a list.");
+				return null;
+			}
+
+			return out;
+		}
+		else if (matchType(ScriptKernel.TYPE_LBRACE))
+		{
+			ScriptValue out = ScriptValue.createEmptyMap();
+			
+			// if no elements.
+			if (matchType(ScriptKernel.TYPE_RBRACE))
+				return out;
+
+			// each map fields.
+			while (currentType(ScriptKernel.TYPE_IDENTIFIER, ScriptKernel.TYPE_NUMBER, ScriptKernel.TYPE_STRING, ScriptKernel.TYPE_TRUE, ScriptKernel.TYPE_FALSE))
+			{
+				String key = currentToken().getLexeme();
+				nextToken();
+				
+				if (!matchType(ScriptKernel.TYPE_COLON))
+				{
+					addErrorMessage("Expected ':' after map key.");
+					return null;			
+				}
+				
+				ScriptValue value;
+				if ((value = parseValue()) == null)
+					return null;
+				out.mapSet(key, value);
+				if (!matchType(ScriptKernel.TYPE_COMMA))
+					break;
+			}
+			
+			if (!matchType(ScriptKernel.TYPE_RBRACE))
+			{
+				addErrorMessage("Expression - expected a '}' to terminate a map.");
+				return null;
+			}
+
+			return out;
 		}
 		else
 		{
-			addErrorMessage("Expression - Expected a single value.");
+			addErrorMessage("Expression - expected a single value.");
 			return null;
 		}
 	}
@@ -547,7 +677,7 @@ public class ScriptParser extends Lexer.Parser
 			if (matchType(ScriptKernel.TYPE_FUNCTION))
 				return parseFunctionEntry(currentScript, true);
 			else if (matchType(ScriptKernel.TYPE_ENTRY))
-				return parseNamedEntry(currentScript, true);
+				return parseEntryPoint(currentScript, true);
 			else
 			{
 				addErrorMessage("Expected a \"function\" or \"entry\" entry after \"check\".");
@@ -561,7 +691,7 @@ public class ScriptParser extends Lexer.Parser
 		// entry.
 		else if (matchType(ScriptKernel.TYPE_ENTRY))
 		{
-			return parseNamedEntry(currentScript, false);
+			return parseEntryPoint(currentScript, false);
 		}
 		else
 		{
@@ -618,85 +748,93 @@ public class ScriptParser extends Lexer.Parser
 		
 	}
 
-	/* 
-		<ScriptEntry> := 
-			<ScriptName> "(" <ScriptEntryArgumentList> ")" "{" <StatementList> "}"
+	/*
+	 *  <Function> := "(" <Expression> ... ")"
 	 */
-	private boolean parseNamedEntry(Script currentScript, boolean checkMode)
+	private boolean parseFunctionCall(Script currentScript, String checkEndLabel, String functionNamespace, String functionName, boolean partial)
 	{
-		if (!currentType(ScriptKernel.TYPE_IDENTIFIER, ScriptKernel.TYPE_NUMBER, ScriptKernel.TYPE_STRING))
-		{
-			addErrorMessage("Expected an identifier for the function name.");
-			return false;
-		}
-	
-		String name = currentToken().getLexeme();
-		nextToken();
-		
-		String label = getScriptLabel(name);
-		if (currentScript.getScriptEntry(name) != null)
-		{
-			addErrorMessage("The script entry \"" + name + "\" was already defined.");
-			return false;
-		}
-		
-		int index = mark(currentScript, label);
-		
 		if (!matchType(ScriptKernel.TYPE_LPAREN))
 		{
-			addErrorMessage("Expected \"(\" after function name.");
+			addErrorMessage("INTERNAL ERROR: Expected \"(\" - not verified first!");
 			return false;
 		}
 	
-		int paramAmount = 0;
-		if (currentType(ScriptKernel.TYPE_IDENTIFIER))
+		// test type of call: host function first, then local script function.
+		ScriptFunctionType hostFunctionEntry;
+		Entry localFunctionEntry;
+		if ((hostFunctionEntry = currentScript.getHostFunctionResolver().getNamespacedFunction(functionNamespace, functionName)) != null)
 		{
-			Deque<String> paramNameStack = new LinkedList<>();
-			paramNameStack.push(currentToken().getLexeme());
-			nextToken();
-			
-			while (matchType(ScriptKernel.TYPE_COMMA))
+			int requiredParamCount = hostFunctionEntry.getParameterCount() - (partial ? 1 : 0);
+			int parsedCount;
+			if ((parsedCount = parseFunctionParameters(currentScript, checkEndLabel, requiredParamCount)) == PARSEFUNCTIONCALL_FALSE)
+				return false;
+			if (partial)
+				parsedCount++;
+							
+			if (!matchType(ScriptKernel.TYPE_RPAREN))
 			{
-				if (!currentType(ScriptKernel.TYPE_IDENTIFIER))
-				{
-					addErrorMessage("Expected identifier after \",\" for parameter name.");
-					return false;
-				}
-				
-				paramNameStack.push(currentToken().getLexeme());
-				nextToken();
+				if (parsedCount == hostFunctionEntry.getParameterCount())
+					addErrorMessage("Expected \")\". The maximum amount of parameters on this host function call was reached.");
+				else
+					addErrorMessage("Expected \")\" after a host function call's parameters.");
+				return false;
 			}
 			
-			paramAmount = paramNameStack.size();
+			// fill last arguments left with null.
+			while ((parsedCount++) < hostFunctionEntry.getParameterCount())
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
 			
-			while (!paramNameStack.isEmpty())
-				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.POP_VARIABLE, paramNameStack.pop()));
+			if (functionNamespace != null)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST_NAMESPACE, functionNamespace, functionName));
+			else
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL_HOST, functionName));
+	
+			if (checkEndLabel != null)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CHECK_ERROR, checkEndLabel));
 			
+			return true;
 		}
-		
-		currentScript.setScriptEntry(name, paramAmount, index);
-		
-		if (!matchType(ScriptKernel.TYPE_RPAREN))
+		else if (functionNamespace == null && (localFunctionEntry = currentScript.getFunctionEntry(functionName)) != null)
 		{
-			addErrorMessage("Expected \")\".");
-			return false;
+			int requiredParamCount = localFunctionEntry.getParameterCount() - (partial ? 1 : 0);
+			int parsedCount;
+			if ((parsedCount = parseFunctionParameters(currentScript, checkEndLabel, requiredParamCount)) == PARSEFUNCTIONCALL_FALSE)
+				return false;
+			if (partial)
+				parsedCount++;
+							
+			if (!matchType(ScriptKernel.TYPE_RPAREN))
+			{
+				if (parsedCount == localFunctionEntry.getParameterCount())
+					addErrorMessage("Expected \")\". The maximum amount of parameters on this function call was reached.");
+				else
+					addErrorMessage("Expected \")\" after a function call's parameters.");
+				return false;
+			}
+			
+			// fill last arguments left with null.
+			while ((parsedCount++) < localFunctionEntry.getParameterCount())
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
+			
+			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CALL, getFunctionLabel(functionName)));
+	
+			if (checkEndLabel != null)
+				currentScript.addCommand(ScriptCommand.create(ScriptCommandType.CHECK_ERROR, checkEndLabel));
+	
+			return true;
 		}
 	
-		if (checkMode)
+		// not found!
+		if (functionNamespace != null)
 		{
-			if (!parseCheckBody(currentScript, null, null, 0, 0))
-				return false;
+			addErrorMessage("\"" + functionNamespace + "::" + functionName + "\" is not the name of a valid namespaced function call.");
+			return false;
 		}
 		else
 		{
-			if (!parseStatementBody(currentScript, null, null, null, 0, 0))
-				return false;
-
-			currentScript.addCommand(ScriptCommand.create(ScriptCommandType.PUSH_NULL));
+			addErrorMessage("\"" + functionName + "\" is not the name of a valid function call - not host or local.");
+			return false;
 		}
-
-		currentScript.addCommand(ScriptCommand.create(ScriptCommandType.RETURN));
-		return true;
 	}
 
 	/*
@@ -2460,6 +2598,90 @@ public class ScriptParser extends Lexer.Parser
 			default:
 				return false;
 		}
+	}
+	
+	/**
+	 * An error object added when an error is logged. 
+	 */
+	public static class ErrorMessage
+	{
+		private String streamName;
+		private String tokenLexeme;
+		private Integer lineNumber;
+		private Integer characterIndex;
+		private String message;
+		
+		private ErrorMessage(Lexer.Token token, String message)
+		{
+			if (token == null)
+			{
+				this.streamName = "STREAM END";
+				this.message = message;
+			}
+			else
+			{
+				this.streamName = token.getStreamName();
+				this.tokenLexeme = token.getLexeme();
+				this.lineNumber = token.getLineNumber();
+				this.characterIndex = token.getCharIndex();
+				this.message = message;
+			}
+		}
+
+		/**
+		 * @return the stream name / file name that the error was emitted from.
+		 */
+		public String getStreamName()
+		{
+			return streamName;
+		}
+
+		/**
+		 * @return the lexeme of the current token that the error was emitted from. 
+		 */
+		public String getTokenLexeme()
+		{
+			return tokenLexeme;
+		}
+
+		/**
+		 * @return the line number that the error was emitted from. 
+		 */
+		public int getLineNumber()
+		{
+			return lineNumber;
+		}
+
+		/**
+		 * @return the character index that the error was emitted from.
+		 */
+		public int getCharacterIndex()
+		{
+			return characterIndex;
+		}
+
+		/**
+		 * @return the error message.
+		 */
+		public String getMessage()
+		{
+			return message;
+		}
+
+		@Override
+		public String toString()
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.append("(").append(streamName).append(") ");
+			if (lineNumber != null)
+			{
+				sb.append("Line ").append(lineNumber).append(", ").append(" Character ").append(characterIndex).append(", ");
+				sb.append("Token ").append("\"").append(tokenLexeme).append("\"").append(": ");
+			}
+			sb.append(message);
+			return sb.toString();
+		}
+		
 	}
 	
 }
