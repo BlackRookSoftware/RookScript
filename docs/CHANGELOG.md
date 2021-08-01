@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.12.0
+-----------------
+
+- `Changed` Added a prettifying function to WRITEJSON and JSONSTR in JSONFunctions.
+
+
 Changed in 1.11.0
 -----------------
 

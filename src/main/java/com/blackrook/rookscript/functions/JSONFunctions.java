@@ -41,6 +41,7 @@ import java.nio.charset.Charset;
  * Script common functions for converting JSON to Maps (and vice-versa).
  * @author Matthew Tropiano
  * @since 1.6.0
+ * @since 1.12.0, prettifying was added to {@link #WRITEJSON} and {@link #JSONSTR}.
  */
 public enum JSONFunctions implements ScriptFunctionType
 {
@@ -129,7 +130,7 @@ public enum JSONFunctions implements ScriptFunctionType
 		}
 	},
 
-	WRITEJSON(2)
+	WRITEJSON(3)
 	{
 		@Override
 		protected Usage usage()
@@ -137,7 +138,8 @@ public enum JSONFunctions implements ScriptFunctionType
 			return ScriptFunctionUsage.create()
 				.instructions(
 					"Converts a script value to JSON and writes it to a provided output. Objects will be " +
-					"reflection-exported as JS objects, and buffers as arrays of unsigned byte values."
+					"reflection-exported as JS objects, and buffers as arrays of unsigned byte values. " +
+					"You can optionally export JSON with indentation for prettifying."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "File", "The file to write the JSON to (encoding is UTF-8, file is overwritten, and then closed)."),
@@ -146,6 +148,10 @@ public enum JSONFunctions implements ScriptFunctionType
 				)
 				.parameter("value",
 					type("The value to export as JSON. Objects will be reflection-exported as maps, and buffers as arrays of unsigned byte values.")
+				)
+				.parameter("indentation",
+					type(Type.NULL, "No indentation."),
+					type(Type.STRING, "The indentation string for exporting members.")
 				)
 				.returns(
 					type(Type.OBJECTREF, "output."),
@@ -162,6 +168,8 @@ public enum JSONFunctions implements ScriptFunctionType
 			ScriptValue output = CACHEVALUE2.get();
 			try 
 			{
+				scriptInstance.popStackValue(temp);
+				String indentation = temp.isNull() ? null : temp.asString();
 				scriptInstance.popStackValue(temp);
 				scriptInstance.popStackValue(output);
 				
@@ -184,7 +192,7 @@ public enum JSONFunctions implements ScriptFunctionType
 						return true;
 					}
 					
-					writeJSONValue(temp, writer);
+					writeJSONValue(temp, writer, indentation, 0);
 					
 				} catch (SecurityException e) {
 					returnValue.setError("Security", e.getMessage(), e.getLocalizedMessage());
@@ -215,7 +223,7 @@ public enum JSONFunctions implements ScriptFunctionType
 		}
 	},
 
-	JSONSTR(1)
+	JSONSTR(2)
 	{
 		@Override
 		protected Usage usage()
@@ -227,6 +235,10 @@ public enum JSONFunctions implements ScriptFunctionType
 				)
 				.parameter("value",
 					type("The value to export as JSON.")
+				)
+				.parameter("indentation",
+					type(Type.NULL, "No indentation."),
+					type(Type.STRING, "The indentation string for exporting members.")
 				)
 				.returns(
 					type(Type.STRING, "The resultant string."),
@@ -242,10 +254,12 @@ public enum JSONFunctions implements ScriptFunctionType
 			try 
 			{
 				scriptInstance.popStackValue(temp);
+				String indentation = temp.isNull() ? null : temp.asString();
+				scriptInstance.popStackValue(temp);
 				
 				try {
 					StringWriter sw = new StringWriter(256);
-					writeJSONValue(temp, sw);
+					writeJSONValue(temp, sw, indentation, 0);
 					returnValue.set(sw.toString());
 					return true;
 				} catch (IOException e) {
@@ -308,9 +322,10 @@ public enum JSONFunctions implements ScriptFunctionType
 	 * Writes a ScriptValue as JSON.
 	 * @param object the object to write.
 	 * @param writer the target writer.
+	 * @param indentation if not null, indents JSON members.
 	 * @throws IOException if an error occurs on the write.
 	 */
-	private static void writeJSONValue(ScriptValue object, Writer writer) throws IOException
+	private static void writeJSONValue(ScriptValue object, Writer writer, String indentation, int indentDepth) throws IOException
 	{
 		if (object.isNull())
 			writer.append("null");
@@ -318,62 +333,31 @@ public enum JSONFunctions implements ScriptFunctionType
 		{
 			ScriptValue value = ScriptValue.createEmptyMap();
 			value.mapExtract(object.asObject());
-			writeJSONValue(value, writer);
+			writeJSONValue(value, writer, indentation, indentDepth + 1);
 		}
 		else if (object.isBuffer())
 		{
-			writer.write('[');
-			BufferType buf = object.asObjectType(BufferType.class);
-			for (int i = 0; i < buf.size(); i++)
-			{
-				writer.write(String.valueOf(buf.getByte(i)));
-				if (i < buf.size() - 1)
-					writer.append(',');
-			}
-			writer.append(']');
+			writeBufferValue(object, writer);
 		}
 		else if (object.isList())
 		{
-			writer.write('[');
-			int i = 0;
-			int len = object.length();
-			for (IteratorPair member : object)
-			{
-				writeJSONValue(member.getValue(), writer);
-				if (i < len - 1)
-					writer.append(',');
-				i++;
-			}
-			writer.append(']');
+			writeListValue(object, writer, indentation, indentDepth + 1);
 		}
 		else if (object.isMap())
 		{
-			writer.write('{');
-			int i = 0;
-			int len = object.length();
-			for (IteratorPair member : object)
-			{
-				writer.write('"');
-				escape(member.getKey().asString(), writer);
-				writer.write("\":");
-				writeJSONValue(member.getValue(), writer);
-				if (i < len - 1)
-					writer.write(',');
-				i++;
-			}
-			writer.write('}');
+			writeObjectValue(object, writer, indentation, indentDepth + 1);
 		}
 		else if (object.isString())
 		{
-			writer.write('"');
+			writer.append('"');
 			escape(object.asString(), writer);
-			writer.write('"');
+			writer.append('"');
 		}
 		else if (object.isInfinite() || object.isNaN())
 		{
-			writer.write('"');
+			writer.append('"');
 			escape(String.valueOf(object.asDouble()), writer);
-			writer.write('"');
+			writer.append('"');
 		}
 		else if (object.isFloat())
 		{
@@ -389,12 +373,100 @@ public enum JSONFunctions implements ScriptFunctionType
 		}
 		else
 		{
-			writer.write('"');
+			writer.append('"');
 			escape(String.valueOf(object.asObject()), writer);
-			writer.write('"');
+			writer.append('"');
 		}
 	}
 	
+	private static void writeBufferValue(ScriptValue object, Writer writer) throws IOException
+	{
+		writer.append('[');
+		BufferType buf = object.asObjectType(BufferType.class);
+		for (int i = 0; i < buf.size(); i++)
+		{
+			writer.append(String.valueOf(buf.getByte(i)));
+			if (i < buf.size() - 1)
+				writer.append(',');
+		}
+		writer.append(']');
+	}
+	
+	private static void writeListValue(ScriptValue object, Writer writer, String indentation, int indentDepth) throws IOException
+	{
+		String memberIndent = indentString(indentation, indentDepth);
+		String endIndent = indentString(indentation, indentDepth - 1);
+		
+		writer.append('[');
+		if (memberIndent != null)
+			writer.append('\n');
+		int i = 0;
+		int len = object.length();
+		for (IteratorPair member : object)
+		{
+			if (memberIndent != null)
+				writer.append(memberIndent);
+			writeJSONValue(member.getValue(), writer, indentation, indentDepth);
+			if (i < len - 1)
+			{
+				writer.append(", ");
+				if (memberIndent != null)
+					writer.append("\n");
+			}
+			else if (memberIndent != null)
+				writer.append('\n');
+
+			i++;
+		}
+		if (endIndent != null)
+			writer.append(endIndent);
+		writer.append(']');
+	}
+
+	private static void writeObjectValue(ScriptValue object, Writer writer, String indentation, int indentDepth) throws IOException
+	{
+		String memberIndent = indentString(indentation, indentDepth);
+		String endIndent = indentString(indentation, indentDepth - 1);
+
+		writer.append('{');
+		if (memberIndent != null)
+			writer.append('\n');
+		int i = 0;
+		int len = object.length();
+		for (IteratorPair member : object)
+		{
+			if (memberIndent != null)
+				writer.append(memberIndent);
+			writer.append('"');
+			escape(member.getKey().asString(), writer);
+			writer.append("\": ");
+			writeJSONValue(member.getValue(), writer, indentation, indentDepth);
+			if (i < len - 1)
+			{
+				writer.append(", ");
+				if (memberIndent != null)
+					writer.append("\n");
+			}
+			else if (memberIndent != null)
+				writer.append('\n');
+			
+			i++;
+		}
+		if (endIndent != null)
+			writer.append(endIndent);
+		writer.append('}');
+	}
+
+	private static String indentString(String indentation, int depth) throws IOException
+	{
+		if (indentation == null)
+			return null;
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < depth; i++)
+			sb.append(indentation);
+		return sb.toString();
+	}
+
 	private static void escape(String s, Writer writer) throws IOException
 	{
     	for (int i = 0; i < s.length(); i++)

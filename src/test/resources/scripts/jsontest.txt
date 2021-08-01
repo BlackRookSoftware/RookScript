@@ -12,9 +12,11 @@ check entry main()
 	println([]->jsonstr());
 	println({}->jsonstr());
 	println({x: "asdfasdf", y:[67,89,12,"asdfasdf",6.9]}->jsonstr());
-	println({x: "asdfasdf", y:[67,89,12,"asdfasdf",6.9]}->jsonstr()->readjson());
+	println({x: "asdfasdf", y:[67,89,12,"asdfasdf",6.9]}->jsonstr()->readjson().y[2]);
+
+	println({x: "asdfasdf", y:[67,89,{a:6, b:[5,4,3,2], c:{}, d:[]},"asdfasdf",6.9]}->jsonstr("  "));
 	
 	b = {x: "asdfasdf", y:[67,89,12,"asdfasdf",6.9]}->jsonstr()->readjson();
-	file("barf.json")->writejson(b);
+	file("barf.json")->writejson(b, "    ");
 	filedelete(file("barf.json"))->println();
 }

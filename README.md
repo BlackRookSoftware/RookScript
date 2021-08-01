@@ -95,7 +95,7 @@ Object result = instance.callAndReturnAs(Object.class, "main");
 ### Executor Tool
 
 The class `com.blackrook.rookscript.tools.ScriptExecutor` contains a main file that can run
-RookScript files like programs. By default, they expect a `main` entry point with a single parameter,
+RookScript files like programs. By default, it expects a `main` entry point with a single parameter,
 which is set to a list of the script arguments.
 
 Call it with the `--help` switch to output help.
