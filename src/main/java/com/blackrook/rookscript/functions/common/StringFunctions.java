@@ -220,7 +220,7 @@ public enum StringFunctions implements ScriptFunctionType
 				
 				if (startIndex < 0 || startIndex >= length)
 					returnValue.setNull();
-				else if (endIndex < 0 && endIndex > length)
+				else if (endIndex < 0 || endIndex > length)
 					returnValue.setNull();
 				else if (endIndex < startIndex)
 					returnValue.setNull();

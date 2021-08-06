@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.12.1
+-----------------
+
+- `Fixed` SUBSTR would produce an exception if `endIndex` were out-of-bounds, due to a typo.
+
+
 Changed in 1.12.0
 -----------------
 
