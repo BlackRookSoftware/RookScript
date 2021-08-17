@@ -443,7 +443,8 @@ public enum ListFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Creates a new list from a larger list using a range of contiguous list indices."
+					"Creates a new, smaller list from a larger list using a range of contiguous list indices, " +
+					"such that the new list contains the elements in the desired range, in order."
 				)
 				.parameter("list", 
 					type(Type.LIST, "The list to use.")
@@ -457,7 +458,7 @@ public enum ListFunctions implements ScriptFunctionType
 				)
 				.returns(
 					type(Type.NULL, "If either index is out-of-bounds or the end index is less than the start index."),
-					type(Type.LIST, "The substring returned.")
+					type(Type.LIST, "The new list.")
 				)
 			;
 		}
@@ -740,7 +741,7 @@ public enum ListFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets the union of two sets, returning a new set with values in both."
+					"Creates the union of two sets, returning a new set with values in both."
 				)
 				.parameter("list1", 
 					type(Type.LIST, "The first set (list)."),
@@ -814,7 +815,7 @@ public enum ListFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets the intersection of two sets, returning a new set with values in both."
+					"Creates the intersection of two sets, returning a new set with values in both."
 				)
 				.parameter("list1", 
 					type(Type.LIST, "The first set (list)."),
@@ -887,7 +888,7 @@ public enum ListFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets the exclusive-or of two sets, returning the union of both sets minus the intersection."
+					"Creates the exclusive-or of two sets, returning the union of both sets minus the intersection."
 				)
 				.parameter("list1", 
 					type(Type.LIST, "The first set (list)."),
@@ -965,7 +966,7 @@ public enum ListFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Gets a new set that is the first set minus the values in the second set."
+					"Creates a new set that is the first set minus the values in the second set."
 				)
 				.parameter("list1", 
 					type(Type.LIST, "The first set (list)."),

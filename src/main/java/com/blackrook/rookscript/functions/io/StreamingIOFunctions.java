@@ -60,7 +60,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 			return ScriptFunctionUsage.create()
 				.instructions(
 					"Skips reading [length] amount of bytes from a readable data input, from the file's " +
-					"current cursor position. The file's cursor will be advanced."
+					"current cursor position. The stream's position will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input."),
@@ -284,7 +284,8 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads [length] amount of bytes from a readable data input, from the file's current cursor position. The file's cursor will be advanced."
+					"Reads [length] amount of bytes from a readable data input, from the file or stream's current position. " +
+					"The position will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -358,8 +359,8 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes [length] amount of bytes to the file, from the file's current cursor " +
-					"position using the bytes in a buffer. The file's cursor will be advanced."
+					"Writes [length] amount of bytes to a writable data output, to the file or stream " +
+					"position using the bytes in a buffer. The position will be advanced."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")

@@ -33,7 +33,7 @@ public enum PrintFunctions implements ScriptFunctionType
 					"Prints something to standard out."
 				)
 				.parameter("message", 
-					type(Type.STRING, "Value to print.")
+					type("Value to print.")
 				)
 				.returns(
 					type(Type.NULL, "Returns nothing.")
@@ -68,7 +68,7 @@ public enum PrintFunctions implements ScriptFunctionType
 					"Prints something to standard out, appending a newline."
 				)
 				.parameter("message", 
-					type(Type.STRING, "Value to print.")
+					type("Value to print.")
 				)
 				.returns(
 					type(Type.NULL, "Returns nothing.")
@@ -104,7 +104,7 @@ public enum PrintFunctions implements ScriptFunctionType
 					"Prints something to standard error."
 				)
 				.parameter("message", 
-					type(Type.STRING, "Value to print.")
+					type("Value to print.")
 				)
 				.returns(
 					type(Type.NULL, "Returns nothing.")
@@ -139,7 +139,7 @@ public enum PrintFunctions implements ScriptFunctionType
 					"Prints something to standard error, appending a newline."
 				)
 				.parameter("message", 
-					type(Type.STRING, "Value to print.")
+					type("Value to print.")
 				)
 				.returns(
 					type(Type.NULL, "Returns nothing.")

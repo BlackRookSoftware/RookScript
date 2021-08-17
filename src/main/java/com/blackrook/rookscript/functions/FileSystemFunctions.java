@@ -841,7 +841,7 @@ public enum FileSystemFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Attempts to create a directory using an abstract pathname and all of directories in between, if they also don't exist. " +
+					"Attempts to create a directory using an abstract pathname and all of the directories in between, if they also don't exist. " +
 					"NOTE: A failure may still involve some directories being created!"
 				)
 				.parameter("path", 

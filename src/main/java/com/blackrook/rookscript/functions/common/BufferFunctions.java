@@ -36,10 +36,10 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Creates a new, blank buffer."
+					"Creates a new, blank buffer of a specific size."
 				)
 				.parameter("size", 
-					type(Type.INTEGER, "The size of the buffer.")
+					type(Type.INTEGER, "The size of the buffer in bytes.")
 				)
 				.parameter("order", 
 					type(Type.NULL, "Use native byte order/endian mode."),
@@ -102,7 +102,7 @@ public enum BufferFunctions implements ScriptFunctionType
 					type(Type.BUFFER, "The buffer to resize.")
 				)
 				.parameter("size", 
-					type(Type.INTEGER, "The new size of the buffer.")
+					type(Type.INTEGER, "The new size of the buffer in bytes.")
 				)
 				.returns(
 					type(Type.BUFFER, "buffer."),
@@ -555,7 +555,8 @@ public enum BufferFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Read bulk bytes from another buffer. Will stop if the end of this buffer is reached."
+					"Reads a bulk set of bytes from another buffer into a destination buffer. " +
+					"Will stop if the end of the destination buffer is reached."
 				)
 				.parameter("destbuf", 
 					type(Type.BUFFER, "The destination buffer to fill.")

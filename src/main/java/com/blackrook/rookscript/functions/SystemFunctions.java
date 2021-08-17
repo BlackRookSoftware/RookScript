@@ -51,7 +51,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				.parameter("key", 
 					type(Type.NULL, "Get all properties as a map."),
 					type(Type.STRING, "Get a single property as a string value."),
-					type(Type.LIST, "Get all provided properties as a map.")
+					type(Type.LIST, "[STRING, ...]", "Get all provided properties as a map.")
 				)
 				.returns(
 					type(Type.NULL, "If no corresponding property, if [key] is a string."),
@@ -115,7 +115,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				.parameter("variable", 
 					type(Type.NULL, "Get all variables as a map."),
 					type(Type.STRING, "Get a single variable as a string value."),
-					type(Type.LIST, "Get all provided variables as a map.")
+					type(Type.LIST, "[STRING, ...]", "Get all provided variables as a map.")
 				)
 				.returns(
 					type(Type.STRING, "The corresponding value, if [variable] is a string."),
@@ -402,7 +402,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				.instructions(
 					"Waits for a process to complete and returns its result."
 				)
-				.parameter("command", 
+				.parameter("process", 
 					type(Type.OBJECTREF, "ProcessInstance", "The process instance.")
 				)
 				.parameter("waitmillis", 

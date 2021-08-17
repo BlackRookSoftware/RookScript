@@ -42,7 +42,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a byte from a readable data input. The file's cursor will be advanced."
+					"Reads a byte from a readable data input. The source's position, if any, will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -95,7 +95,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a short (2 bytes) from a readable data input. The file's cursor will be advanced."
+					"Reads a short (2 bytes) from a readable data input. The source's position, if any, will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -162,7 +162,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads an unsigned short (2 bytes) from a readable data input. The file's cursor will be advanced."
+					"Reads an unsigned short (2 bytes) from a readable data input. The source's position, if any, will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -229,7 +229,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads an integer (4 bytes) from a readable data input. The file's cursor will be advanced."
+					"Reads an integer (4 bytes) from a readable data input. The source's position, if any, will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -296,7 +296,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads an unsigned integer (4 bytes) from a readable data input. The file's cursor will be advanced."
+					"Reads an unsigned integer (4 bytes) from a readable data input. The source's position, if any, will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -363,7 +363,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a 32-bit float (4 bytes) from a readable data input. The file's cursor will be advanced."
+					"Reads a 32-bit float (4 bytes) from a readable data input. The source's position, if any, will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -430,7 +430,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a long integer (8 bytes) from a readable data input. The file's cursor will be advanced."
+					"Reads a long integer (8 bytes) from a readable data input. The source's position, if any, will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -497,7 +497,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a 64-bit float (8 bytes) from a readable data input. The file's cursor will be advanced."
+					"Reads a 64-bit float (8 bytes) from a readable data input. The source's position, if any, will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -564,7 +564,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Reads a set of bytes from a readable data input, and converts it into a string."
+					"Reads a set of bytes from a readable data input, and converts it into a string. The source's position, if any, will be advanced."
 				)
 				.parameter("input", 
 					type(Type.OBJECTREF, "DataInput", "A readable data input.")
@@ -652,7 +652,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes a byte to a writeable data output."
+					"Writes a byte to a writeable data output. The destination's position, if any, will be advanced."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
@@ -707,7 +707,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes a short (2 bytes) to a writeable data output."
+					"Writes a short (2 bytes) to a writeable data output. The destination's position, if any, will be advanced."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
@@ -773,7 +773,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes an unsigned short (2 bytes) to a writeable data output."
+					"Writes an unsigned short (2 bytes) to a writeable data output. The destination's position, if any, will be advanced."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
@@ -839,7 +839,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes an integer (4 bytes) to a writeable data output."
+					"Writes an integer (4 bytes) to a writeable data output. The destination's position, if any, will be advanced."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
@@ -905,7 +905,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes an unsigned integer (4 bytes) to a writeable data output."
+					"Writes an unsigned integer (4 bytes) to a writeable data output. The destination's position, if any, will be advanced."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
@@ -971,7 +971,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes a 32-bit floating-point number to a writeable data output."
+					"Writes a 32-bit floating-point number to a writeable data output. The destination's position, if any, will be advanced."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
@@ -1037,7 +1037,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes a long integer (8 bytes) to a writeable data output."
+					"Writes a long integer (8 bytes) to a writeable data output. The destination's position, if any, will be advanced."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
@@ -1103,7 +1103,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes a 64-bit floating-point number to a writeable data output."
+					"Writes a 64-bit floating-point number to a writeable data output. The destination's position, if any, will be advanced."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
@@ -1169,7 +1169,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes a string to a writeable data output, converting it into a set of bytes."
+					"Writes a string to a writeable data output, converting it into a set of bytes. The destination's position, if any, will be advanced."
 				)
 				.parameter("output", 
 					type(Type.OBJECTREF, "DataOutput", "A writeable data output.")
