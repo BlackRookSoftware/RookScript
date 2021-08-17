@@ -42,7 +42,7 @@ public enum RegexFunctions implements ScriptFunctionType
 					type(Type.STRING, "The string to test.")
 				)
 				.returns(
-					type(Type.BOOLEAN, "True if the pattern is malformed, false otherwise.")
+					type(Type.BOOLEAN, "True if the pattern is valid, false otherwise.")
 				)
 			;
 		}
