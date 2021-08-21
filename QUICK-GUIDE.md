@@ -414,7 +414,7 @@ for (x = 0; x < 10; x += 1)
 Each part can be left out of a *for* loop, except for the conditional. The previous loop can be rewritten as:
 
 ```
-x = 10;
+x = 0;
 for (; x < 10;)
 {
     println("x is " + x);
@@ -428,8 +428,8 @@ for (; x < 10;)
 
 ```
 numbers = [1, 2, 3, 4, 5];
-// will print each number in "numbers" on its own line.
-each (x : numbers)
+// will print number in "numbers" on its own line.
+(x : numbers)
 {
     println(x);
 }
@@ -439,8 +439,8 @@ Maps and other map-like objects can have their entries iterated through, as well
 
 ```
 triple = { x: 3, y: 4, z: -2 };
-// will print each key and value in "triple" on its own line.
-each (k, v : triple)
+// will print key and value in "triple" on its own line.
+(k, v : triple)
 {
     println(k + " is " + v);
 }
@@ -450,8 +450,8 @@ Performing a key-value iteration on lists will fill the key with the index:
 
 ```
 numbers = [1, 2, 3, 4, 5];
-// will print each index and value in "numbers" on its own line.
-each (k, v : numbers)
+// will print index and value in "numbers" on its own line.
+(k, v : numbers)
 {
     println("numbers[" + k + "] is " + v);
 }
@@ -462,7 +462,7 @@ Attempting to iterate on a single value will only run the loop once, though:
 ```
 a = 3;
 // will just print "3"
-each (x : a)
+(x : a)
 {
     println(x);
 }
@@ -757,7 +757,7 @@ In this situation, either the `fileContents` function call will return a buffer 
 
 The `check` functionality does not have a way to automatically free resources (like how some languages have `finally`) - you will have to ensure that happens given your program's flow.
 
-Checking for errors also adds a little overhead to a script (roughly +7% throughput). A check is made each function call and entering/leaving a `check` block pushes/pops some more objects in/out of the stack. Use discretion with your automatic error detection, especially in real-time applications that call a script constantly!
+Checking for errors also adds a little overhead to a script (roughly +7% throughput). A check is made function call and entering/leaving a `check` block pushes/pops some more objects in/out of the stack. Use discretion with your automatic error detection, especially in real-time applications that call a script constantly!
 
 
 ### The Preprocessor
