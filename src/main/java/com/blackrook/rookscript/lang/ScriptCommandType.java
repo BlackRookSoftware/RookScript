@@ -308,7 +308,7 @@ public enum ScriptCommandType
 	 * 
 	 * If stack top is not OBJECTREF:ScriptIteratorType, Exception - script was compiled badly.
 	 * If stack top's ScriptIteratorType.hasNext() is null, POP, then JUMP to [label].
-	 * Else, call ScriptIteratorType.next(), then push value. If operand1 is true, also push key.
+	 * Else, call ScriptIteratorType.next(), then push value. If operand2 is true, also push key.
 	 *  
 	 * Operand1 is label.
 	 * Operand2 is value/key-value flag.
