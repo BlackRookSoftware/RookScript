@@ -94,7 +94,7 @@ function display_release_data(release, release_section_element, release_version_
 
 		let link = $Element('a', {
 			"href": asset.browser_download_url, 
-			"class": 'w3-button w3-red w3-round-large w3-margin',
+			"class": 'w3-button w3-red w3-round-large w3-margin w3-card',
 			"style": 'width:275px'
 		});
 		link.innerHTML = linkhtml;
