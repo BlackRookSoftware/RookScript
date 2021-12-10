@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2020 Black Rook Software
+ * Copyright (c) 2017-2021 Black Rook Software
  * This program and the accompanying materials are made available under the 
  * terms of the GNU Lesser Public License v2.1 which accompanies this 
  * distribution, and is available at 
@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 
 import com.blackrook.rookscript.lang.ScriptCommand;
 import com.blackrook.rookscript.resolvers.ScriptHostFunctionResolver;
@@ -37,10 +39,10 @@ public class Script
 	/** List of script commands. */
 	private List<ScriptCommand> commands;
 
-	/** Function name map (name to entry, case-insensitive). */
-	private HashMap<String, Entry> functionLabelMap;
-	/** Script entry name map (name to entry, case-insensitive). */
-	private HashMap<String, Entry> scriptLabelMap;
+	/** Function name map (name to entry). */
+	private Map<String, Entry> functionLabelMap;
+	/** Script entry name map (name to entry). */
+	private Map<String, Entry> scriptEntryMap;
 
 	/** Label map (label to index). */
 	private HashMap<String, Integer> labelMap;
@@ -59,8 +61,8 @@ public class Script
 		this.hostFunctionResolver = ScriptHostFunctionResolver.EMPTY;
 		this.scopeResolver = ScriptScopeResolver.EMPTY;
 		this.commands = new ArrayList<>(256);
-		this.functionLabelMap = new HashMap<>();
-		this.scriptLabelMap = new HashMap<>();
+		this.functionLabelMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		this.scriptEntryMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		this.labelMap = new HashMap<>();
 		this.indexMap = null;
 		this.labelGeneratorCounter = null;
@@ -89,8 +91,8 @@ public class Script
 	}
 	
 	/**
-	 * Sets the commands to use in the script.
-	 * @param commands the command set.
+	 * Sets the commands to use in the script, replacing them entirely.
+	 * @param commands the new command set.
 	 */
 	public void setCommands(ScriptCommand[] commands)
 	{
@@ -100,8 +102,10 @@ public class Script
 	}
 
 	/**
-	 * Creates/sets a command index for a subscript entry name in the script.
-	 * Entry names are case-insensitive.
+	 * Creates/sets a command index for a function entry name in the script.
+	 * Also sets the function label index.
+	 * <p> <strong>NOTE:</strong> Function entry names are case-insensitive, but the label that they convert to are not.
+	 * Those labels are converted to lower-case, and prefixed with {@value #LABEL_FUNCTION_PREFIX}.
 	 * @param name the name.
 	 * @param parameterCount the amount of parameters that this takes.
 	 * @param index the corresponding index.
@@ -110,9 +114,8 @@ public class Script
 	public Entry createFunctionEntry(String name, int parameterCount, int index)
 	{
 		Entry out = new Entry(parameterCount, index);
-		name = name.toLowerCase();
 		functionLabelMap.put(name, out);
-		setIndex(LABEL_FUNCTION_PREFIX + name, index);
+		setIndex(LABEL_FUNCTION_PREFIX + name.toLowerCase(), index);
 		return out;
 	}
 
@@ -124,13 +127,14 @@ public class Script
 	 */
 	public Entry getFunctionEntry(String name)
 	{
-		return functionLabelMap.get(name.toLowerCase());
+		return functionLabelMap.get(name);
 	}
 
 	/**
 	 * Sets an index for a subscript entry name in the script.
 	 * Also sets the entry label index.
-	 * Entry names are case-insensitive.
+	 * <p> <strong>NOTE:</strong> Script entry names are case-insensitive, but the label that they convert to are not.
+	 * Those labels are converted to lower-case, and prefixed with {@value #LABEL_ENTRY_PREFIX}.
 	 * @param name the name.
 	 * @param parameterCount the amount of parameters that this takes.
 	 * @param index the corresponding index.
@@ -138,9 +142,8 @@ public class Script
 	 */
 	public void setScriptEntry(String name, int parameterCount, int index)
 	{
-		name = name.toLowerCase();
-		scriptLabelMap.put(name, new Entry(parameterCount, index));
-		setIndex(LABEL_ENTRY_PREFIX + name, index);
+		scriptEntryMap.put(name, new Entry(parameterCount, index));
+		setIndex(LABEL_ENTRY_PREFIX + name.toLowerCase(), index);
 	}
 
 	/**
@@ -151,11 +154,22 @@ public class Script
 	 */
 	public Entry getScriptEntry(String name)
 	{
-		return scriptLabelMap.get(name.toLowerCase());
+		return scriptEntryMap.get(name);
 	}
 
 	/**
+	 * @return an array of this script's entry point names.
+	 * @since 1.13.0
+	 */
+	public String[] getScriptEntryNames()
+	{
+		Set<String> nameSet = scriptEntryMap.keySet();
+		return nameSet.toArray(new String[nameSet.size()]);
+	}
+	
+	/**
 	 * Sets an index for a label in the script.
+	 * The label is used case-sensitively! Use caution when setting it!
 	 * @param label the label name.
 	 * @param index the corresponding index.
 	 */

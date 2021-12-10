@@ -1,0 +1,21 @@
+entry another(args)
+{
+	println("Hello, another.");
+	println(args);
+	return 0;
+}
+
+entry hello(args)
+{
+	println("Hello, hello.");
+	println(args);
+	return 0;
+}
+
+entry main(args)
+{
+	println("Hello, main.");
+	println(args);
+	return 0;
+}
+

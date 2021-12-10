@@ -18,11 +18,8 @@ check entry main()
 	info = readHeader(f);
 	println(info);
 	
-	// force an error
-	info.entrycount += 2;
-
 	// Skip to WAD entry list.
-	skip(f, info.listoffset - 12);
+	fsetpos(f, info.listoffset);
 
 	// Read entries.
 	list = listnew(info.entrycount);

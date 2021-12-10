@@ -3,6 +3,13 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.13.0
+-----------------
+
+- `Added` Script.getScriptEntryNames().
+- `Changed` Host function `EXEC()` will not auto-close any of the standard streams, if used.
+
+
 Changed in 1.12.1.1
 -------------------
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2020 Black Rook Software
+ * Copyright (c) 2017-2021 Black Rook Software
  * This program and the accompanying materials are made available under the 
  * terms of the GNU Lesser Public License v2.1 which accompanies this 
  * distribution, and is available at 
@@ -175,7 +175,8 @@ public enum SystemFunctions implements ScriptFunctionType
 				.instructions(
 					"Spawns a process instance. A set of daemon threads are created that assist the streams on the process. " +
 					"The process, if created successfully, is registered as an open resource, and is closeable like any other resource. " +
-					"The script may end before the process does, so you may want to wait for its end via EXECRESULT()."
+					"The script may end before the process does, so you may want to wait for its end via EXECRESULT(). " +
+					"If STDIN, STDOUT, or STDERR are used as streams, they are NOT closed after the process terminates."
 				)
 				.parameter("command", 
 					type(Type.STRING, "Process name or path to execute.")
@@ -565,12 +566,19 @@ public enum SystemFunctions implements ScriptFunctionType
 			byte[] BUFFER = new byte[8192];
 			try {
 				while ((buf = srcIn.read(BUFFER)) > 0)
+				{
 					destOut.write(BUFFER, 0, buf);
+					destOut.flush();
+				}
 			} catch (IOException e) {
 				// Eat exception.
 			} finally {
-				Utils.close(srcIn);
-				Utils.close(destOut);
+				// Do not close STDIN.
+				if (srcIn != System.in)
+					Utils.close(srcIn);
+				// Do not close STDOUT or STDERR.
+				if (destOut != System.out && destOut != System.err)
+					Utils.close(destOut);
 			}
 		}
 	}

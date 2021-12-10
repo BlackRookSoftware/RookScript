@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2020 Black Rook Software
+ * Copyright (c) 2017-2021 Black Rook Software
  * This program and the accompanying materials are made available under the 
  * terms of the GNU Lesser Public License v2.1 which accompanies this 
  * distribution, and is available at 
@@ -60,6 +60,7 @@ public final class ScriptExecutor
 	private static final String SWITCH_FUNCHELP2 = "--function-help-markdown";
 	private static final String SWITCH_DISASSEMBLE1 = "--disassemble";
 	private static final String SWITCH_ENTRY1 = "--entry";
+	private static final String SWITCH_ENTRYLIST = "--entry-list";
 	private static final String SWITCH_RUNAWAYLIMIT1 = "--runaway-limit";
 	private static final String SWITCH_ACTIVATIONDEPTH1 = "--activation-depth";
 	private static final String SWITCH_STACKDEPTH1 = "--stack-depth";
@@ -315,6 +316,7 @@ public final class ScriptExecutor
 		FUNCTIONHELP,
 		FUNCTIONHELP_MARKDOWN,
 		DISASSEMBLE,
+		ENTRYPOINTS,
 		EXECUTE;
 	}
 
@@ -388,6 +390,13 @@ public final class ScriptExecutor
 
 		ScriptInstance instance = builder.createInstance();
 		
+		if (mode == Mode.ENTRYPOINTS)
+		{
+			for (String name : instance.getScript().getScriptEntryNames())
+				System.out.println(name);
+			return 0;
+		}
+
 		if (mode == Mode.DISASSEMBLE)
 		{
 			System.out.println("Disassembly of \"" + scriptFile + "\":");
@@ -488,6 +497,8 @@ public final class ScriptExecutor
 						mode = Mode.FUNCTIONHELP;
 					else if (SWITCH_FUNCHELP2.equalsIgnoreCase(arg))
 						mode = Mode.FUNCTIONHELP_MARKDOWN;
+					else if (SWITCH_ENTRYLIST.equalsIgnoreCase(arg))
+						mode = Mode.ENTRYPOINTS;
 					else if (SWITCH_ENTRY1.equalsIgnoreCase(arg))
 						state = STATE_SWITCHES_ENTRY;
 					else if (SWITCH_RUNAWAYLIMIT1.equalsIgnoreCase(arg))
@@ -509,6 +520,7 @@ public final class ScriptExecutor
 				{
 					arg = arg.trim();
 					entryPointName = arg.length() > 0 ? arg : null;
+					state = STATE_START;
 				}
 				break;
 				
@@ -621,6 +633,8 @@ public final class ScriptExecutor
 		out.println("                                     Markdown format.");
 		out.println("    --disassemble                Prints the disassembly for this script");
 		out.println("                                     and exits.");
+		out.println("    --entry-list                 Prints the names of the entry points for this");
+		out.println("                                     script and exits.");
 		out.println("    --entry [name]               Use a different entry point named [name].");
 		out.println("                                     Default: \"main\"");
 		out.println("    --runaway-limit [num]        Sets the runaway limit (in operations)");
@@ -659,7 +673,7 @@ public final class ScriptExecutor
 	{
 		if (args.length == 0)
 		{
-			System.out.println("RookScript Executor (C) 2020 Black Rook Software");
+			System.out.println("RookScript Executor (C) 2020-2021 Black Rook Software");
 			System.out.println("Use switch `--help` for help.");
 			System.exit(-1);
 			return;
