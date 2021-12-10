@@ -26,9 +26,10 @@ check entry main()
 	
 	each (v : path()) println(v);
 	
-	buf = bufnew(2048);
-	result = cmd("dir", null, null, bosopen(buf))->execresult();
-	println(buf->bufgetpos());
+	result = cmd("dir")->execresult();
+	
+	result = cmd("dir")->execresult();
+
 	println(result);
 	return result;
 }
