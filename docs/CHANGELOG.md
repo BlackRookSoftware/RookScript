@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.14.0
+-----------------
+
+- `Changed` Host function `EXEC()` will not auto-close any **non-file** stream, if used.
+
+
 Changed in 1.13.0
 -----------------
 

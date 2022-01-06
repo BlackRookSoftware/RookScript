@@ -174,9 +174,11 @@ public enum SystemFunctions implements ScriptFunctionType
 			return ScriptFunctionUsage.create()
 				.instructions(
 					"Spawns a process instance. A set of daemon threads are created that assist the streams on the process. " +
-					"The process, if created successfully, is registered as an open resource, and is closeable like any other resource. " +
+					"The process, if created successfully, is registered as an open resource, and is closeable like any other resource (closing it will terminate it, if running). " +
 					"The script may end before the process does, so you may want to wait for its end via EXECRESULT(). " +
-					"If STDIN, STDOUT, or STDERR are used as streams, they are NOT closed after the process terminates."
+					"All input/output streams are not closed, unless OBJECTREF:Files are used. " +
+					"If a file is used for output, it is overwritten. " +
+					"If you wish to keep a process running after the script terminates, call DONOTCLOSE with the process to avoid its cleanup."
 				)
 				.parameter("command", 
 					type(Type.STRING, "Process name or path to execute.")
@@ -235,10 +237,12 @@ public enum SystemFunctions implements ScriptFunctionType
 				
 				String[] argv;
 				File workingDir;
-				OutputStream out;
-				OutputStream err;
+				OutputStream out, err;
 				InputStream in;
 				Map<String, String> env = new HashMap<>(temp.length());
+				boolean closeOut = false; 
+				boolean closeErr = false;
+				boolean closeIn = false;
 				
 				// Runtime
 				if (temp.isMap())
@@ -304,6 +308,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				{
 					try {
 						out = new FileOutputStream(stdout.asObjectType(File.class));
+						closeOut = true;
 					} catch (FileNotFoundException e) {
 						returnValue.setError("BadFile", "Fifth parameter, the output stream, could not be opened.");
 						return true;
@@ -318,7 +323,11 @@ public enum SystemFunctions implements ScriptFunctionType
 					return true;
 				}
 				
-				if (stderr.isNull())
+				if (stderr.equals(stdout))
+				{
+					err = out;
+				}
+				else if (stderr.isNull())
 				{
 					err = Utils.NULL_OUTPUT;
 				}
@@ -330,6 +339,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				{
 					try {
 						err = new FileOutputStream(stderr.asObjectType(File.class));
+						closeErr = true;
 					} catch (FileNotFoundException e) {
 						returnValue.setError("BadFile", "Sixth parameter, the error stream, could not be opened.");
 						return true;
@@ -356,6 +366,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				{
 					try {
 						in = new FileInputStream(stdin.asObjectType(File.class));
+						closeIn = true;
 					} catch (FileNotFoundException e) {
 						returnValue.setError("BadFile", "Seventh parameter, the input stream, could not be opened.");
 						return true;
@@ -371,7 +382,7 @@ public enum SystemFunctions implements ScriptFunctionType
 				}
 
 				try {
-					ProcessInstance instance = new ProcessInstance(argv, env, workingDir, out, err, in);
+					ProcessInstance instance = new ProcessInstance(argv, env, workingDir, out, err, in, closeOut, closeErr, closeIn);
 					scriptInstance.registerCloseable(instance);
 					returnValue.set(instance);
 					return true;
@@ -497,7 +508,7 @@ public enum SystemFunctions implements ScriptFunctionType
 		
 		private final Process process;
 		
-		private ProcessInstance(String[] argv, Map<String, String> env, File workingDir, final OutputStream out, final OutputStream err, final InputStream in) throws IOException
+		private ProcessInstance(String[] argv, Map<String, String> env, File workingDir, OutputStream out, OutputStream err, InputStream in, boolean closeOut, boolean closeErr, boolean closeIn) throws IOException
 		{
 			long id = PROCESSTHREAD_ID.getAndIncrement();
 			ProcessBuilder builder = new ProcessBuilder(argv);
@@ -506,9 +517,9 @@ public enum SystemFunctions implements ScriptFunctionType
 				envVarMap.put(entry.getKey(), entry.getValue());
 			builder.directory(workingDir);
 			process = builder.start();
-			(new PipeInToOutThread(id, "stdout", process.getInputStream(), out)).start();
-			(new PipeInToOutThread(id, "stderr", process.getErrorStream(), err)).start();
-			(new PipeInToOutThread(id, "stdin", in, process.getOutputStream())).start();
+			(new PipeInToOutThread(id, "stdout", process.getInputStream(), out,                       false, closeOut)).start();
+			(new PipeInToOutThread(id, "stderr", process.getErrorStream(), err,                       false, closeErr)).start();
+			(new PipeInToOutThread(id, "stdin",  in,                       process.getOutputStream(), closeIn, false)).start();
 		}
 		
 		/**
@@ -522,6 +533,18 @@ public enum SystemFunctions implements ScriptFunctionType
 			} catch (InterruptedException e) {
 				return 0;
 			}
+		}
+		
+		/**
+		 * Attempts to destroy the process.
+		 * @param force if true, force its closure.
+		 */
+		public void destroy(boolean force)
+		{
+			if (force)
+				process.destroyForcibly();
+			else
+				process.destroy();
 		}
 		
 		/**
@@ -541,7 +564,7 @@ public enum SystemFunctions implements ScriptFunctionType
 		@Override
 		public void close() throws Exception 
 		{
-			process.destroy();
+			destroy(false);
 		}
 	}
 	
@@ -550,13 +573,17 @@ public enum SystemFunctions implements ScriptFunctionType
 	{
 		private InputStream srcIn;
 		private OutputStream destOut;
+		private boolean closeIn;
+		private boolean closeOut;
 		
-		private PipeInToOutThread(long processId, String suffix, InputStream in, OutputStream out)
+		private PipeInToOutThread(long processId, String suffix, InputStream in, OutputStream out, boolean closeIn, boolean closeOut)
 		{
 			setDaemon(false);
 			setName("RookScriptProcess-" + processId + "-" + suffix);
 			this.srcIn = in;
 			this.destOut = out;
+			this.closeIn = closeIn;
+			this.closeOut = closeOut;
 		}
 		
 		@Override
@@ -573,11 +600,9 @@ public enum SystemFunctions implements ScriptFunctionType
 			} catch (IOException e) {
 				// Eat exception.
 			} finally {
-				// Do not close STDIN.
-				if (srcIn != System.in)
+				if (closeIn)
 					Utils.close(srcIn);
-				// Do not close STDOUT or STDERR.
-				if (destOut != System.out && destOut != System.err)
+				if (closeOut)
 					Utils.close(destOut);
 			}
 		}
