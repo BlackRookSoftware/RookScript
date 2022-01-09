@@ -57,7 +57,7 @@ public enum ListFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(value);
 				if (value.isList())
 				{
-					returnValue.setEmptyList(value.length());
+					returnValue.setEmptyList(value.length(), value.length());
 					for (int i = 0; i < value.length(); i++)
 					{
 						value.listGetByIndex(i, temp);
@@ -66,7 +66,7 @@ public enum ListFunctions implements ScriptFunctionType
 				}
 				else
 				{
-					returnValue.setEmptyList(4);
+					returnValue.setEmptyList(1, 4);
 					returnValue.listSetByIndex(0, value);
 				}
 				return true;

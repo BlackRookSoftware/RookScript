@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.14.1
+-----------------
+
+- `Fixed` Host function `LIST()` did not encapsulate non-list values properly.
+
+
 Changed in 1.14.0
 -----------------
 

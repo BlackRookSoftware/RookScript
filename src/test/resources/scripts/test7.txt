@@ -1,0 +1,9 @@
+
+entry main()
+{
+	x = [1,2];
+	println(list(1));
+	println(list(x));
+	println(list(x) === x); // should be false
+	println(listnew(1));
+}
