@@ -3,7 +3,7 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
-Changed in [NOW]
+Changed in 1.15.0
 -----------------
 
 - `Changed` Updated `ScriptReaderIncluder` (`PreprocessorLexer.Includer`) so that a specific encoding can be supplied to included files.
