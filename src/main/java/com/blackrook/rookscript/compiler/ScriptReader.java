@@ -419,6 +419,7 @@ public final class ScriptReader
 
 	/**
 	 * Reads a script.
+	 * Assumes platform default encoding.
 	 * @param streamName the name of the stream.
 	 * @param in the stream to read from.
 	 * @param functionResolver the host function resolver to use.
@@ -435,6 +436,7 @@ public final class ScriptReader
 
 	/**
 	 * Reads a script.
+	 * Assumes platform default encoding.
 	 * @param streamName the name of the stream.
 	 * @param in the stream to read from.
 	 * @param functionResolver the host function resolver to use.
@@ -452,6 +454,7 @@ public final class ScriptReader
 
 	/**
 	 * Reads a script.
+	 * Assumes platform default encoding.
 	 * @param streamName the name of the stream.
 	 * @param in the stream to read from.
 	 * @param functionResolver the host function resolver to use.
@@ -470,6 +473,7 @@ public final class ScriptReader
 
 	/**
 	 * Reads a script.
+	 * Assumes platform default encoding.
 	 * @param streamName the name of the stream.
 	 * @param in the stream to read from.
 	 * @param functionResolver the host function resolver to use.
@@ -488,6 +492,7 @@ public final class ScriptReader
 
 	/**
 	 * Reads a script.
+	 * Assumes platform default encoding.
 	 * @param streamName the name of the stream.
 	 * @param in the stream to read from.
 	 * @param functionResolver the host function resolver to use.
@@ -507,6 +512,7 @@ public final class ScriptReader
 
 	/**
 	 * Reads a script.
+	 * Assumes platform default encoding.
 	 * @param streamName the name of the stream.
 	 * @param in the stream to read from.
 	 * @param functionResolver the host function resolver to use.
