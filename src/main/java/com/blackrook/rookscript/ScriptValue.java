@@ -1698,7 +1698,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	
 	/**
 	 * Gets this value cast as a different object type.
-	 * Does no conversion nor coersion.
+	 * Does no conversion nor coercion.
 	 * @param targetType the class type to cast to.
 	 * @param <T> the returned type.
 	 * @return the object representation of this value.
