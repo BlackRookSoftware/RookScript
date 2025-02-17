@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.15.1
+-----------------
+
+- `Fixed` Updated Preprocessor - some directives were not ignored on false code blocks when they should have been.
+
+
 Changed in 1.15.0
 -----------------
 
