@@ -813,7 +813,7 @@ The #ifdef directive includes the next series of lines if the following macro wa
 
 #### #ifndef
 
-The #ifdef directive includes the next series of lines if the following macro was NOT defined, until it reaches an #endif directive.
+The #ifndef directive includes the next series of lines if the following macro was NOT defined, until it reaches an #endif directive.
 
 
 	#define STUFF
