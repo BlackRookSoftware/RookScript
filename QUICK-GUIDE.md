@@ -429,7 +429,7 @@ for (; x < 10;)
 ```
 numbers = [1, 2, 3, 4, 5];
 // will print number in "numbers" on its own line.
-(x : numbers)
+each (x : numbers)
 {
     println(x);
 }
@@ -440,7 +440,7 @@ Maps and other map-like objects can have their entries iterated through, as well
 ```
 triple = { x: 3, y: 4, z: -2 };
 // will print key and value in "triple" on its own line.
-(k, v : triple)
+each (k, v : triple)
 {
     println(k + " is " + v);
 }
@@ -451,7 +451,7 @@ Performing a key-value iteration on lists will fill the key with the index:
 ```
 numbers = [1, 2, 3, 4, 5];
 // will print index and value in "numbers" on its own line.
-(k, v : numbers)
+each (k, v : numbers)
 {
     println("numbers[" + k + "] is " + v);
 }
@@ -462,7 +462,7 @@ Attempting to iterate on a single value will only run the loop once, though:
 ```
 a = 3;
 // will just print "3"
-(x : a)
+each (x : a)
 {
     println(x);
 }
