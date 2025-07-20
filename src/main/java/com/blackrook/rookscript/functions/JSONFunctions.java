@@ -469,50 +469,50 @@ public enum JSONFunctions implements ScriptFunctionType
 
 	private static void escape(String s, Writer writer) throws IOException
 	{
-    	for (int i = 0; i < s.length(); i++)
-    	{
-    		char c = s.charAt(i);
-    		switch (c)
-    		{
+		for (int i = 0; i < s.length(); i++)
+		{
+			char c = s.charAt(i);
+			switch (c)
+			{
 				case '\0':
 					writer.append("\\0");
 					break;
-    			case '\b':
-    				writer.append("\\b");
-    				break;
-    			case '\t':
-    				writer.append("\\t");
-    				break;
-    			case '\n':
-    				writer.append("\\n");
-    				break;
-    			case '\f':
-    				writer.append("\\f");
-    				break;
-    			case '\r':
-    				writer.append("\\r");
-    				break;
-    			case '\\':
-    				writer.append("\\\\");
-    				break;
-    			case '"':
-    				writer.append("\\\"");    					
-    				break;
-    			default:
-    				if (c < 0x0020 || c >= 0x7f)
-    				{
-    					writer.write('\\');
-    					writer.write('u');
-    					writer.write(HEXALPHABET.charAt((c & 0x0f000) >> 12));
-    					writer.write(HEXALPHABET.charAt((c & 0x00f00) >> 8));
-    					writer.write(HEXALPHABET.charAt((c & 0x000f0) >> 4));
-    					writer.write(HEXALPHABET.charAt(c & 0x0000f));
-    				}
-    				else
-    					writer.append(c);
-    				break;
-    		}
-    	}
+				case '\b':
+					writer.append("\\b");
+					break;
+				case '\t':
+					writer.append("\\t");
+					break;
+				case '\n':
+					writer.append("\\n");
+					break;
+				case '\f':
+					writer.append("\\f");
+					break;
+				case '\r':
+					writer.append("\\r");
+					break;
+				case '\\':
+					writer.append("\\\\");
+					break;
+				case '"':
+					writer.append("\\\"");    					
+					break;
+				default:
+					if (c < 0x0020 || c >= 0x7f)
+					{
+						writer.write('\\');
+						writer.write('u');
+						writer.write(HEXALPHABET.charAt((c & 0x0f000) >> 12));
+						writer.write(HEXALPHABET.charAt((c & 0x00f00) >> 8));
+						writer.write(HEXALPHABET.charAt((c & 0x000f0) >> 4));
+						writer.write(HEXALPHABET.charAt(c & 0x0000f));
+					}
+					else
+						writer.append(c);
+					break;
+			}
+		}
 	}
 
 	private static class JSONLexerKernel extends Lexer.Kernel

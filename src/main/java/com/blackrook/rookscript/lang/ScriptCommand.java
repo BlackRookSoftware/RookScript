@@ -213,11 +213,11 @@ public final class ScriptCommand
 		return operand2;
 	}
 	
-    /**
-     * Executes this command.
-     * @param scriptInstance the originating script instance.
-     * @return if false, stop script running, else if true, continue.
-     */	
+	/**
+	 * Executes this command.
+	 * @param scriptInstance the originating script instance.
+	 * @return if false, stop script running, else if true, continue.
+	 */	
 	public boolean execute(ScriptInstance scriptInstance)
 	{
 		return type.execute(scriptInstance, operand1, operand2);

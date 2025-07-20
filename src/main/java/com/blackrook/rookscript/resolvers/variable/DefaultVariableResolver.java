@@ -37,13 +37,13 @@ public class DefaultVariableResolver extends AbstractVariableResolver
 		super(capacity);
 	}
 	
-    /**
-     * Removes a value by variable name.
-     * This should fail if the provided name corresponds to a read-only variable. 
+	/**
+	 * Removes a value by variable name.
+	 * This should fail if the provided name corresponds to a read-only variable. 
 	 * @param name the variable name.
 	 * @return true if the value existed and was removed, false otherwise.
 	 * @throws IllegalArgumentException if the provided name refers to a value that is read-only.
-     */
+	 */
 	public synchronized boolean clearValue(String name)
 	{
 		int i;

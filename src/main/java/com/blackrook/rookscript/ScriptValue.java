@@ -1493,15 +1493,15 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 	private void resolveFuture()
 	{
 		if (type != Type.OBJECTREF || !(ref instanceof Future))
-	        return;
-	    Future<?> future = (Future<?>)ref;
-	    try {
-	        set(future.get());
-	    } catch (CancellationException | InterruptedException e) {
-	        setError(e);
-	    } catch (ExecutionException e) {
-	        setError(e.getCause());
-	    }
+			return;
+		Future<?> future = (Future<?>)ref;
+		try {
+			set(future.get());
+		} catch (CancellationException | InterruptedException e) {
+			setError(e);
+		} catch (ExecutionException e) {
+			setError(e.getCause());
+		}
 	}
 	
 	private Type getType()
@@ -3711,13 +3711,13 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			super(capacity);
 		}
 		
-	    /**
-	     * Removes a value by variable name.
-	     * This should fail if the provided name corresponds to a read-only variable. 
+		/**
+		 * Removes a value by variable name.
+		 * This should fail if the provided name corresponds to a read-only variable. 
 		 * @param name the variable name.
 		 * @return true if the value existed and was removed, false otherwise.
 		 * @throws IllegalArgumentException if the provided name refers to a value that is read-only.
-	     */
+		 */
 		private synchronized boolean clearValue(String name)
 		{
 			int i;

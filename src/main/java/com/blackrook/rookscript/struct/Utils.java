@@ -735,9 +735,9 @@ public final class Utils
 	{
 		if (lo >= hi)
 			return;
-	    int p = quicksortPartition(array, lo, hi);
-	    quicksort(array, lo, p - 1);
-	    quicksort(array, p + 1, hi);
+		int p = quicksortPartition(array, lo, hi);
+		quicksort(array, lo, p - 1);
+		quicksort(array, p + 1, hi);
 	}
 
 	/**
@@ -754,43 +754,43 @@ public final class Utils
 	{
 		if (lo >= hi)
 			return;
-	    int p = quicksortPartition(array, lo, hi, comparator);
-	    quicksort(array, lo, p - 1, comparator);
-	    quicksort(array, p + 1, hi, comparator);
+		int p = quicksortPartition(array, lo, hi, comparator);
+		quicksort(array, lo, p - 1, comparator);
+		quicksort(array, p + 1, hi, comparator);
 	}
 
 	// Do quicksort partition - pivot sort.
 	private static <T extends Comparable<T>> int quicksortPartition(T[] array, int lo, int hi)
 	{
 		T pivot = array[hi];
-	    int i = lo;
-	    for (int j = lo; j <= hi - 1; j++)
-	    {
-	        if (array[j].compareTo(pivot) <= 0)
-	        {
-	        	arraySwap(array, i, j);
-	            i++;
-	        }
-	    }
+		int i = lo;
+		for (int j = lo; j <= hi - 1; j++)
+		{
+			if (array[j].compareTo(pivot) <= 0)
+			{
+				arraySwap(array, i, j);
+				i++;
+			}
+		}
 		arraySwap(array, i, hi);
-	    return i;
+		return i;
 	}
 
 	// Do quicksort partition - pivot sort.
 	private static <T> int quicksortPartition(T[] array, int lo, int hi, Comparator<? super T> comparator)
 	{
 		T pivot = array[hi];
-	    int i = lo;
-	    for (int j = lo; j <= hi - 1; j++)
-	    {
-	        if (comparator.compare(array[j], pivot) <= 0)
-	        {
-	        	arraySwap(array, i, j);
-	            i++;
-	        }
-	    }
+		int i = lo;
+		for (int j = lo; j <= hi - 1; j++)
+		{
+			if (comparator.compare(array[j], pivot) <= 0)
+			{
+				arraySwap(array, i, j);
+				i++;
+			}
+		}
 		arraySwap(array, i, hi);
-	    return i;
+		return i;
 	}
 
 	/**

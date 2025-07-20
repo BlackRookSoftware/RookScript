@@ -38,13 +38,13 @@ public interface ScriptScopeResolver
 	 * @param name the scope name.
 	 * @return the corresponding scope, or <code>null</code> if no corresponding scope.
 	 */
-    ScriptVariableResolver getScope(String name);
-    
-    /**
-     * Checks if this contains a scope by its scope name.
+	ScriptVariableResolver getScope(String name);
+	
+	/**
+	 * Checks if this contains a scope by its scope name.
 	 * @param name the scope name.
 	 * @return true if so, false if not.
-     */
-    boolean containsScope(String name);
-    
+	 */
+	boolean containsScope(String name);
+	
 }
