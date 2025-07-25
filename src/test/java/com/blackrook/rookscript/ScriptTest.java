@@ -21,6 +21,7 @@ import com.blackrook.rookscript.functions.DigestFunctions;
 import com.blackrook.rookscript.functions.FileSystemFunctions;
 import com.blackrook.rookscript.functions.IOFunctions;
 import com.blackrook.rookscript.functions.PrintFunctions;
+import com.blackrook.rookscript.functions.RandomFunctions;
 import com.blackrook.rookscript.functions.common.BufferFunctions;
 import com.blackrook.rookscript.functions.io.DataIOFunctions;
 import com.blackrook.rookscript.functions.io.FileIOFunctions;
@@ -101,6 +102,7 @@ public class ScriptTest
 			.withFunctionResolver(CommonFunctions.createResolver())
 				.andFunctionResolver(PrintFunctions.createResolver())
 				.andFunctionResolver(MathFunctions.createResolver())
+				.andFunctionResolver(RandomFunctions.createResolver())
 				.andFunctionResolver(RegexFunctions.createResolver())
 				.andFunctionResolver(FileSystemFunctions.createResolver())
 				.andFunctionResolver(DateFunctions.createResolver())

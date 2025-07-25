@@ -3,6 +3,13 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.16.0
+-----------------
+
+- `Added` String host function `STRBYTES()`.
+- `Added` Host function library `RandomFunctions`.
+
+
 Changed in 1.15.1
 -----------------
 

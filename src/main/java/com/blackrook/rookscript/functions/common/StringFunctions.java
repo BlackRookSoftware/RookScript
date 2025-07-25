@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017-2022 Black Rook Software
+ * Copyright (c) 2017-2025 Black Rook Software
  * This program and the accompanying materials are made available under the 
  * terms of the GNU Lesser Public License v2.1 which accompanies this 
  * distribution, and is available at 
@@ -9,6 +9,7 @@ package com.blackrook.rookscript.functions.common;
 
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
+import com.blackrook.rookscript.ScriptValue.BufferType;
 import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;
@@ -16,6 +17,10 @@ import com.blackrook.rookscript.resolvers.ScriptFunctionResolver;
 import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
 
 import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
+
+import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
+import java.nio.charset.UnsupportedCharsetException;
 
 /**
  * RookScript string functions.
@@ -576,6 +581,70 @@ public enum StringFunctions implements ScriptFunctionType
 				scriptInstance.popStackValue(temp);
 				String str = temp.asString();
 				returnValue.set(str.replace(target, replacement));
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	/** @since 1.16.0 */
+	STRBYTES(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a buffer of bytes that represents the provided string in the specified encoding."
+				)
+				.parameter("string", 
+					type(Type.STRING, "The string to encode as bytes.")
+				)
+				.parameter("encoding", 
+					type(Type.NULL, "Use the system encoding."),
+					type(Type.STRING, "The target encoding.")
+				)
+				.returns(
+					type(Type.BUFFER, "The resultant buffer of bytes."),
+					type(Type.ERROR, "BadEncoding", "If the target encoding is not found.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String encoding = temp.asString();
+				scriptInstance.popStackValue(temp);
+				String str = temp.asString();
+				
+				Charset set = null;
+				try {
+					set = encoding != null ? Charset.forName(encoding) : Charset.defaultCharset();
+				} catch (IllegalCharsetNameException e) {
+					returnValue.setError("BadEncoding", e.getLocalizedMessage());
+					return true;
+				} catch (UnsupportedCharsetException e) {
+					returnValue.setError("BadEncoding", e.getLocalizedMessage());
+					return true;
+				} catch (IllegalArgumentException e) {
+					returnValue.setError("BadEncoding", e.getLocalizedMessage());
+					return true;
+				} 
+				
+				byte[] bytes = str.getBytes(set);
+				
+				returnValue.setEmptyBuffer(bytes.length);
+				BufferType buf = returnValue.asObjectType(BufferType.class);
+				buf.readBytes(0, bytes, 0, bytes.length);
+				
 				return true;
 			}
 			finally
