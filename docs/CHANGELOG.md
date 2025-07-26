@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.16.1
+-----------------
+
+- `Fixed` STRBYTES() would error out if a null encoding was provided.
+
+
 Changed in 1.16.0
 -----------------
 

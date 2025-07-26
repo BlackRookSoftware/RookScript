@@ -603,7 +603,7 @@ public enum StringFunctions implements ScriptFunctionType
 					"Returns a buffer of bytes that represents the provided string in the specified encoding."
 				)
 				.parameter("string", 
-					type(Type.STRING, "The string to encode as bytes.")
+					type(Type.STRING, "The string (or value converted to string) to encode as bytes.")
 				)
 				.parameter("encoding", 
 					type(Type.NULL, "Use native encoding."),
@@ -623,7 +623,7 @@ public enum StringFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				String encodingName = temp.asString();
+				String encodingName = temp.isNull() ? null : temp.asString();
 				scriptInstance.popStackValue(temp);
 				String str = temp.asString();
 				
