@@ -6,7 +6,10 @@ by Matt Tropiano et al. (see AUTHORS.txt)
 Changed in 1.16.0
 -----------------
 
+- `Fixed` Some function documentation wording.
 - `Added` String host function `STRBYTES()`.
+- `Added` String host function `STRENCODINGS()`.
+- `Added` Digest host function `DIGESTALGORITHMS()`.
 - `Added` Host function library `RandomFunctions`.
 
 

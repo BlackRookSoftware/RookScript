@@ -10,6 +10,7 @@ package com.blackrook.rookscript.functions;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.BufferType;
+import com.blackrook.rookscript.ScriptValue.ListType;
 import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;
@@ -26,6 +27,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Provider.Service;
+import java.security.Security;
+import java.util.Set;
 
 /**
  * Script common functions for standard input/output.
@@ -227,6 +232,69 @@ public enum DigestFunctions implements ScriptFunctionType
 				byte[] hash = temp.asObjectType(MessageDigest.class).digest();
 				returnValue.setEmptyBuffer(hash.length);
 				returnValue.asObjectType(BufferType.class).readBytes(0, hash, 0, hash.length);
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+
+	/** @since 1.16.0 */
+	DIGESTALGORITHMS(0)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a set (sorted, discrete) of valid hashing algorithms (and provider aliases) available on this implementation. " +
+					"Can be an expensive operation."
+				)
+				.returns(
+					type(Type.LIST, "[STRING, ...]", "A set of valid algorithm names.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				returnValue.setEmptyList(256);
+				ListType list = returnValue.asObjectType(ListType.class);
+				
+				Provider[] providers = Security.getProviders();
+				
+				final String aliasPrefix = "Alg.Alias.MessageDigest.";
+				
+				for (Provider p : providers)
+				{
+					Set<Service> services = p.getServices();
+					for (Service s : services)
+					{
+						temp.set(s.getAlgorithm().toLowerCase());
+						list.add(temp);
+					}
+					
+					// get aliases
+					Set<Object> algoKeys = p.keySet();
+					for (Object key : algoKeys)
+					{
+						String keyName = String.valueOf(key);
+						if (keyName.startsWith(aliasPrefix))
+						{
+							temp.set(keyName.substring(aliasPrefix.length()).toLowerCase());
+							list.add(temp);
+						}
+					}
+				}
+				
+				list.sort();
+				
 				return true;
 			}
 			finally

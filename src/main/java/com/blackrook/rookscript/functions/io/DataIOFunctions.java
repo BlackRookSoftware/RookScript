@@ -573,7 +573,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.INTEGER, "The number of bytes to read.")
 				)
 				.parameter("encoding", 
-					type(Type.NULL, "Use platform encoding."),
+					type(Type.NULL, "Use native encoding."),
 					type(Type.STRING, "A charset name.")
 				)
 				.returns(
@@ -1179,7 +1179,7 @@ public enum DataIOFunctions implements ScriptFunctionType
 					type(Type.STRING, "The string to write.")
 				)
 				.parameter("encoding", 
-					type(Type.NULL, "Use platform encoding."),
+					type(Type.NULL, "Use native encoding."),
 					type(Type.STRING, "A charset name.")
 				)
 				.returns(

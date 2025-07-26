@@ -737,7 +737,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "InputStream", "A valid open input stream.")
 				)
 				.parameter("encoding", 
-					type(Type.NULL, "Use platform encoding."),
+					type(Type.NULL, "Use native encoding."),
 					type(Type.STRING, "A charset name.")
 				)
 				.returns(
@@ -812,7 +812,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "OutputStream", "A valid open output stream.")
 				)
 				.parameter("encoding", 
-					type(Type.NULL, "Use platform encoding."),
+					type(Type.NULL, "Use native encoding."),
 					type(Type.STRING, "A charset name.")
 				)
 				.returns(

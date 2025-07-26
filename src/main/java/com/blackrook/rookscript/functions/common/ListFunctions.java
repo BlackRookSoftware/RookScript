@@ -450,6 +450,7 @@ public enum ListFunctions implements ScriptFunctionType
 					type(Type.LIST, "The list to use.")
 				)
 				.parameter("start", 
+					type(Type.NULL, "Use 0."),
 					type(Type.INTEGER, "The starting index (0-based), inclusive.")
 				)
 				.parameter("end", 

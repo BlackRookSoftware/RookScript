@@ -1,0 +1,6 @@
+
+entry main()
+{
+	each (name : digestalgorithms())
+		println(name);
+}

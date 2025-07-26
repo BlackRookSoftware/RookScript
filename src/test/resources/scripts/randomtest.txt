@@ -7,9 +7,7 @@ entry main() {
 	println(r->randomstring(64));
 	println(r->randombytes(32)->bufstr());
 	println(r->randomelement([1,2,3,4,5,6,7,8]));
-	list = [1,2,3,4,5,6,7,8];
-	r->randomshuffle(list);
-	println(list);
+	println(r->randomshuffle([1,2,3,4,5,6,7,8]));
 
 	r = randomseed(132412341);
 	println(r->randomint(1000));
@@ -19,7 +17,5 @@ entry main() {
 	println(r->randomstring(64));
 	println(r->randombytes(32)->bufstr());
 	println(r->randomelement([1,2,3,4,5,6,7,8]));
-	list = [1,2,3,4,5,6,7,8];
-	r->randomshuffle(list);
-	println(list);
+	println(r->randomshuffle([1,2,3,4,5,6,7,8]));
 }

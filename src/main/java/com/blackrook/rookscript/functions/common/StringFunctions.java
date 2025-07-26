@@ -10,6 +10,7 @@ package com.blackrook.rookscript.functions.common;
 import com.blackrook.rookscript.ScriptInstance;
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.BufferType;
+import com.blackrook.rookscript.ScriptValue.ListType;
 import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.lang.ScriptFunctionType;
 import com.blackrook.rookscript.lang.ScriptFunctionUsage;
@@ -21,6 +22,7 @@ import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Set;
 
 /**
  * RookScript string functions.
@@ -604,7 +606,7 @@ public enum StringFunctions implements ScriptFunctionType
 					type(Type.STRING, "The string to encode as bytes.")
 				)
 				.parameter("encoding", 
-					type(Type.NULL, "Use the system encoding."),
+					type(Type.NULL, "Use native encoding."),
 					type(Type.STRING, "The target encoding.")
 				)
 				.returns(
@@ -621,29 +623,75 @@ public enum StringFunctions implements ScriptFunctionType
 			try
 			{
 				scriptInstance.popStackValue(temp);
-				String encoding = temp.asString();
+				String encodingName = temp.asString();
 				scriptInstance.popStackValue(temp);
 				String str = temp.asString();
 				
-				Charset set = null;
-				try {
-					set = encoding != null ? Charset.forName(encoding) : Charset.defaultCharset();
-				} catch (IllegalCharsetNameException e) {
-					returnValue.setError("BadEncoding", e.getLocalizedMessage());
+				Charset encoding;
+				if (encodingName == null)
+					encoding = Charset.defaultCharset();
+				else try {
+					encoding = Charset.forName(encodingName);
+				} catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
+					returnValue.setError("BadEncoding", e.getMessage(), e.getLocalizedMessage());
 					return true;
-				} catch (UnsupportedCharsetException e) {
-					returnValue.setError("BadEncoding", e.getLocalizedMessage());
-					return true;
-				} catch (IllegalArgumentException e) {
-					returnValue.setError("BadEncoding", e.getLocalizedMessage());
-					return true;
-				} 
+				}
 				
-				byte[] bytes = str.getBytes(set);
+				byte[] bytes = str.getBytes(encoding);
 				
 				returnValue.setEmptyBuffer(bytes.length);
 				BufferType buf = returnValue.asObjectType(BufferType.class);
 				buf.readBytes(0, bytes, 0, bytes.length);
+				
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	/** @since 1.16.0 */
+	STRENCODINGS(0)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Returns a set (sorted, discrete) of available encoding types (and their aliases) for strings avaliable on this implementation. " +
+					"Can be an expensive operation."
+				)
+				.returns(
+					type(Type.LIST, "[STRING, ...]", "A set of valid encoding type names.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				Set<String> charsets = Charset.availableCharsets().keySet();
+				returnValue.setEmptyList(1024);
+				ListType list = returnValue.asObjectType(ListType.class);
+				
+				for (String charset : charsets)
+				{
+					for (String alias : Charset.forName(charset).aliases())
+					{
+						temp.set(alias.toLowerCase());
+						list.add(temp);
+					}
+					
+					temp.set(charset.toLowerCase());
+					list.add(temp);
+				}
+				
+				list.sort();
 				
 				return true;
 			}

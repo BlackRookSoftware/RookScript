@@ -24,6 +24,7 @@ import com.blackrook.rookscript.resolvers.hostfunction.EnumFunctionResolver;
 /**
  * RookScript Random functions.
  * @author Matthew Tropiano
+ * @since 1.16.0
  */
 public enum RandomFunctions implements ScriptFunctionType
 {
@@ -34,7 +35,7 @@ public enum RandomFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Creates a new random number generator object."
+					"Creates a new random number generator object. Algorithm is implementation-provided."
 				)
 				.returns(
 					type(Type.OBJECTREF, "Random", "The new random number generator.")
@@ -57,7 +58,7 @@ public enum RandomFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Creates a new random number generator object with a defined random seed."
+					"Creates a new random number generator object with a defined random seed. Algorithm is implementation-provided."
 				)
 				.parameter("seed",
 					type(Type.INTEGER, "The seeding number.")
@@ -143,7 +144,7 @@ public enum RandomFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Generates a random number from [min] (inclusive) to [max] (exclusive)."
+					"Generates a random number from [min] to [max] (inclusive)."
 				)
 				.parameter("random",
 					type(Type.OBJECTREF, "Random", "The random number generator.")
@@ -155,7 +156,7 @@ public enum RandomFunctions implements ScriptFunctionType
 					type(Type.INTEGER, "The upper bound.")
 				)
 				.returns(
-					type(Type.INTEGER, "A random integer from [min, max)."),
+					type(Type.INTEGER, "A random integer from [min, max]."),
 					type(Type.ERROR, "BadRandom", "If a random number generator was not provided.")
 				)
 			;
@@ -182,7 +183,7 @@ public enum RandomFunctions implements ScriptFunctionType
 				Random random = temp.asObjectType(Random.class);
 				double value = random.nextDouble();
 				
-				returnValue.set((long)((max - min) * value) + min);
+				returnValue.set((long)((max - min + 1) * value) + min);
 				return true;
 			}
 			finally
@@ -205,7 +206,7 @@ public enum RandomFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "Random", "The random number generator.")
 				)
 				.returns(
-					type(Type.FLOAT, "A random integer from 0.0 to 1.0."),
+					type(Type.FLOAT, "A random integer from 0.0 to 1.0 (exclusive)."),
 					type(Type.ERROR, "BadRandom", "If a random number generator was not provided.")
 				)
 			;
@@ -481,7 +482,7 @@ public enum RandomFunctions implements ScriptFunctionType
 					type(Type.LIST, "The list to select an item from.")
 				)
 				.returns(
-					type(Type.NULL, "Returns nothing on success."),
+					type(Type.LIST, "The list that was provided (not a new list)."),
 					type(Type.ERROR, "BadList", "If a list was not provided."),
 					type(Type.ERROR, "BadRandom", "If a random number generator was not provided.")
 				)
@@ -515,7 +516,7 @@ public enum RandomFunctions implements ScriptFunctionType
 				
 				Random random = temp.asObjectType(Random.class);
 
-				returnValue.setNull();
+				returnValue.set(list);
 
 				if (list.isEmpty() || list.size() == 1)
 				{
