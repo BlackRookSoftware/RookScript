@@ -206,7 +206,7 @@ public enum RandomFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "Random", "The random number generator.")
 				)
 				.returns(
-					type(Type.FLOAT, "A random integer from 0.0 to 1.0 (exclusive)."),
+					type(Type.FLOAT, "A random float from 0.0 to 1.0 (exclusive)."),
 					type(Type.ERROR, "BadRandom", "If a random number generator was not provided.")
 				)
 			;
@@ -250,7 +250,7 @@ public enum RandomFunctions implements ScriptFunctionType
 					type(Type.OBJECTREF, "Random", "The random number generator.")
 				)
 				.returns(
-					type(Type.FLOAT, "A random integer from 0.0 to 1.0."),
+					type(Type.FLOAT, "A random float, such that the mean is around 0.0, but the range is infinite."),
 					type(Type.ERROR, "BadRandom", "If a random number generator was not provided.")
 				)
 			;
