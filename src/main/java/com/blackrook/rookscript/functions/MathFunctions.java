@@ -1035,6 +1035,115 @@ public enum MathFunctions implements ScriptFunctionType
 		}
 	},
 
+	/** @since 1.17.0 */
+	ISNAN(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a value is Not-A-Number (NaN). " +
+				    "This is necessary since NaN cannot be checked via equality."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if NaN, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.isNaN());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	/** @since 1.17.0 */
+	ISINFINITE(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a value is Infinite."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if positive or negative infinity, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.isInfinite());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	/** @since 1.17.0 */
+	ISNUMERIC(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a value is numeric (integer, floating-point)."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if numerical, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.isNumeric());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	;
 	
 	private final int parameterCount;

@@ -24,7 +24,43 @@ import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
  * @author Matthew Tropiano
  */
 public enum MapFunctions implements ScriptFunctionType
-{	
+{
+	/** @since 1.17.0 */
+	ISMAP(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if the provided value is a map type."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if a map, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.isMap());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	MAPKEYS(1)
 	{
 		@Override

@@ -29,6 +29,42 @@ import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
  */
 public enum BufferFunctions implements ScriptFunctionType
 {	
+	/** @since 1.17.0 */
+	ISBUFFER(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if the provided value is a buffer type."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if a buffer, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.isBuffer());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	BUFNEW(2)
 	{
 		@Override

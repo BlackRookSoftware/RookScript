@@ -1,0 +1,70 @@
+
+entry main()
+{
+	println(isNaN(NaN));
+	println(isNaN(0));
+	println("...");
+
+	println(isInfinite(Infinity));
+	println(isInfinite(-Infinity));
+	println(isInfinite(0));
+	println(isInfinite(-1));
+	println("...");
+
+	println(isNumeric(45));
+	println(isNumeric("45"));
+	println("...");
+
+	println(isBoolean(true));
+	println(isBoolean(false));
+	println(isBoolean("true"));
+	println(isBoolean(0));
+	println("...");
+
+	println(isInt(1));
+	println(isInt(1.0));
+	println(isInt("1"));
+	println(isInt(0.0));
+	println("...");
+
+	println(isFloat(1));
+	println(isFloat(1.0));
+	println(isFloat("1"));
+	println(isFloat(0.0));
+	println("...");
+
+	println(isString(1));
+	println(isString(1.0));
+	println(isString("1"));
+	println(isString(0.0));
+	println("...");
+
+	println(isObject(1));
+	println(isObject(1.0));
+	println(isObject("1"));
+	println(isObject(file(".")));
+	println(isObject(file("."), "datainputstream"));
+	println(isObject(file("."), "file"));
+	println("...");
+	
+	println(isBuffer(1));
+	println(isBuffer(0.0));
+	println(isBuffer([]));
+	println(isBuffer({}));
+	println(isBuffer(bufnew(32)));
+	println("...");
+	
+	println(isList(1));
+	println(isList(0.0));
+	println(isList([]));
+	println(isList({}));
+	println(isList(bufnew(32)));
+	println("...");
+
+	println(isMap(1));
+	println(isMap(0.0));
+	println(isMap([]));
+	println(isMap({}));
+	println(isMap(bufnew(32)));
+	println("...");
+}

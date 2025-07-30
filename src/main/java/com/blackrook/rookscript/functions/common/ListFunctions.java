@@ -23,6 +23,42 @@ import static com.blackrook.rookscript.lang.ScriptFunctionUsage.type;
  */
 public enum ListFunctions implements ScriptFunctionType
 {	
+	/** @since 1.17.0 */
+	ISLIST(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if the provided value is a list type."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if a list, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue) 
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.isList());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	/**
 	 * Creates a new list.
 	 * Copies an existing list, or encapsulates a value as a list. 

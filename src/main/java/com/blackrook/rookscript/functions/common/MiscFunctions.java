@@ -274,6 +274,207 @@ public enum MiscFunctions implements ScriptFunctionType
 		}
 	},
 
+	/** @since 1.17.0 */
+	ISBOOLEAN(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a value is a boolean type."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if boolean type, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.isBoolean());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	/** @since 1.17.0 */
+	ISINT(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a value is an integer type."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if integer type, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.isInteger());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	/** @since 1.17.0 */
+	ISFLOAT(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a value is a floating-point type."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if float type, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.isFloat());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	/** @since 1.17.0 */
+	ISSTRING(1)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a value is a string type."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if string type, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				returnValue.set(temp.isString());
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
+	/** @since 1.17.0 */
+	ISOBJECT(2)
+	{
+		@Override
+		protected Usage usage()
+		{
+			return ScriptFunctionUsage.create()
+				.instructions(
+					"Checks if a value is an objectref type."
+				)
+				.parameter("value", 
+					type("The value.")
+				)
+				.parameter("type", 
+					type(Type.NULL, "Do not test for a specific type."),
+					type(Type.STRING, "The type name to test for. The name must match case-insensitively.")
+				)
+				.returns(
+					type(Type.BOOLEAN, "True if object of matching type type, false if not.")
+				)
+			;
+		}
+		
+		@Override
+		public boolean execute(ScriptInstance scriptInstance, ScriptValue returnValue)
+		{
+			ScriptValue temp = CACHEVALUE1.get();
+			try
+			{
+				scriptInstance.popStackValue(temp);
+				String typeName = temp.isNull() ? null : temp.asString();
+				scriptInstance.popStackValue(temp);
+				
+				if (!temp.isObjectRef())
+				{
+					returnValue.set(false);
+					return true;
+				}
+				
+				if (typeName != null)
+				{
+					String objName = temp.asObject().getClass().getSimpleName(); 
+					returnValue.set(objName.equalsIgnoreCase(typeName));
+				}
+				else
+				{
+					returnValue.set(true);
+				}
+				return true;
+			}
+			finally
+			{
+				temp.setNull();
+			}
+		}
+	},
+	
 	TOBOOLEAN(1)
 	{
 		@Override

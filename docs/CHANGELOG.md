@@ -3,6 +3,16 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.17.0
+-----------------
+
+- `Added` Map host function `ISMAP()`.
+- `Added` List host function `ISLIST()`.
+- `Added` Buffer host function `ISBUFFER()`.
+- `Added` Misc host functions: `ISBOOLEAN()` `ISINT()` `ISFLOAT()` `ISSTRING()`, `ISOBJECT()`.
+- `Added` Math host functions: `ISNAN()` `ISINFINITE()`, `ISNUMERIC()`.
+
+
 Changed in 1.16.2
 -----------------
 
