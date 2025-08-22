@@ -7,7 +7,6 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
-import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.Type;
 import com.blackrook.rookscript.annotations.ScriptIgnore;
 import com.blackrook.rookscript.annotations.ScriptName;
