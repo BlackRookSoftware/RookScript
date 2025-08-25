@@ -7,9 +7,6 @@
  ******************************************************************************/
 package com.blackrook.rookscript;
 
-import com.blackrook.rookscript.ScriptInstanceStack;
-import com.blackrook.rookscript.ScriptValue;
-
 public class ScriptInstanceStackTest
 {
 	public static void main(String[] args)

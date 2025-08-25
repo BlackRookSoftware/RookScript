@@ -8,14 +8,7 @@
 package com.blackrook.rookscript;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-
-import com.blackrook.rookscript.annotations.ScriptIgnore;
-import com.blackrook.rookscript.annotations.ScriptName;
-import com.blackrook.rookscript.lang.ScriptFunctionType;
-import com.blackrook.rookscript.resolvers.hostfunction.ClassMemberFunctionResolver;
 
 public class ReflectionTest
 {
