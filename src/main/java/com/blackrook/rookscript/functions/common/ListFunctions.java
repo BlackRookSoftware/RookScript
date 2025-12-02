@@ -852,7 +852,7 @@ public enum ListFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Creates the intersection of two sets, returning a new set with values in both."
+					"Creates the intersection of two sets, returning a new set with values that only exist in both."
 				)
 				.parameter("list1", 
 					type(Type.LIST, "The first set (list)."),

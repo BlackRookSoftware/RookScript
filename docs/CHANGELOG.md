@@ -3,6 +3,13 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.17.1
+-----------------
+
+- `Fixed` Some misleading documentation.
+- `Fixed` `BISOPEN()` and `BOSOPEN()` registered the streams as script closeables, counter to what the documentation said.
+
+
 Changed in 1.17.0
 -----------------
 

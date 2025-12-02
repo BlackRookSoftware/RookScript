@@ -664,7 +664,6 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				}
 				
 				DataInputStream in = new DataInputStream(temp.asObjectType(BufferType.class).getInputStream());
-				scriptInstance.registerCloseable(in);
 				returnValue.set(in);
 				return true;
 			}
@@ -682,7 +681,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Opens a data output stream for writing from a buffer from its current cursor position " +
+					"Opens a data output stream for writing to a buffer from its current cursor position " +
 					"(cursor advances with writing). This is NOT registered as a closeable resource."
 				)
 				.parameter("buffer", 
@@ -709,7 +708,6 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 				}
 				
 				DataOutputStream in = new DataOutputStream(temp.asObjectType(BufferType.class).getOutputStream());
-				scriptInstance.registerCloseable(in);
 				returnValue.set(in);
 				return true;
 			}
@@ -1163,7 +1161,7 @@ public enum StreamingIOFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Writes characters to a writer."
+					"Writes characters to a writer, appending a newline to the end of the string written."
 				)
 				.parameter("writer", 
 					type(Type.OBJECTREF, "Writer", "A valid open Writer.")
