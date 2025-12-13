@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.17.2
+-----------------
+
+- `Fixed` Some wrong documentation on Zip functions.
+
+
 Changed in 1.17.1
 -----------------
 

@@ -32,7 +32,7 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 /**
- * Script common functions for date/time stuff.
+ * Script common functions for Zip File reading.
  * @author Matthew Tropiano
  */
 public enum ZipFunctions implements ScriptFunctionType
@@ -96,7 +96,7 @@ public enum ZipFunctions implements ScriptFunctionType
 		{
 			return ScriptFunctionUsage.create()
 				.instructions(
-					"Returns a list of all of the entries in an open Zip File."
+					"Returns a single entry from an open Zip File by name."
 				)
 				.parameter("zip", 
 					type(Type.OBJECTREF, "ZipFile", "The open zip file.")
