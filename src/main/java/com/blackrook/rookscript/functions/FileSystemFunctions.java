@@ -635,7 +635,7 @@ public enum FileSystemFunctions implements ScriptFunctionType
 					type(Type.STRING, "The pattern to match each file against.")
 				)
 				.returns(
-					type(Type.NULL, "If not a directory or [path] is null."),
+					type(Type.NULL, "If not a directory or [path] is null, or the directory could not be read."),
 					type(Type.LIST, "[STRING, ...]", "A list of file paths in the directory (if parameter was string)."),
 					type(Type.LIST, "[OBJECTREF:File, ...]", "A list of file paths in the directory (if parameter was file)."),
 					type(Type.ERROR, "Security", "If the OS is preventing the search."),
@@ -985,7 +985,8 @@ public enum FileSystemFunctions implements ScriptFunctionType
 	private static void fillFiles(File directory, boolean stringPaths, boolean recursive, ScriptValue list, FileFilter filter)
 	{
 		File[] files = directory.listFiles();
-		for (int i = 0; i < files.length; i++)
+		
+		if (files != null) for (int i = 0; i < files.length; i++)
 		{
 			File f = files[i];
 			if (recursive && f.isDirectory())
@@ -999,6 +1000,10 @@ public enum FileSystemFunctions implements ScriptFunctionType
 				else
 					list.listAdd(f);
 			}
+		}
+		else
+		{
+			list.setNull();
 		}
 	}
 	

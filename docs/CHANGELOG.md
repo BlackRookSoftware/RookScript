@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.17.3
+-----------------
+
+- `Fixed` Account for `FILELIST(...)` not being able to read a directory.
+
+
 Changed in 1.17.2
 -----------------
 
