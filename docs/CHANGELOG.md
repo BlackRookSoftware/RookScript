@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.18.0
+-----------------
+
+- `Fixed` Preprocessor directives in comment blocks now will not get processed.
+
+
 Changed in 1.17.3
 -----------------
 

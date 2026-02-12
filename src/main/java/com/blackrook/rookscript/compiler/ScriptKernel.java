@@ -97,9 +97,8 @@ public class ScriptKernel extends Lexer.Kernel
 		addStringDelimiter('"', '"');
 		addRawStringDelimiter('`', '`');
 		
-		addCommentStartDelimiter("/*", TYPE_COMMENT);
-		addCommentLineDelimiter("//", TYPE_COMMENT);
-		addCommentEndDelimiter("*/", TYPE_COMMENT);
+		addCommentDelimiter("/*", "*/");
+		addCommentLineDelimiter("//");
 
 		addDelimiter("(", TYPE_LPAREN);
 		addDelimiter(")", TYPE_RPAREN);
