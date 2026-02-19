@@ -3,6 +3,13 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.19.0
+-----------------
+
+- `Fixed` Some rare stack overflows may occur when setting the value of a ScriptValue.
+- `Fixed` Docs: The return type of EMPTY().
+
+
 Changed in 1.18.0
 -----------------
 

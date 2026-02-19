@@ -457,7 +457,7 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 		else if (value instanceof ErrorType)
 			set((ErrorType)value);
 		else if (value instanceof Throwable)
-			set((Throwable)value);
+			setError((Throwable)value);
 		else if (value instanceof Boolean)
 			set((boolean)value);
 		else if (value instanceof Byte)
@@ -529,6 +529,26 @@ public class ScriptValue implements Comparable<ScriptValue>, Iterable<IteratorPa
 			this.type = value.type;
 			this.ref = value.ref;
 			this.rawbits = value.rawbits;
+		}
+	}
+
+	/**
+	 * Sets this value using another value.
+	 * If null, this is set to the null value.
+	 * @param value the source value to use.
+	 * @since 1.19.0
+	 */
+	public void set(ErrorType value)
+	{
+		if (value == null)
+		{
+			setNull();
+		}
+		else
+		{
+			this.type = Type.ERROR;
+			this.ref = value;
+			this.rawbits = 0L;
 		}
 	}
 
