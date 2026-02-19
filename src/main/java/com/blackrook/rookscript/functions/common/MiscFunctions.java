@@ -117,7 +117,7 @@ public enum MiscFunctions implements ScriptFunctionType
 					type("The value.")
 				)
 				.returns(
-					type(Type.INTEGER,
+					type(Type.BOOLEAN,
 						"Returns true if:" +
 						"\nNULL." +
 						"\nOBJECTREF: is a Collection and isEmpty() returns true."+
