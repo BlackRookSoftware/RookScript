@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"com.blackrook.rookscript.desktop"},{"l":"com.blackrook.rookscript.desktop.functions"}]
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html","k":"18"},{"l":"com.blackrook.rookscript.desktop"},{"l":"com.blackrook.rookscript.desktop.functions"}];updateSearchResults();
