@@ -21,7 +21,7 @@ NONE
 ### Where to Get
 
 * [Maven Central](https://central.sonatype.com/artifact/com.blackrooksoftware/rookscript)  
-* [GitHub Releases](https://github.com/BlackRookSoftware/JSON/releases/latest)
+* [GitHub Releases](https://github.com/BlackRookSoftware/RookScript/releases/latest)
 
 
 ### Introduction
