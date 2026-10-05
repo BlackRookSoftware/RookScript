@@ -654,7 +654,7 @@ public class ScriptParser extends Lexer.Parser
 		
 		if (currentToken() != null)
 		{
-			addErrorMessage("Expected an \"main\", \"function\", \"entry\", or \"pragma\" entry.");
+			addErrorMessage("Expected a \"main\", \"function\", \"entry\", or \"pragma\" entry.");
 			return false;
 		}
 		
