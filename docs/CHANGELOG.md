@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.20.0
+-----------------
+
+- `Added` Scope usage for providing information about how to use certain host-provided scopes.
+
+
 Changed in 1.19.0
 -----------------
 

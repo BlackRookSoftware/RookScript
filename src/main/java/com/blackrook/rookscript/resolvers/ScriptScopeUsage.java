@@ -1,11 +1,4 @@
-/*******************************************************************************
- * Copyright (c) 2017-2022 Black Rook Software
- * This program and the accompanying materials are made available under the 
- * terms of the GNU Lesser Public License v2.1 which accompanies this 
- * distribution, and is available at 
- * http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
- ******************************************************************************/
-package com.blackrook.rookscript.lang;
+package com.blackrook.rookscript.resolvers;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -13,33 +6,32 @@ import java.util.Objects;
 
 import com.blackrook.rookscript.ScriptValue;
 import com.blackrook.rookscript.ScriptValue.Type;
+import com.blackrook.rookscript.resolvers.ScriptScopeResolver.Usage;
 
 /**
- * Function usage builder.
+ * Scope usage builder.
  * @author Matthew Tropiano
+ * @since 1.20.0
  */
-public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
+public class ScriptScopeUsage implements Usage
 {
-	/** Instructions for function use. */
+	/** Instructions for scope use. */
 	private String instructions;
-	/** List of each parameter. */
-	private List<ParameterUsage> parameters;
-	/** List of each return type. */
-	private List<TypeUsage> returnTypes;
-	
-	private ScriptFunctionUsage()
+	/** Instructions for each scope variable. */
+	private List<VariableUsage> variables;
+
+	private ScriptScopeUsage()
 	{
 		this.instructions = "";
-		this.parameters = new LinkedList<ParameterUsage>();
-		this.returnTypes = new LinkedList<TypeUsage>();
+		this.variables = new LinkedList<VariableUsage>();
 	}
 	
 	/**
 	 * @return a new usage description.
 	 */
-	public static ScriptFunctionUsage create()
+	public static ScriptScopeUsage create()
 	{
-		return new ScriptFunctionUsage();
+		return new ScriptScopeUsage();
 	}
 	
 	/**
@@ -78,36 +70,24 @@ public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
 	/**
 	 * Sets the instructions.
 	 * @param instructions the new instructions.
-	 * @return this function usage.
+	 * @return this scope usage.
 	 */
-	public ScriptFunctionUsage instructions(String instructions)
+	public ScriptScopeUsage instructions(String instructions)
 	{
 		this.instructions = Objects.requireNonNull(instructions);
 		return this;
 	}
 	
 	/**
-	 * Adds a parameter's usage.
-	 * @param name the parameter name.
-	 * @param usages each accepted type and its description.
-	 * @return this function usage.
+	 * Adds a variable's usage.
+	 * @param name the variable name.
+	 * @param usages each variable type and its description.
+	 * @return this scope usage.
 	 */
-	public ScriptFunctionUsage parameter(String name, TypeUsage ... usages)
+	public ScriptScopeUsage variable(String name, TypeUsage ... usages)
 	{
 		Objects.requireNonNull(name);
-		parameters.add(new Parameter(name, usages));
-		return this;
-	}
-	
-	/**
-	 * Adds return types.
-	 * @param typeUsages each returned type and its description.
-	 * @return itself.
-	 */
-	public ScriptFunctionUsage returns(TypeUsage ... typeUsages)
-	{
-		for (TypeUsage tu : typeUsages)
-			returnTypes.add(tu);
+		variables.add(new Variable(name, usages));
 		return this;
 	}
 	
@@ -118,17 +98,11 @@ public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
 	}
 
 	@Override
-	public List<ParameterUsage> getParameterInstructions() 
+	public List<VariableUsage> getVariableInstructions()
 	{
-		return parameters;
+		return variables;
 	}
 
-	@Override
-	public List<TypeUsage> getReturnTypes() 
-	{
-		return returnTypes;
-	}
-	
 	private static class TypeInfo implements TypeUsage
 	{
 		private ScriptValue.Type type;
@@ -162,12 +136,12 @@ public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
 		
 	}
 	
-	private static class Parameter implements ParameterUsage
+	private static class Variable implements VariableUsage
 	{
 		private String name;
 		private List<TypeUsage> types;
 
-		private Parameter(String name, TypeUsage ... typeUsages)
+		private Variable(String name, TypeUsage ... typeUsages)
 		{
 			this.name = name;
 			this.types = new LinkedList<TypeUsage>();
@@ -176,7 +150,7 @@ public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
 		}
 		
 		@Override
-		public String getParameterName()
+		public String getVariableName()
 		{
 			return name;
 		}
@@ -190,4 +164,3 @@ public final class ScriptFunctionUsage implements ScriptFunctionType.Usage
 	}
 	
 }
-

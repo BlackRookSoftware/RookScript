@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.function.Supplier;
 
 import com.blackrook.rookscript.ScriptInstance.State;
 import com.blackrook.rookscript.compiler.ScriptReader;
@@ -46,6 +47,34 @@ public final class ScriptInstanceBuilder
 		ScriptInstanceStack getStack();
 	}
 
+	private static final ScriptScopeResolver BLANK_SCOPE_RESOLVER = new ScriptScopeResolver()
+	{
+		@Override
+		public ScriptVariableResolver getScope(String name)
+		{
+			return null;
+		}
+
+		@Override
+		public boolean containsScope(String name)
+		{
+			return false;
+		}
+
+		@Override
+		public String[] getScopeNames() 
+		{
+			return NO_NAMES;
+		}
+
+		@Override
+		public Usage getScopeUsage(String name)
+		{
+			return null;
+		}
+		
+	};
+
 	/** Script provider. */
 	private ScriptProvider scriptProvider;
 	/** The optional reader includer. */
@@ -59,7 +88,7 @@ public final class ScriptInstanceBuilder
 	/** Resolvers in the named namespaces. */
 	private Map<String, ScriptFunctionResolver> namedResolvers;
 	/** Scope resolver to use with each instance. */
-	private DefaultScopeResolver scopeResolver;
+	private ScriptScopeResolver scopeResolver;
 	/** Wait handler to use with each instance. */
 	private ScriptWaitHandler waitHandler;
 	/** The the environment to use for each instance. */
@@ -76,7 +105,7 @@ public final class ScriptInstanceBuilder
 		this.stackProvider = null;
 		this.globalResolvers = new LinkedList<>();
 		this.namedResolvers = new HashMap<>();
-		this.scopeResolver = new DefaultScopeResolver();
+		this.scopeResolver = BLANK_SCOPE_RESOLVER;
 		this.waitHandler = null;
 		this.environment = null;
 		this.runawayLimit = ScriptInstance.DEFAULT_RUNAWAY_LIMIT;
@@ -275,6 +304,20 @@ public final class ScriptInstanceBuilder
 	}
 	
 	/**
+	 * Sets a scope resolver to be used in the script, clearing the set of scopes first.
+	 * Each instance created will be provided with the added scopes at runtime.
+	 * @param resolver the scope resolver to add.
+	 * @return the builder, for chained calls.
+	 * @see #andScope(String, ScriptVariableResolver)
+	 * @since 1.20.0
+	 */
+	public ScriptInstanceBuilder withScopeResolver(ScriptScopeResolver resolver)
+	{
+		scopeResolver = resolver;
+		return this;
+	}
+	
+	/**
 	 * Adds a scope to be used in the script, clearing the set of scopes first.
 	 * Each instance created will be provided with the added scopes at runtime.
 	 * @param name the scope name.
@@ -284,8 +327,42 @@ public final class ScriptInstanceBuilder
 	 */
 	public ScriptInstanceBuilder withScope(String name, ScriptVariableResolver resolver)
 	{
-		scopeResolver.clear();
+		scopeResolver = new DefaultScopeResolver();
 		return andScope(name, resolver);
+	}
+	
+	/**
+	 * Adds a scope to be used in the script, clearing the set of scopes first.
+	 * Each instance created will be provided with the added scopes at runtime.
+	 * @param name the scope name.
+	 * @param resolver the scope resolver to add.
+	 * @param usage the scope usage information.
+	 * @return the builder, for chained calls.
+	 * @see #andScope(String, ScriptVariableResolver, ScriptScopeResolver.Usage)
+	 * @since 1.20.0
+	 */
+	public ScriptInstanceBuilder withScope(String name, ScriptVariableResolver resolver, ScriptScopeResolver.Usage usage)
+	{
+		scopeResolver = new DefaultScopeResolver();
+		return andScope(name, resolver, usage);
+	}
+	
+	/**
+	 * Adds a scope to be used in the script, clearing the set of scopes first.
+	 * Each instance created will be provided with the added scopes at runtime.
+	 * You might want to use this method over {@link #withScope(String, ScriptVariableResolver, ScriptScopeResolver.Usage)} 
+	 * if you want the Usage retrieval to be passive.
+	 * @param name the scope name.
+	 * @param resolver the scope resolver to add.
+	 * @param usageSupplier the scope usage information supplier.
+	 * @return the builder, for chained calls.
+	 * @see #andScope(String, ScriptVariableResolver, ScriptScopeResolver.Usage)
+	 * @since 1.20.0
+	 */
+	public ScriptInstanceBuilder withScope(String name, ScriptVariableResolver resolver, Supplier<ScriptScopeResolver.Usage> usageSupplier)
+	{
+		scopeResolver = new DefaultScopeResolver();
+		return andScope(name, resolver, usageSupplier);
 	}
 	
 	/**
@@ -294,11 +371,59 @@ public final class ScriptInstanceBuilder
 	 * @param name the scope name.
 	 * @param resolver the scope resolver to add.
 	 * @return the builder, for chained calls.
+	 * @throws IllegalStateException if the scope resolver can't be added.
 	 * @see #withScope(String, ScriptVariableResolver)
 	 */
 	public ScriptInstanceBuilder andScope(String name, ScriptVariableResolver resolver)
 	{
-		scopeResolver.addScope(name, resolver);
+		if (!(scopeResolver instanceof DefaultScopeResolver))
+			throw new IllegalStateException("Must use withScope() first before andScope()!");
+		
+		((DefaultScopeResolver)scopeResolver).addScope(name, resolver);
+		return this;
+	}
+	
+	/**
+	 * Adds a scope to be used in the script.
+	 * Each instance created will be provided with the added scopes at runtime.
+	 * @param name the scope name.
+	 * @param resolver the scope resolver to add.
+	 * @param usage the scope usage information.
+	 * @return the builder, for chained calls.
+	 * @throws IllegalStateException if the scope resolver can't be added.
+	 * @see #withScope(String, ScriptVariableResolver, ScriptScopeResolver.Usage)
+	 * @since 1.20.0
+	 */
+	public ScriptInstanceBuilder andScope(String name, ScriptVariableResolver resolver, ScriptScopeResolver.Usage usage)
+	{
+		if (!(scopeResolver instanceof DefaultScopeResolver))
+			throw new IllegalStateException("Must use withScope() first before andScope()!");
+		
+		((DefaultScopeResolver)scopeResolver).addScope(name, resolver);
+		((DefaultScopeResolver)scopeResolver).addScopeUsage(name, usage);
+		return this;
+	}
+	
+	/**
+	 * Adds a scope to be used in the script.
+	 * Each instance created will be provided with the added scopes at runtime.
+	 * You might want to use this method over {@link #andScope(String, ScriptVariableResolver, ScriptScopeResolver.Usage)} 
+	 * if you want the Usage retrieval to be passive.
+	 * @param name the scope name.
+	 * @param resolver the scope resolver to add.
+	 * @param usageSupplier the scope usage information supplier.
+	 * @return the builder, for chained calls.
+	 * @throws IllegalStateException if the scope resolver can't be added.
+	 * @see #withScope(String, ScriptVariableResolver, ScriptScopeResolver.Usage)
+	 * @since 1.20.0
+	 */
+	public ScriptInstanceBuilder andScope(String name, ScriptVariableResolver resolver, Supplier<ScriptScopeResolver.Usage> usageSupplier)
+	{
+		if (!(scopeResolver instanceof DefaultScopeResolver))
+			throw new IllegalStateException("Must use withScope() first before andScope()!");
+		
+		((DefaultScopeResolver)scopeResolver).addScope(name, resolver);
+		((DefaultScopeResolver)scopeResolver).addScopeUsage(name, usageSupplier);
 		return this;
 	}
 	

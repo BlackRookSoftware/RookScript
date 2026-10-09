@@ -8,7 +8,9 @@
 package com.blackrook.rookscript.resolvers.scope;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import com.blackrook.rookscript.resolvers.ScriptScopeResolver;
 import com.blackrook.rookscript.resolvers.ScriptVariableResolver;
@@ -24,6 +26,8 @@ public class DefaultScopeResolver implements ScriptScopeResolver
 {
 	/** The scope map. */
 	private Map<String, ScriptVariableResolver> scopeMap;
+	/** The scope usage map. */
+	private Map<String, Supplier<Usage>> scopeUsageMap;
 	
 	/**
 	 * Creates a new default scope resolver with no added scopes.
@@ -44,6 +48,29 @@ public class DefaultScopeResolver implements ScriptScopeResolver
 	}
 	
 	/**
+	 * Adds a scope usage to this scope resolver by scope name.
+	 * @param name the name of the scope.
+	 * @param usage the usage to resolve by that name.
+	 * @since 1.20.0
+	 */
+	public synchronized void addScopeUsage(String name, Usage usage)
+	{
+		scopeUsageMap.put(name, () -> usage);
+	}
+	
+	/**
+	 * Adds a scope usage supplier to this scope resolver by scope name.
+	 * You might want to use this method over {@link #addScopeUsage(String, Usage)} if you want the Usage retrieval to be passive.
+	 * @param name the name of the scope.
+	 * @param usageSupplier the usage supplier to resolve by that name.
+	 * @since 1.20.0
+	 */
+	public synchronized void addScopeUsage(String name, Supplier<Usage> usageSupplier)
+	{
+		scopeUsageMap.put(name, usageSupplier);
+	}
+	
+	/**
 	 * Clears this scope resolver of all added scope mappings.
 	 */
 	public synchronized void clear()
@@ -61,6 +88,20 @@ public class DefaultScopeResolver implements ScriptScopeResolver
 	public synchronized boolean containsScope(String name)
 	{
 		return scopeMap.containsKey(name);
+	}
+
+	@Override
+	public String[] getScopeNames()
+	{
+		Set<String> set = scopeMap.keySet();
+		return set.toArray(new String[set.size()]);
+	}
+
+	@Override
+	public Usage getScopeUsage(String name)
+	{
+		Supplier<Usage> usageSupplier = scopeUsageMap.get(name);
+		return usageSupplier != null ? usageSupplier.get() : null;
 	}
 
 }

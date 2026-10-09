@@ -7,7 +7,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.blackrooksoftware</groupId>
 	<artifactId>rookscript</artifactId>
-	<version>1.19.0</version>
+	<version>1.20.0</version>
 	<name>RookScript</name>
 	<description>This library compiles and runs RookScript, a non-host-specific scripting language.</description>
 	<url>https://blackrooksoftware.github.io/RookScript/</url>
