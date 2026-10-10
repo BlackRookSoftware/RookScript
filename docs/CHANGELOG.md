@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.20.1
+-----------------
+
+- `Fixed` DefaultScopeResolver would NPE on adding scope usage info.
+
+
 Changed in 1.20.0
 -----------------
 

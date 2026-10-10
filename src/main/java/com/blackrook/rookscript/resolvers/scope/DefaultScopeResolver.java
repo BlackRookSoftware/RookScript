@@ -35,6 +35,7 @@ public class DefaultScopeResolver implements ScriptScopeResolver
 	public DefaultScopeResolver()
 	{
 		this.scopeMap = new TreeMap<String, ScriptVariableResolver>(String.CASE_INSENSITIVE_ORDER);
+		this.scopeUsageMap = new TreeMap<String, Supplier<Usage>>(String.CASE_INSENSITIVE_ORDER);
 	}
 	
 	/**
