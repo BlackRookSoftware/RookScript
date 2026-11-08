@@ -3,6 +3,12 @@ RookScript (C) Black Rook Software
 by Matt Tropiano et al. (see AUTHORS.txt)
 
 
+Changed in 1.20.2
+-----------------
+
+- `Changed` An error message in the compiler would allude to a "main" block that doesn't exist.
+
+
 Changed in 1.20.1
 -----------------
 
